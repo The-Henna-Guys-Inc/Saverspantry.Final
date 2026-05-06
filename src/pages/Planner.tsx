@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Sparkles, ShoppingCart, RefreshCw, Calendar, Info, Copy, Share2, Printer } from "lucide-react";
 import { toast } from "sonner";
+import { SpecialtyStoreBanner } from "@/components/SpecialtyStoreBanner";
+import { detectItemCuisines, summarizeCuisines, CUISINE_LABEL } from "@/lib/cuisineHints";
 
 type Meal = { title: string; main_ingredients: string[]; estimated_cost_usd: number; time_minutes: number };
 type Day = { day: string; breakfast: Meal; lunch: Meal; dinner: Meal };
@@ -254,7 +256,9 @@ const Planner = () => {
           </>
         )}
 
-        {grouped && (
+        {grouped && (() => {
+          const cuisineSummary = summarizeCuisines(grocery!.items);
+          return (
           <div id="grocery-print">
             <div className="flex items-baseline justify-between mb-2">
               <h2 className="text-xl font-semibold text-primary">Grocery list</h2>
@@ -264,6 +268,10 @@ const Planner = () => {
                 </span>
               </div>
             </div>
+            <SpecialtyStoreBanner
+              topCuisines={cuisineSummary.topCuisines}
+              matchCount={cuisineSummary.hints.length}
+            />
             <div className="flex flex-wrap gap-2 mb-4 print:hidden">
               <Button variant="outline" size="sm" onClick={copyList} className="rounded-xl">
                 <Copy className="h-3.5 w-3.5 mr-1.5" />Copy
@@ -287,6 +295,7 @@ const Planner = () => {
                     {items.map((it, i) => {
                       const k = keyOf(it);
                       const done = !!checked[k];
+                      const itemCuisines = detectItemCuisines(it.item);
                       return (
                         <li key={i} className="flex items-start justify-between text-sm gap-3">
                           <button type="button" onClick={() => toggleItem(k)}
@@ -298,6 +307,14 @@ const Planner = () => {
                             </span>
                             <span className={done ? "line-through text-muted-foreground" : "text-foreground/90"}>
                               {it.item} <span className="text-muted-foreground">· {it.quantity}</span>
+                              {itemCuisines.length > 0 && (
+                                <span
+                                  className="ml-1.5 inline-block text-[10px] px-1.5 py-0.5 rounded-full bg-accent/15 text-accent font-medium align-middle"
+                                  title={`Often cheaper at ${itemCuisines.map(c => CUISINE_LABEL[c]).join(" / ")} grocers`}
+                                >
+                                  {CUISINE_LABEL[itemCuisines[0]]}
+                                </span>
+                              )}
                             </span>
                           </button>
                           <span className="text-muted-foreground whitespace-nowrap">${it.estimated_cost_low_usd?.toFixed(2)}–${it.estimated_cost_high_usd?.toFixed(2)}</span>
@@ -309,7 +326,8 @@ const Planner = () => {
               ))}
             </div>
           </div>
-        )}
+          );
+        })()}
       </div>
     </main>
   );
