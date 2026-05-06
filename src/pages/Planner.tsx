@@ -41,6 +41,7 @@ const Planner = () => {
   const [householdSize, setHouseholdSize] = useState(2);
   const [budget, setBudget] = useState<string>("");
   const [cuisine, setCuisine] = useState("");
+  const [dietStyle, setDietStyle] = useState("balanced");
   const [plan, setPlan] = useState<Plan | null>(null);
   const [grocery, setGrocery] = useState<Grocery | null>(null);
   const [genLoading, setGenLoading] = useState(false);
@@ -65,7 +66,7 @@ const Planner = () => {
     setGrocery(null);
     try {
       const { data, error } = await supabase.functions.invoke("meal-plan-generate", {
-        body: { household_size: householdSize, budget_usd: budget ? Number(budget) : undefined, cuisine_focus: cuisine || undefined },
+        body: { household_size: householdSize, budget_usd: budget ? Number(budget) : undefined, cuisine_focus: cuisine || undefined, diet_style: dietStyle },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -119,12 +120,21 @@ const Planner = () => {
         <p className="text-muted-foreground mb-8">Generate a 7-day plan and turn it into a grocery list.</p>
 
         <Card className="p-6 rounded-3xl border-border/50 shadow-soft mb-8">
-          <div className="grid sm:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <Label htmlFor="hh" className="text-xs">Household size</Label>
               <Input id="hh" type="number" min={1} max={12} value={householdSize}
                 onChange={e => setHouseholdSize(Math.max(1, Number(e.target.value) || 1))}
                 className="rounded-xl mt-1" />
+            </div>
+            <div>
+              <Label htmlFor="ds" className="text-xs">Diet style</Label>
+              <Select value={dietStyle} onValueChange={setDietStyle}>
+                <SelectTrigger id="ds" className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {DIET_STYLES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="b" className="text-xs">Weekly budget ($, optional)</Label>
@@ -185,11 +195,17 @@ const Planner = () => {
 
         {grouped && (
           <div>
-            <div className="flex items-baseline justify-between mb-4">
+            <div className="flex items-baseline justify-between mb-2">
               <h2 className="text-xl font-semibold text-primary">Grocery list</h2>
               <div className="text-sm text-muted-foreground">
-                Est. <span className="font-semibold text-primary">${grocery!.total_estimated_cost_usd?.toFixed(2)}</span>
+                Est. <span className="font-semibold text-primary">
+                  ${grocery!.total_low_usd?.toFixed(2)}–${grocery!.total_high_usd?.toFixed(2)}
+                </span>
               </div>
+            </div>
+            <div className="flex items-start gap-2 text-xs text-muted-foreground mb-4 p-3 rounded-xl bg-secondary/60">
+              <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              <span>AI estimate — actual prices vary by store, region, and sales. Live local pricing is coming soon.</span>
             </div>
             <div className="grid md:grid-cols-2 gap-4">
               {Object.entries(grouped).map(([cat, items]) => (
@@ -197,9 +213,9 @@ const Planner = () => {
                   <div className="text-xs uppercase tracking-wider text-accent mb-2">{cat}</div>
                   <ul className="space-y-1.5">
                     {items.map((it, i) => (
-                      <li key={i} className="flex justify-between text-sm">
+                      <li key={i} className="flex justify-between text-sm gap-3">
                         <span className="text-foreground/90">{it.item} <span className="text-muted-foreground">· {it.quantity}</span></span>
-                        <span className="text-muted-foreground">${it.estimated_cost_usd?.toFixed(2)}</span>
+                        <span className="text-muted-foreground whitespace-nowrap">${it.estimated_cost_low_usd?.toFixed(2)}–${it.estimated_cost_high_usd?.toFixed(2)}</span>
                       </li>
                     ))}
                   </ul>
