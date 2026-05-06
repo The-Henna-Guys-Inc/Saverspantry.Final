@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Sprout, LogOut, BookmarkCheck, CalendarDays, Refrigerator, Settings as SettingsIcon, Store as StoreIcon } from "lucide-react";
 import { toast } from "sonner";
+import { SavingsCounter } from "@/components/SavingsCounter";
 
 export const Header = () => {
   const { user, loading } = useAuth();
@@ -40,6 +41,7 @@ export const Header = () => {
               <Button asChild variant="ghost" size="sm" className="rounded-xl">
                 <Link to="/stores"><StoreIcon className="h-4 w-4 mr-1.5" />Stores</Link>
               </Button>
+              <SavingsCounter />
               <Button asChild variant="ghost" size="sm" className="rounded-xl">
                 <Link to="/library"><BookmarkCheck className="h-4 w-4 mr-1.5" />Library</Link>
               </Button>
