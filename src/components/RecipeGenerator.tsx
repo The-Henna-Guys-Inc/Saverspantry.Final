@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2, ChefHat, Clock, Users, DollarSign } from "lucide-react";
+import { SaveButton } from "./SaveButton";
 
 type Recipe = {
   title: string;
@@ -93,8 +94,13 @@ export const RecipeGenerator = () => {
 
       {recipe && (
         <Card className="mt-6 p-6 sm:p-8 rounded-3xl shadow-glow border-border/50 animate-fade-up">
-          <div className="text-xs uppercase tracking-widest text-accent font-semibold">{recipe.cuisine}</div>
-          <h3 className="text-2xl sm:text-3xl font-bold text-primary mt-1">{recipe.title}</h3>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-xs uppercase tracking-widest text-accent font-semibold">{recipe.cuisine}</div>
+              <h3 className="text-2xl sm:text-3xl font-bold text-primary mt-1">{recipe.title}</h3>
+            </div>
+            <SaveButton table="saved_recipes" payload={{ recipe, source: "ai_generated" }} />
+          </div>
 
           <div className="flex flex-wrap gap-4 mt-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-1.5"><Clock className="h-4 w-4" />{recipe.time_minutes} min</div>
