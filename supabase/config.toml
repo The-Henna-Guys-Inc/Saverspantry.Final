@@ -2,3 +2,9 @@ project_id = "paajifqvwmoqttefxykw"
 
 [functions.nutrition-lookup]
 verify_jwt = false
+
+[functions.equivalency-swap]
+verify_jwt = false
+
+[functions.recipe-generate]
+verify_jwt = false

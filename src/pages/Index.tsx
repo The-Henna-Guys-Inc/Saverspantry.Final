@@ -1,5 +1,7 @@
 import heroImg from "@/assets/hero-foods.jpg";
 import { NutritionLookup } from "@/components/NutritionLookup";
+import { EquivalencyEngine } from "@/components/EquivalencyEngine";
+import { RecipeGenerator } from "@/components/RecipeGenerator";
 import { Card } from "@/components/ui/card";
 import { ArrowLeftRight, Sparkles, ChefHat, PiggyBank } from "lucide-react";
 
@@ -28,7 +30,7 @@ const Index = () => {
 
             <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed">
               Swap any food for a nutritionally-equivalent alternative — usually cheaper.
-              Look up macros instantly with AI.
+              Look up macros, find swaps, and generate recipes with AI.
             </p>
 
             <img
@@ -42,10 +44,10 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Live demo */}
-      <section id="lookup" className="container max-w-6xl mx-auto px-6 py-20 sm:py-28">
+      {/* Nutrition lookup */}
+      <section id="lookup" className="container max-w-6xl mx-auto px-6 py-20 sm:py-24">
         <div className="text-center mb-10">
-          <span className="text-xs font-semibold uppercase tracking-widest text-accent">Try it now</span>
+          <span className="text-xs font-semibold uppercase tracking-widest text-accent">Nutrition Lookup</span>
           <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
             Ask anything. Get instant nutrition.
           </h2>
@@ -56,62 +58,75 @@ const Index = () => {
         <NutritionLookup />
       </section>
 
-      {/* Pillars */}
-      <section id="services" className="container max-w-6xl mx-auto px-6 py-20 sm:py-28">
-        <div className="text-center mb-12">
-          <span className="text-xs font-semibold uppercase tracking-widest text-accent">How it works</span>
-          <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">Three tools. One smarter kitchen.</h2>
+      {/* Equivalency engine */}
+      <section id="swap" className="bg-gradient-warm py-20 sm:py-24">
+        <div className="container max-w-6xl mx-auto px-6">
+          <div className="text-center mb-10">
+            <span className="text-xs font-semibold uppercase tracking-widest text-accent">Equivalency Engine</span>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
+              Same nutrition. Less money.
+            </h2>
+            <p className="mt-3 text-muted-foreground max-w-lg mx-auto">
+              Enter a food. Get three swaps that match the protein and calories — usually for less.
+            </p>
+          </div>
+          <EquivalencyEngine />
         </div>
+      </section>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {[
-            {
-              icon: ArrowLeftRight,
-              title: "Equivalency Engine",
-              body: "Swap 200g chicken for 1 cup lentils + 100g paneer — same protein, less money. Coming next.",
-            },
-            {
-              icon: Sparkles,
-              title: "AI Nutrition Lookup",
-              body: "Type any food and portion. Get accurate macros and key micronutrients in seconds.",
-              live: true,
-            },
-            {
-              icon: ChefHat,
-              title: "Recipe Generator",
-              body: "List what you have, pick a cuisine, and get a recipe with steps, nutrition, and cost. Coming soon.",
-            },
-          ].map((p) => (
-            <Card
-              key={p.title}
-              className="p-6 rounded-3xl border-border/60 shadow-soft hover:shadow-glow transition-smooth bg-card"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-gradient-leaf flex items-center justify-center mb-4">
-                <p.icon className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <div className="flex items-center gap-2 mb-2">
-                <h3 className="text-lg font-semibold text-primary">{p.title}</h3>
-                {p.live && (
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent/20 text-accent-foreground">
-                    Live
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">{p.body}</p>
-            </Card>
-          ))}
+      {/* Recipe generator */}
+      <section id="recipe" className="container max-w-6xl mx-auto px-6 py-20 sm:py-24">
+        <div className="text-center mb-10">
+          <span className="text-xs font-semibold uppercase tracking-widest text-accent">Recipe Generator</span>
+          <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
+            Cook with what you have.
+          </h2>
+          <p className="mt-3 text-muted-foreground max-w-lg mx-auto">
+            List your ingredients, pick a cuisine, and get a recipe with steps, nutrition, and cost.
+          </p>
+        </div>
+        <RecipeGenerator />
+      </section>
+
+      {/* Pillars */}
+      <section id="services" className="bg-gradient-warm py-20 sm:py-24">
+        <div className="container max-w-6xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <span className="text-xs font-semibold uppercase tracking-widest text-accent">How it works</span>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">Three tools. One smarter kitchen.</h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { icon: Sparkles, title: "AI Nutrition Lookup", body: "Type any food and portion. Get accurate macros and key micronutrients in seconds.", href: "#lookup" },
+              { icon: ArrowLeftRight, title: "Equivalency Engine", body: "Swap 200g chicken for 1 cup lentils + 100g paneer — same protein, less money.", href: "#swap" },
+              { icon: ChefHat, title: "Recipe Generator", body: "List what you have, pick a cuisine, and get a recipe with steps, nutrition, and cost.", href: "#recipe" },
+            ].map((p) => (
+              <a key={p.title} href={p.href}
+                className="group p-6 rounded-3xl border border-border/60 shadow-soft hover:shadow-glow transition-smooth bg-card block">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-leaf flex items-center justify-center mb-4 group-hover:scale-105 transition-smooth">
+                  <p.icon className="h-5 w-5 text-primary-foreground" />
+                </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className="text-lg font-semibold text-primary">{p.title}</h3>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent/20 text-accent-foreground">Live</span>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">{p.body}</p>
+              </a>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="container max-w-4xl mx-auto px-6 py-20 sm:py-28">
+      <section className="container max-w-4xl mx-auto px-6 py-20 sm:py-24">
         <Card className="p-10 sm:p-14 rounded-[2rem] bg-gradient-leaf border-0 shadow-glow text-center">
           <PiggyBank className="h-10 w-10 text-primary-foreground mx-auto mb-4" />
           <h2 className="text-3xl sm:text-4xl font-bold text-primary-foreground">
             Build your weekly plan — for less.
           </h2>
           <p className="mt-3 text-primary-foreground/80 max-w-lg mx-auto">
-            Auth, meal planning, grocery lists, and the full Equivalency Engine roll out next.
+            Auth, meal planning, and grocery lists roll out next.
           </p>
         </Card>
       </section>
