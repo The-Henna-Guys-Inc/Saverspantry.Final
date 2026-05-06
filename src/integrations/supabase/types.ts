@@ -128,6 +128,150 @@ export type Database = {
         }
         Relationships: []
       }
+      sale_confirmations: {
+        Row: {
+          confirmed_at: string
+          id: string
+          sale_observation_id: string
+          user_id: string
+        }
+        Insert: {
+          confirmed_at?: string
+          id?: string
+          sale_observation_id: string
+          user_id: string
+        }
+        Update: {
+          confirmed_at?: string
+          id?: string
+          sale_observation_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_confirmations_sale_observation_id_fkey"
+            columns: ["sale_observation_id"]
+            isOneToOne: false
+            referencedRelation: "sale_observations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_flags: {
+        Row: {
+          flagged_at: string
+          id: string
+          notes: string | null
+          reason: string
+          sale_observation_id: string
+          user_id: string
+        }
+        Insert: {
+          flagged_at?: string
+          id?: string
+          notes?: string | null
+          reason: string
+          sale_observation_id: string
+          user_id: string
+        }
+        Update: {
+          flagged_at?: string
+          id?: string
+          notes?: string | null
+          reason?: string
+          sale_observation_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_flags_sale_observation_id_fkey"
+            columns: ["sale_observation_id"]
+            isOneToOne: false
+            referencedRelation: "sale_observations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_observations: {
+        Row: {
+          city: string | null
+          confirmation_count: number
+          created_at: string
+          ends_at: string
+          flag_count: number
+          food_name: string
+          id: string
+          moderation_status: string
+          pack_size: string | null
+          photo_url: string | null
+          region: string | null
+          regular_price_usd: number | null
+          sale_price_usd: number
+          savings_pct: number | null
+          source: string
+          starts_at: string
+          store_chain: string | null
+          store_id: string | null
+          store_name: string
+          submitted_by_user_id: string | null
+          title: string
+        }
+        Insert: {
+          city?: string | null
+          confirmation_count?: number
+          created_at?: string
+          ends_at: string
+          flag_count?: number
+          food_name: string
+          id?: string
+          moderation_status?: string
+          pack_size?: string | null
+          photo_url?: string | null
+          region?: string | null
+          regular_price_usd?: number | null
+          sale_price_usd: number
+          savings_pct?: number | null
+          source?: string
+          starts_at?: string
+          store_chain?: string | null
+          store_id?: string | null
+          store_name: string
+          submitted_by_user_id?: string | null
+          title: string
+        }
+        Update: {
+          city?: string | null
+          confirmation_count?: number
+          created_at?: string
+          ends_at?: string
+          flag_count?: number
+          food_name?: string
+          id?: string
+          moderation_status?: string
+          pack_size?: string | null
+          photo_url?: string | null
+          region?: string | null
+          regular_price_usd?: number | null
+          sale_price_usd?: number
+          savings_pct?: number | null
+          source?: string
+          starts_at?: string
+          store_chain?: string | null
+          store_id?: string | null
+          store_name?: string
+          submitted_by_user_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_observations_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "specialty_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_lookups: {
         Row: {
           created_at: string
@@ -333,6 +477,39 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      watchlist_items: {
+        Row: {
+          created_at: string
+          food_name: string
+          id: string
+          min_savings_pct: number
+          min_savings_usd: number
+          snoozed_until: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          food_name: string
+          id?: string
+          min_savings_pct?: number
+          min_savings_usd?: number
+          snoozed_until?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          food_name?: string
+          id?: string
+          min_savings_pct?: number
+          min_savings_usd?: number
+          snoozed_until?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
