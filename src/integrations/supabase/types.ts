@@ -90,6 +90,8 @@ export type Database = {
           display_name: string | null
           household_size: number
           id: string
+          search_radius_miles: number
+          show_specialty_stores: boolean
           subscription_expires_at: string | null
           subscription_tier: string
           updated_at: string
@@ -102,6 +104,8 @@ export type Database = {
           display_name?: string | null
           household_size?: number
           id?: string
+          search_radius_miles?: number
+          show_specialty_stores?: boolean
           subscription_expires_at?: string | null
           subscription_tier?: string
           updated_at?: string
@@ -114,6 +118,8 @@ export type Database = {
           display_name?: string | null
           household_size?: number
           id?: string
+          search_radius_miles?: number
+          show_specialty_stores?: boolean
           subscription_expires_at?: string | null
           subscription_tier?: string
           updated_at?: string
@@ -205,6 +211,110 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      specialty_stores: {
+        Row: {
+          address: string | null
+          chain_name: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          cuisine_specialties: string[]
+          curation_source: string
+          description: string | null
+          google_place_id: string | null
+          google_rating: number | null
+          google_rating_count: number | null
+          id: string
+          last_synced_at: string | null
+          latitude: number | null
+          longitude: number | null
+          name: string
+          price_tier: string
+          region: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          chain_name?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          cuisine_specialties?: string[]
+          curation_source?: string
+          description?: string | null
+          google_place_id?: string | null
+          google_rating?: number | null
+          google_rating_count?: number | null
+          id?: string
+          last_synced_at?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          price_tier?: string
+          region?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          chain_name?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          cuisine_specialties?: string[]
+          curation_source?: string
+          description?: string | null
+          google_place_id?: string | null
+          google_rating?: number | null
+          google_rating_count?: number | null
+          id?: string
+          last_synced_at?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          price_tier?: string
+          region?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      store_visits: {
+        Row: {
+          created_at: string
+          id: string
+          store_id: string
+          user_id: string
+          user_note: string | null
+          user_rating: number | null
+          visited_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          store_id: string
+          user_id: string
+          user_note?: string | null
+          user_rating?: number | null
+          visited_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          store_id?: string
+          user_id?: string
+          user_note?: string | null
+          user_rating?: number | null
+          visited_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_visits_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "specialty_stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
