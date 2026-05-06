@@ -158,7 +158,7 @@ export default function Sales() {
                 </Button>
               </Card>
             ) : (
-              <SaleList sales={matched} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} />
+              <SaleList sales={matched} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} isAdmin={isAdmin} onRemove={removeSale} />
             )}
           </TabsContent>
 
@@ -170,7 +170,7 @@ export default function Sales() {
                 <p className="text-sm text-muted-foreground">No active sales right now. Check back soon.</p>
               </Card>
             ) : (
-              <SaleList sales={sales} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} />
+              <SaleList sales={sales} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} isAdmin={isAdmin} onRemove={removeSale} />
             )}
           </TabsContent>
         </Tabs>
