@@ -268,9 +268,35 @@ function SaleList({
                   <Flag className="h-3 w-3" />
                 </Button>
                 {isAdmin && (
-                  <Button size="sm" variant="ghost" className="rounded-xl h-8 text-xs text-destructive" onClick={() => onRemove(s.id)}>
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
+                  <>
+                    <AdminSaleDialog
+                      userId={userId}
+                      onCreated={onRefresh}
+                      sale={{
+                        id: s.id,
+                        food_name: s.food_name,
+                        title: s.title,
+                        store_name: s.store_name,
+                        store_chain: s.store_chain,
+                        sale_price_usd: s.sale_price_usd,
+                        regular_price_usd: s.regular_price_usd,
+                        pack_size: s.pack_size,
+                        address: s.address,
+                        city: s.city,
+                        region: s.region,
+                        google_maps_url: s.google_maps_url,
+                        ends_at: s.ends_at,
+                      }}
+                      trigger={
+                        <Button size="sm" variant="ghost" className="rounded-xl h-8 text-xs">
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                      }
+                    />
+                    <Button size="sm" variant="ghost" className="rounded-xl h-8 text-xs text-destructive" onClick={() => onRemove(s.id)}>
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
