@@ -40,8 +40,12 @@ const TOOL = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const { plan, household_size = 2 } = await req.json();
+    const { plan, household_size = 2, pantry = [] } = await req.json();
     if (!plan) return new Response(JSON.stringify({ error: "Missing plan" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    const pantryText = Array.isArray(pantry) && pantry.length
+      ? pantry.map((p: any) => `- ${p.item} (${p.quantity} ${p.unit})`).join("\n")
+      : "(empty)";
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -50,8 +54,8 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "You build consolidated grocery lists from meal plans. Combine duplicate ingredients, scale to household size, group by store category. Skip salt/pepper/oil/common spices. Return realistic 2026 US grocery price RANGES (low and high) reflecting current inflation — assume ~8-12% above 2023 prices, varying by region. Always call return_grocery_list." },
-          { role: "user", content: `Household: ${household_size}.\nMeal plan JSON:\n${JSON.stringify(plan)}` },
+          { role: "system", content: "You build consolidated grocery lists from meal plans. Combine duplicate ingredients, scale to household size, group by store category. Skip salt/pepper/oil/common spices. SUBTRACT items the user already has in their pantry — if a pantry item fully covers a needed ingredient, omit it; if it partially covers it, only include the remaining quantity needed. Return realistic 2026 US grocery price RANGES (low and high) reflecting current inflation — assume ~8-12% above 2023 prices. Always call return_grocery_list." },
+          { role: "user", content: `Household: ${household_size}.\n\nPantry (already at home — subtract from list):\n${pantryText}\n\nMeal plan JSON:\n${JSON.stringify(plan)}` },
         ],
         tools: [TOOL],
         tool_choice: { type: "function", function: { name: "return_grocery_list" } },
