@@ -129,6 +129,7 @@ export default function Sales() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            {isAdmin && user && <AdminSaleCsvUpload userId={user.id} onCreated={loadSales} />}
             {isAdmin && user && <AdminSaleDialog userId={user.id} onCreated={loadSales} />}
             <Button asChild variant="hero" size="sm" className="rounded-xl">
               <Link to="/watchlist">Manage watchlist</Link>
