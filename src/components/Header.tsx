@@ -40,6 +40,9 @@ export const Header = () => {
               <Button asChild variant="ghost" size="sm" className="rounded-xl">
                 <Link to="/library"><BookmarkCheck className="h-4 w-4 mr-1.5" />Library</Link>
               </Button>
+              <Button asChild variant="ghost" size="icon" className="rounded-xl">
+                <Link to="/settings" aria-label="Settings"><SettingsIcon className="h-4 w-4" /></Link>
+              </Button>
               <Button onClick={signOut} variant="ghost" size="sm" className="rounded-xl">
                 <LogOut className="h-4 w-4" />
               </Button>
