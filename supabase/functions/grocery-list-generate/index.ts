@@ -12,9 +12,10 @@ const ITEM = {
     item: { type: "string" },
     quantity: { type: "string" },
     category: { type: "string", description: "produce, protein, dairy, pantry, frozen, bakery, other" },
-    estimated_cost_usd: { type: "number" },
+    estimated_cost_low_usd: { type: "number", description: "Lower bound of typical 2026 US price" },
+    estimated_cost_high_usd: { type: "number", description: "Upper bound of typical 2026 US price" },
   },
-  required: ["item", "quantity", "category", "estimated_cost_usd"],
+  required: ["item", "quantity", "category", "estimated_cost_low_usd", "estimated_cost_high_usd"],
   additionalProperties: false,
 };
 
@@ -22,14 +23,15 @@ const TOOL = {
   type: "function",
   function: {
     name: "return_grocery_list",
-    description: "Return a consolidated grocery list grouped by category.",
+    description: "Return a consolidated grocery list grouped by category with price ranges.",
     parameters: {
       type: "object",
       properties: {
         items: { type: "array", items: ITEM },
-        total_estimated_cost_usd: { type: "number" },
+        total_low_usd: { type: "number" },
+        total_high_usd: { type: "number" },
       },
-      required: ["items", "total_estimated_cost_usd"],
+      required: ["items", "total_low_usd", "total_high_usd"],
       additionalProperties: false,
     },
   },
@@ -48,7 +50,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "You build consolidated grocery lists from meal plans. Combine duplicate ingredients, scale to household size, group by store category. Skip salt/pepper/oil/common spices. Realistic US prices. Always call return_grocery_list." },
+          { role: "system", content: "You build consolidated grocery lists from meal plans. Combine duplicate ingredients, scale to household size, group by store category. Skip salt/pepper/oil/common spices. Return realistic 2026 US grocery price RANGES (low and high) reflecting current inflation — assume ~8-12% above 2023 prices, varying by region. Always call return_grocery_list." },
           { role: "user", content: `Household: ${household_size}.\nMeal plan JSON:\n${JSON.stringify(plan)}` },
         ],
         tools: [TOOL],

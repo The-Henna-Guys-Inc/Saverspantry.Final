@@ -51,13 +51,14 @@ const TOOL = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const { household_size = 2, dietary_prefs = [], budget_usd, cuisine_focus } = await req.json().catch(() => ({}));
+    const { household_size = 2, dietary_prefs = [], budget_usd, cuisine_focus, diet_style } = await req.json().catch(() => ({}));
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const userMsg = `Plan 7 days of meals for a household of ${household_size}.
+Diet style: ${diet_style || "balanced"}.
 Dietary prefs: ${Array.isArray(dietary_prefs) && dietary_prefs.length ? dietary_prefs.join(", ") : "none"}.
 ${budget_usd ? `Weekly grocery budget: $${budget_usd}.` : "Keep it budget-friendly."}
 ${cuisine_focus ? `Lean toward: ${cuisine_focus}.` : "Mix common cuisines."}
-Reuse ingredients across meals to reduce waste. Realistic US grocery prices.`;
+Reuse ingredients across meals to reduce waste. Use realistic 2026 US grocery prices (~8-12% above 2023 baseline).`;
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -65,7 +66,7 @@ Reuse ingredients across meals to reduce waste. Realistic US grocery prices.`;
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "You are a practical, money-conscious meal planner. Always call return_meal_plan. Keep meals simple and realistic." },
+          { role: "system", content: "You are a practical, money-conscious meal planner. Always call return_meal_plan. Honor the requested diet style strictly (keto = <30g carbs/day, vegetarian = no meat or fish, vegan = no animal products, high-protein = ≥30g protein per main meal, mediterranean = olive oil + fish + legumes). Keep meals simple and realistic." },
           { role: "user", content: userMsg },
         ],
         tools: [TOOL],
