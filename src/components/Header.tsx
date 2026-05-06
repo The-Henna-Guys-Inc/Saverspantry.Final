@@ -32,6 +32,9 @@ export const Header = () => {
                 <Link to="/planner"><CalendarDays className="h-4 w-4 mr-1.5" />Planner</Link>
               </Button>
               <Button asChild variant="ghost" size="sm" className="rounded-xl">
+                <Link to="/pantry"><Refrigerator className="h-4 w-4 mr-1.5" />Pantry</Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="rounded-xl">
                 <Link to="/library"><BookmarkCheck className="h-4 w-4 mr-1.5" />Library</Link>
               </Button>
               <Button onClick={signOut} variant="ghost" size="sm" className="rounded-xl">
