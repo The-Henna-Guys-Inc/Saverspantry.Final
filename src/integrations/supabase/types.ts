@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      meal_plans: {
+        Row: {
+          created_at: string
+          household_id: string | null
+          id: string
+          plan: Json
+          updated_at: string
+          user_id: string
+          week_start_date: string
+        }
+        Insert: {
+          created_at?: string
+          household_id?: string | null
+          id?: string
+          plan: Json
+          updated_at?: string
+          user_id: string
+          week_start_date: string
+        }
+        Update: {
+          created_at?: string
+          household_id?: string | null
+          id?: string
+          plan?: Json
+          updated_at?: string
+          user_id?: string
+          week_start_date?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
