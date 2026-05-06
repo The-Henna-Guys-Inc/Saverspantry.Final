@@ -4,7 +4,7 @@ import { EquivalencyEngine } from "@/components/EquivalencyEngine";
 import { RecipeGenerator } from "@/components/RecipeGenerator";
 import { Header } from "@/components/Header";
 import { Card } from "@/components/ui/card";
-import { ArrowLeftRight, Sparkles, ChefHat, PiggyBank } from "lucide-react";
+import { ArrowLeftRight, Sparkles, ChefHat, Beef } from "lucide-react";
 
 const Index = () => {
   return (
@@ -124,7 +124,7 @@ const Index = () => {
       <section className="container max-w-4xl mx-auto px-6 py-20 sm:py-24">
         <a href="/planner" className="block">
           <Card className="p-10 sm:p-14 rounded-[2rem] bg-gradient-leaf border-0 shadow-glow text-center hover:shadow-soft transition-smooth">
-            <PiggyBank className="h-10 w-10 text-primary-foreground mx-auto mb-4" />
+            <Beef className="h-10 w-10 text-primary-foreground mx-auto mb-4" />
             <h2 className="text-3xl sm:text-4xl font-bold text-primary-foreground">
               Build your weekly plan — for less.
             </h2>
