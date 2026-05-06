@@ -27,6 +27,9 @@ const DIET_STYLES = [
   { value: "pescatarian", label: "Pescatarian" },
 ];
 
+const RESTRICTIONS = ["Halal", "Kosher", "Vegetarian"] as const;
+type Restriction = typeof RESTRICTIONS[number];
+
 // ISO Monday of current week
 const mondayOf = (d = new Date()) => {
   const x = new Date(d);
