@@ -9,6 +9,7 @@ import Auth from "./pages/Auth.tsx";
 import Library from "./pages/Library.tsx";
 import Planner from "./pages/Planner.tsx";
 import Pantry from "./pages/Pantry.tsx";
+import PantryCalendar from "./pages/PantryCalendar.tsx";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/library" element={<Library />} />
           <Route path="/planner" element={<Planner />} />
           <Route path="/pantry" element={<Pantry />} />
+          <Route path="/pantry/calendar" element={<PantryCalendar />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
