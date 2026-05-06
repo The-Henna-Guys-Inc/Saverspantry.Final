@@ -22,18 +22,26 @@ type Result = {
 };
 
 const EXAMPLES = ["200g chicken breast", "2 large eggs", "1 cup Greek yogurt", "150g salmon"];
+const RESTRICTIONS = ["Halal", "Kosher", "Vegetarian"] as const;
+type Restriction = typeof RESTRICTIONS[number];
 
 export const EquivalencyEngine = () => {
   const [food, setFood] = useState("");
+  const [restrictions, setRestrictions] = useState<Restriction[]>([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
+
+  const toggle = (r: Restriction) =>
+    setRestrictions((prev) => (prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]));
 
   const find = async (q: string) => {
     if (!q.trim()) return;
     setLoading(true);
     setResult(null);
     try {
-      const { data, error } = await supabase.functions.invoke("equivalency-swap", { body: { food: q } });
+      const { data, error } = await supabase.functions.invoke("equivalency-swap", {
+        body: { food: q, dietary_prefs: restrictions.map((r) => r.toLowerCase()) },
+      });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data);
@@ -58,6 +66,22 @@ export const EquivalencyEngine = () => {
           <span className="ml-2 hidden sm:inline">Find swaps</span>
         </Button>
       </form>
+
+      <div className="flex flex-wrap gap-2 mt-3">
+        {RESTRICTIONS.map((r) => (
+          <button
+            key={r}
+            onClick={() => toggle(r)}
+            className={`text-xs px-3 py-1.5 rounded-full transition-smooth ${
+              restrictions.includes(r)
+                ? "bg-primary text-primary-foreground shadow-soft"
+                : "bg-accent/20 text-foreground hover:bg-accent/30"
+            }`}
+          >
+            {r}
+          </button>
+        ))}
+      </div>
 
       <div className="flex flex-wrap gap-2 mt-3">
         {EXAMPLES.map((s) => (

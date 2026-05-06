@@ -20,12 +20,18 @@ type Recipe = {
 };
 
 const CUISINES = ["Indian", "Italian", "Mexican", "Chinese", "Mediterranean", "Thai"];
+const RESTRICTIONS = ["Halal", "Kosher", "Vegetarian"] as const;
+type Restriction = typeof RESTRICTIONS[number];
 
 export const RecipeGenerator = () => {
   const [ingredients, setIngredients] = useState("");
   const [cuisine, setCuisine] = useState("Mediterranean");
+  const [restrictions, setRestrictions] = useState<Restriction[]>([]);
   const [loading, setLoading] = useState(false);
   const [recipe, setRecipe] = useState<Recipe | null>(null);
+
+  const toggle = (r: Restriction) =>
+    setRestrictions((prev) => (prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]));
 
   const generate = async () => {
     if (!ingredients.trim()) {
@@ -36,7 +42,7 @@ export const RecipeGenerator = () => {
     setRecipe(null);
     try {
       const { data, error } = await supabase.functions.invoke("recipe-generate", {
-        body: { ingredients, cuisine },
+        body: { ingredients, cuisine, dietary_prefs: restrictions.map((r) => r.toLowerCase()) },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -76,6 +82,25 @@ export const RecipeGenerator = () => {
               }`}
             >
               {c}
+            </button>
+          ))}
+        </div>
+
+        <label className="block text-xs uppercase tracking-wider text-muted-foreground font-semibold mt-5 mb-2">
+          Dietary restrictions
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {RESTRICTIONS.map((r) => (
+            <button
+              key={r}
+              onClick={() => toggle(r)}
+              className={`text-sm px-4 py-2 rounded-full transition-smooth ${
+                restrictions.includes(r)
+                  ? "bg-primary text-primary-foreground shadow-soft"
+                  : "bg-secondary text-secondary-foreground hover:bg-muted"
+              }`}
+            >
+              {r}
             </button>
           ))}
         </div>
