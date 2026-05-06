@@ -153,6 +153,25 @@ const Planner = () => {
                 placeholder="e.g. Mediterranean" className="rounded-xl mt-1" />
             </div>
           </div>
+          <div className="mt-5">
+            <Label className="text-xs">Dietary restrictions</Label>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {RESTRICTIONS.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => toggleRestriction(r)}
+                  className={`text-xs px-3 py-1.5 rounded-full transition-smooth ${
+                    restrictions.includes(r)
+                      ? "bg-primary text-primary-foreground shadow-soft"
+                      : "bg-secondary text-secondary-foreground hover:bg-muted"
+                  }`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="mt-5 flex gap-3">
             <Button variant="hero" onClick={generate} disabled={genLoading} className="rounded-xl">
               {genLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : plan ? <RefreshCw className="h-4 w-4 mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
