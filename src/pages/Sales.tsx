@@ -180,13 +180,15 @@ export default function Sales() {
 }
 
 function SaleList({
-  sales, onConfirm, onFlag, confirming, confirmedIds,
+  sales, onConfirm, onFlag, confirming, confirmedIds, isAdmin, onRemove,
 }: {
   sales: Sale[];
   onConfirm: (id: string) => void;
   onFlag: (id: string) => void;
   confirming: string | null;
   confirmedIds: Set<string>;
+  isAdmin: boolean;
+  onRemove: (id: string) => void;
 }) {
   return (
     <div className="space-y-3">
