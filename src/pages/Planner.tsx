@@ -45,6 +45,9 @@ const Planner = () => {
   const [budget, setBudget] = useState<string>("");
   const [cuisine, setCuisine] = useState("");
   const [dietStyle, setDietStyle] = useState("balanced");
+  const [restrictions, setRestrictions] = useState<Restriction[]>([]);
+  const toggleRestriction = (r: Restriction) =>
+    setRestrictions((prev) => (prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]));
   const [plan, setPlan] = useState<Plan | null>(null);
   const [grocery, setGrocery] = useState<Grocery | null>(null);
   const [genLoading, setGenLoading] = useState(false);
@@ -69,7 +72,7 @@ const Planner = () => {
     setGrocery(null);
     try {
       const { data, error } = await supabase.functions.invoke("meal-plan-generate", {
-        body: { household_size: householdSize, budget_usd: budget ? Number(budget) : undefined, cuisine_focus: cuisine || undefined, diet_style: dietStyle },
+        body: { household_size: householdSize, budget_usd: budget ? Number(budget) : undefined, cuisine_focus: cuisine || undefined, diet_style: dietStyle, dietary_prefs: restrictions.map((r) => r.toLowerCase()) },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
