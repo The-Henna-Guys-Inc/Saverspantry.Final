@@ -127,9 +127,12 @@ export default function Sales() {
               Some verified by stores, some by the community. We never rank by paid placement.
             </p>
           </div>
-          <Button asChild variant="hero" size="sm" className="rounded-xl">
-            <Link to="/watchlist">Manage watchlist</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            {isAdmin && user && <AdminSaleDialog userId={user.id} onCreated={loadSales} />}
+            <Button asChild variant="hero" size="sm" className="rounded-xl">
+              <Link to="/watchlist">Manage watchlist</Link>
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="watching" className="w-full">
