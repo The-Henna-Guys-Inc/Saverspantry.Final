@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Sprout, LogOut, BookmarkCheck, CalendarDays, Refrigerator, Settings as SettingsIcon, Store as StoreIcon } from "lucide-react";
+import { Sprout, LogOut, BookmarkCheck, CalendarDays, Refrigerator, Settings as SettingsIcon, Store as StoreIcon, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { SavingsCounter } from "@/components/SavingsCounter";
 
@@ -40,6 +40,9 @@ export const Header = () => {
               </Button>
               <Button asChild variant="ghost" size="sm" className="rounded-xl">
                 <Link to="/stores"><StoreIcon className="h-4 w-4 mr-1.5" />Stores</Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="rounded-xl">
+                <Link to="/sales"><Tag className="h-4 w-4 mr-1.5" />Sales</Link>
               </Button>
               <SavingsCounter />
               <Button asChild variant="ghost" size="sm" className="rounded-xl">
