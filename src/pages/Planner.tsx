@@ -256,7 +256,9 @@ const Planner = () => {
           </>
         )}
 
-        {grouped && (
+        {grouped && (() => {
+          const cuisineSummary = summarizeCuisines(grocery!.items);
+          return (
           <div id="grocery-print">
             <div className="flex items-baseline justify-between mb-2">
               <h2 className="text-xl font-semibold text-primary">Grocery list</h2>
@@ -266,6 +268,10 @@ const Planner = () => {
                 </span>
               </div>
             </div>
+            <SpecialtyStoreBanner
+              topCuisines={cuisineSummary.topCuisines}
+              matchCount={cuisineSummary.hints.length}
+            />
             <div className="flex flex-wrap gap-2 mb-4 print:hidden">
               <Button variant="outline" size="sm" onClick={copyList} className="rounded-xl">
                 <Copy className="h-3.5 w-3.5 mr-1.5" />Copy
