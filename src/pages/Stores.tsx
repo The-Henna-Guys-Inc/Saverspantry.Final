@@ -6,8 +6,10 @@ import { Header } from "@/components/Header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, MapPin, Store as StoreIcon, ExternalLink, Heart, Search } from "lucide-react";
+import { Loader2, MapPin, Store as StoreIcon, ExternalLink, Heart, Search, Pencil } from "lucide-react";
 import { toast } from "sonner";
+import { AdminStoreDialog, type EditableStore } from "@/components/AdminStoreDialog";
+import { AdminStoreCsvUpload } from "@/components/AdminStoreCsvUpload";
 
 type Store = {
   id: string;
