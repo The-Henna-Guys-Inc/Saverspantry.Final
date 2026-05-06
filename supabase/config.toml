@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.recipe-generate]
 verify_jwt = false
+
+[functions.meal-plan-generate]
+verify_jwt = false
+
+[functions.grocery-list-generate]
+verify_jwt = false
