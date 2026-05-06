@@ -18,8 +18,10 @@ export function AdminSaleDialog({ userId, onCreated }: { userId: string; onCreat
     sale_price_usd: "",
     regular_price_usd: "",
     pack_size: "",
+    address: "",
     city: "",
     region: "",
+    google_maps_url: "",
     ends_in_days: "7",
   });
 
