@@ -94,8 +94,11 @@ const Planner = () => {
     if (!plan) return;
     setGroceryLoading(true);
     try {
+      const { data: pantryRows } = await supabase
+        .from("pantry_items")
+        .select("item, quantity, unit");
       const { data, error } = await supabase.functions.invoke("grocery-list-generate", {
-        body: { plan, household_size: householdSize },
+        body: { plan, household_size: householdSize, pantry: pantryRows ?? [] },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
