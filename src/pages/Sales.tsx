@@ -28,6 +28,8 @@ type Sale = {
   confirmation_count: number;
   city: string | null;
   region: string | null;
+  address: string | null;
+  google_maps_url: string | null;
 };
 
 const sourceMeta: Record<string, { label: string; cls: string }> = {
