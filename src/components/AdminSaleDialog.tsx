@@ -47,8 +47,10 @@ export function AdminSaleDialog({ userId, onCreated }: { userId: string; onCreat
       regular_price_usd: reg,
       savings_pct,
       pack_size: form.pack_size.trim() || null,
+      address: form.address.trim() || null,
       city: form.city.trim() || null,
       region: form.region.trim() || null,
+      google_maps_url: form.google_maps_url.trim() || null,
       ends_at,
       source: "admin_curated",
       moderation_status: "approved",
@@ -58,7 +60,7 @@ export function AdminSaleDialog({ userId, onCreated }: { userId: string; onCreat
     if (error) return toast.error(error.message);
     toast.success("Sale published.");
     setOpen(false);
-    setForm({ ...form, food_name: "", title: "", store_name: "", store_chain: "", sale_price_usd: "", regular_price_usd: "", pack_size: "", city: "", region: "" });
+    setForm({ ...form, food_name: "", title: "", store_name: "", store_chain: "", sale_price_usd: "", regular_price_usd: "", pack_size: "", address: "", city: "", region: "", google_maps_url: "" });
     onCreated();
   };
 
