@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Sprout, LogOut, BookmarkCheck, CalendarDays } from "lucide-react";
+import { Sprout, LogOut, BookmarkCheck, CalendarDays, Refrigerator } from "lucide-react";
 import { toast } from "sonner";
 
 export const Header = () => {
