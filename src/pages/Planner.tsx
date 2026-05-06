@@ -7,14 +7,25 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Sparkles, ShoppingCart, RefreshCw, Calendar } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, Sparkles, ShoppingCart, RefreshCw, Calendar, Info } from "lucide-react";
 import { toast } from "sonner";
 
 type Meal = { title: string; main_ingredients: string[]; estimated_cost_usd: number; time_minutes: number };
 type Day = { day: string; breakfast: Meal; lunch: Meal; dinner: Meal };
 type Plan = { days: Day[]; total_estimated_cost_usd: number; budget_tip: string };
-type GroceryItem = { item: string; quantity: string; category: string; estimated_cost_usd: number };
-type Grocery = { items: GroceryItem[]; total_estimated_cost_usd: number };
+type GroceryItem = { item: string; quantity: string; category: string; estimated_cost_low_usd: number; estimated_cost_high_usd: number };
+type Grocery = { items: GroceryItem[]; total_low_usd: number; total_high_usd: number };
+
+const DIET_STYLES = [
+  { value: "balanced", label: "Balanced" },
+  { value: "high-protein", label: "High protein" },
+  { value: "keto", label: "Keto" },
+  { value: "vegetarian", label: "Vegetarian" },
+  { value: "vegan", label: "Vegan" },
+  { value: "mediterranean", label: "Mediterranean" },
+  { value: "pescatarian", label: "Pescatarian" },
+];
 
 // ISO Monday of current week
 const mondayOf = (d = new Date()) => {
