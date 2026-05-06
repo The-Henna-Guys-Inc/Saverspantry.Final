@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { AdminSaleDialog } from "@/components/AdminSaleDialog";
+import { AdminSaleCsvUpload } from "@/components/AdminSaleCsvUpload";
 
 type Sale = {
   id: string;
