@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { AdminSaleDialog } from "@/components/AdminSaleDialog";
+import { AdminSaleCsvUpload } from "@/components/AdminSaleCsvUpload";
 
 type Sale = {
   id: string;
@@ -128,6 +129,7 @@ export default function Sales() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            {isAdmin && user && <AdminSaleCsvUpload userId={user.id} onCreated={loadSales} />}
             {isAdmin && user && <AdminSaleDialog userId={user.id} onCreated={loadSales} />}
             <Button asChild variant="hero" size="sm" className="rounded-xl">
               <Link to="/watchlist">Manage watchlist</Link>
