@@ -6,10 +6,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Tag, ThumbsUp, Flag, Loader2, MapPin } from "lucide-react";
+import { Tag, ThumbsUp, Flag, Loader2, MapPin, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
+import { AdminSaleDialog } from "@/components/AdminSaleDialog";
 
 type Sale = {
   id: string;
@@ -42,16 +43,28 @@ export default function Sales() {
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState<string | null>(null);
   const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set());
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
   }, [authLoading, user, navigate]);
 
+  const loadSales = async () => {
+    const { data: salesData } = await supabase
+      .from("sale_observations")
+      .select("*")
+      .in("moderation_status", ["auto_approved", "approved"])
+      .gt("ends_at", new Date().toISOString())
+      .order("ends_at", { ascending: true })
+      .limit(100);
+    setSales((salesData ?? []) as Sale[]);
+  };
+
   useEffect(() => {
     if (!user) return;
     (async () => {
       setLoading(true);
-      const [{ data: salesData }, { data: wl }, { data: confirms }] = await Promise.all([
+      const [{ data: salesData }, { data: wl }, { data: confirms }, { data: roles }] = await Promise.all([
         supabase
           .from("sale_observations")
           .select("*")
@@ -61,10 +74,12 @@ export default function Sales() {
           .limit(100),
         supabase.from("watchlist_items").select("food_name").eq("user_id", user.id),
         supabase.from("sale_confirmations").select("sale_observation_id").eq("user_id", user.id),
+        supabase.from("user_roles").select("role").eq("user_id", user.id),
       ]);
       setSales((salesData ?? []) as Sale[]);
       setWatchedFoods((wl ?? []).map((w: any) => w.food_name.toLowerCase()));
       setConfirmedIds(new Set((confirms ?? []).map((c: any) => c.sale_observation_id)));
+      setIsAdmin((roles ?? []).some((r: any) => r.role === "admin"));
       setLoading(false);
     })();
   }, [user]);
@@ -93,6 +108,14 @@ export default function Sales() {
     toast.success("Reported. Thanks for keeping the feed clean.");
   };
 
+  const removeSale = async (saleId: string) => {
+    if (!window.confirm("Remove this sale from the feed?")) return;
+    const { error } = await supabase.from("sale_observations").delete().eq("id", saleId);
+    if (error) return toast.error(error.message);
+    setSales((prev) => prev.filter((s) => s.id !== saleId));
+    toast.success("Removed.");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -104,9 +127,12 @@ export default function Sales() {
               Some verified by stores, some by the community. We never rank by paid placement.
             </p>
           </div>
-          <Button asChild variant="hero" size="sm" className="rounded-xl">
-            <Link to="/watchlist">Manage watchlist</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            {isAdmin && user && <AdminSaleDialog userId={user.id} onCreated={loadSales} />}
+            <Button asChild variant="hero" size="sm" className="rounded-xl">
+              <Link to="/watchlist">Manage watchlist</Link>
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="watching" className="w-full">
@@ -132,7 +158,7 @@ export default function Sales() {
                 </Button>
               </Card>
             ) : (
-              <SaleList sales={matched} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} />
+              <SaleList sales={matched} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} isAdmin={isAdmin} onRemove={removeSale} />
             )}
           </TabsContent>
 
@@ -144,7 +170,7 @@ export default function Sales() {
                 <p className="text-sm text-muted-foreground">No active sales right now. Check back soon.</p>
               </Card>
             ) : (
-              <SaleList sales={sales} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} />
+              <SaleList sales={sales} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} isAdmin={isAdmin} onRemove={removeSale} />
             )}
           </TabsContent>
         </Tabs>
@@ -154,13 +180,15 @@ export default function Sales() {
 }
 
 function SaleList({
-  sales, onConfirm, onFlag, confirming, confirmedIds,
+  sales, onConfirm, onFlag, confirming, confirmedIds, isAdmin, onRemove,
 }: {
   sales: Sale[];
   onConfirm: (id: string) => void;
   onFlag: (id: string) => void;
   confirming: string | null;
   confirmedIds: Set<string>;
+  isAdmin: boolean;
+  onRemove: (id: string) => void;
 }) {
   return (
     <div className="space-y-3">
@@ -218,6 +246,11 @@ function SaleList({
                 <Button size="sm" variant="ghost" className="rounded-xl h-8 text-xs text-muted-foreground" onClick={() => onFlag(s.id)}>
                   <Flag className="h-3 w-3" />
                 </Button>
+                {isAdmin && (
+                  <Button size="sm" variant="ghost" className="rounded-xl h-8 text-xs text-destructive" onClick={() => onRemove(s.id)}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
               </div>
             </div>
           </Card>
