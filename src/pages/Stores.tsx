@@ -210,12 +210,23 @@ const Stores = () => {
                   </div>
                 )}
 
-                <div className="mt-4">
+                <div className="mt-4 flex items-center gap-2 flex-wrap">
                   <Button asChild variant="outline" size="sm" className="rounded-xl">
                     <a href={mapHref(s)} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="h-3.5 w-3.5 mr-1.5" />Open in Maps
                     </a>
                   </Button>
+                  {isAdmin && (
+                    <AdminStoreDialog
+                      onSaved={loadStores}
+                      store={s as EditableStore}
+                      trigger={
+                        <Button variant="ghost" size="sm" className="rounded-xl">
+                          <Pencil className="h-3.5 w-3.5 mr-1.5" />Edit
+                        </Button>
+                      }
+                    />
+                  )}
                 </div>
               </Card>
             ))}
