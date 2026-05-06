@@ -15,6 +15,7 @@ type Swap = {
   estimated_cost_usd: number;
   savings_percent: number;
   notes: string;
+  nutrient_coverage?: string[];
 };
 type Result = {
   original: { name: string; protein_g: number; calories_kcal: number; estimated_cost_usd: number };
@@ -129,6 +130,15 @@ export const EquivalencyEngine = () => {
                 <span>{s.protein_g.toFixed(0)}g protein</span>
                 <span className="font-semibold text-foreground">${s.estimated_cost_usd.toFixed(2)}</span>
               </div>
+              {s.nutrient_coverage && s.nutrient_coverage.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {s.nutrient_coverage.map((n, k) => (
+                    <span key={k} className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                      + {n}
+                    </span>
+                  ))}
+                </div>
+              )}
               {s.notes && <p className="text-xs text-muted-foreground italic mt-2">{s.notes}</p>}
             </Card>
           ))}
