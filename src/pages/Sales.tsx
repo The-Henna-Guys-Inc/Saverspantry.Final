@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Tag, ThumbsUp, Flag, Loader2, MapPin, Trash2, ExternalLink } from "lucide-react";
+import { Tag, ThumbsUp, Flag, Loader2, MapPin, Trash2, ExternalLink, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
@@ -162,7 +162,7 @@ export default function Sales() {
                 </Button>
               </Card>
             ) : (
-              <SaleList sales={matched} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} isAdmin={isAdmin} onRemove={removeSale} />
+              <SaleList sales={matched} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} isAdmin={isAdmin} onRemove={removeSale} userId={user?.id ?? ""} onRefresh={loadSales} />
             )}
           </TabsContent>
 
@@ -174,7 +174,7 @@ export default function Sales() {
                 <p className="text-sm text-muted-foreground">No active sales right now. Check back soon.</p>
               </Card>
             ) : (
-              <SaleList sales={sales} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} isAdmin={isAdmin} onRemove={removeSale} />
+              <SaleList sales={sales} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} isAdmin={isAdmin} onRemove={removeSale} userId={user?.id ?? ""} onRefresh={loadSales} />
             )}
           </TabsContent>
         </Tabs>
@@ -184,7 +184,7 @@ export default function Sales() {
 }
 
 function SaleList({
-  sales, onConfirm, onFlag, confirming, confirmedIds, isAdmin, onRemove,
+  sales, onConfirm, onFlag, confirming, confirmedIds, isAdmin, onRemove, userId, onRefresh,
 }: {
   sales: Sale[];
   onConfirm: (id: string) => void;
@@ -193,6 +193,8 @@ function SaleList({
   confirmedIds: Set<string>;
   isAdmin: boolean;
   onRemove: (id: string) => void;
+  userId: string;
+  onRefresh: () => void;
 }) {
   return (
     <div className="space-y-3">
@@ -266,9 +268,35 @@ function SaleList({
                   <Flag className="h-3 w-3" />
                 </Button>
                 {isAdmin && (
-                  <Button size="sm" variant="ghost" className="rounded-xl h-8 text-xs text-destructive" onClick={() => onRemove(s.id)}>
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
+                  <>
+                    <AdminSaleDialog
+                      userId={userId}
+                      onCreated={onRefresh}
+                      sale={{
+                        id: s.id,
+                        food_name: s.food_name,
+                        title: s.title,
+                        store_name: s.store_name,
+                        store_chain: s.store_chain,
+                        sale_price_usd: s.sale_price_usd,
+                        regular_price_usd: s.regular_price_usd,
+                        pack_size: s.pack_size,
+                        address: s.address,
+                        city: s.city,
+                        region: s.region,
+                        google_maps_url: s.google_maps_url,
+                        ends_at: s.ends_at,
+                      }}
+                      trigger={
+                        <Button size="sm" variant="ghost" className="rounded-xl h-8 text-xs">
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                      }
+                    />
+                    <Button size="sm" variant="ghost" className="rounded-xl h-8 text-xs text-destructive" onClick={() => onRemove(s.id)}>
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
