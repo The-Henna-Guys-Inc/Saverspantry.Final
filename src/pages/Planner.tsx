@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, ShoppingCart, RefreshCw, Calendar, Info } from "lucide-react";
+import { Loader2, Sparkles, ShoppingCart, RefreshCw, Calendar, Info, Copy, Share2, Printer } from "lucide-react";
 import { toast } from "sonner";
 
 type Meal = { title: string; main_ingredients: string[]; estimated_cost_usd: number; time_minutes: number };
@@ -50,6 +50,7 @@ const Planner = () => {
     setRestrictions((prev) => (prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]));
   const [plan, setPlan] = useState<Plan | null>(null);
   const [grocery, setGrocery] = useState<Grocery | null>(null);
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [genLoading, setGenLoading] = useState(false);
   const [groceryLoading, setGroceryLoading] = useState(false);
   const weekStart = mondayOf();
@@ -103,6 +104,7 @@ const Planner = () => {
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
       setGrocery(data as Grocery);
+      setChecked({});
       toast.success("Grocery list ready");
     } catch (e: any) {
       toast.error(e.message ?? "Could not build list");
@@ -117,6 +119,37 @@ const Planner = () => {
   const grouped = grocery ? grocery.items.reduce<Record<string, GroceryItem[]>>((acc, i) => {
     (acc[i.category] ||= []).push(i); return acc;
   }, {}) : null;
+
+  const keyOf = (it: GroceryItem) => `${it.category}::${it.item}`;
+  const toggleItem = (k: string) => setChecked((p) => ({ ...p, [k]: !p[k] }));
+
+  const listAsText = () => {
+    if (!grocery) return "";
+    const lines: string[] = [`Grocery list (week of ${weekStart})`, ""];
+    Object.entries(grouped!).forEach(([cat, items]) => {
+      lines.push(cat.toUpperCase());
+      items.forEach((it) => lines.push(`- ${it.item} · ${it.quantity}`));
+      lines.push("");
+    });
+    lines.push(`Estimated total: $${grocery.total_low_usd?.toFixed(2)}–$${grocery.total_high_usd?.toFixed(2)}`);
+    return lines.join("\n");
+  };
+
+  const copyList = async () => {
+    try {
+      await navigator.clipboard.writeText(listAsText());
+      toast.success("Copied to clipboard");
+    } catch { toast.error("Couldn't copy"); }
+  };
+
+  const shareList = async () => {
+    const text = listAsText();
+    if (navigator.share) {
+      try { await navigator.share({ title: "Grocery list", text }); } catch { /* user cancelled */ }
+    } else { copyList(); }
+  };
+
+  const printList = () => window.print();
 
   return (
     <main className="min-h-screen bg-background">
