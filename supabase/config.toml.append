@@ -1,0 +1,2 @@
+[functions.nutrition-lookup]
+verify_jwt = false
