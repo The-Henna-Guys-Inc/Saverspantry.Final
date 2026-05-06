@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, Trash2, Sparkles, ArrowLeftRight, ChefHat } from "lucide-react";
+import { Loader2, Trash2, Sparkles, ArrowLeftRight, ChefHat, Search } from "lucide-react";
 import { toast } from "sonner";
 
 type Row = { id: string; created_at: string; query?: string; food?: string; result?: any; recipe?: any };
