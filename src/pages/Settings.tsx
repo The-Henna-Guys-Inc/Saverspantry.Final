@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Save, Settings as SettingsIcon } from "lucide-react";
+import { Loader2, Save, Settings as SettingsIcon, TrendingDown } from "lucide-react";
 import { toast } from "sonner";
 
 const RESTRICTIONS = ["halal", "kosher", "vegetarian", "vegan", "gluten-free", "dairy-free", "nut-free"] as const;
@@ -22,15 +22,22 @@ const Settings = () => {
   const [zip, setZip] = useState("");
   const [dietStyle, setDietStyle] = useState<string>("balanced");
   const [restrictions, setRestrictions] = useState<string[]>([]);
+  const [savings, setSavings] = useState<{ total: number; count: number } | null>(null);
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("display_name, household_size, zip_code, dietary_prefs")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      const [{ data }, { data: swaps }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("display_name, household_size, zip_code, dietary_prefs")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("saved_swaps")
+          .select("result")
+          .eq("user_id", user.id),
+      ]);
       if (data) {
         setDisplayName(data.display_name ?? "");
         setHousehold(data.household_size ?? 2);
@@ -39,6 +46,22 @@ const Settings = () => {
         if (prefs.style) setDietStyle(prefs.style);
         if (Array.isArray(prefs.restrictions)) setRestrictions(prefs.restrictions);
       }
+      // Compute potential savings from equivalency engine history
+      let total = 0;
+      let count = 0;
+      for (const row of swaps ?? []) {
+        const r: any = row.result;
+        const origCost = Number(r?.original?.estimated_cost_usd ?? 0);
+        const swapCosts = (r?.swaps ?? [])
+          .map((s: any) => Number(s?.estimated_cost_usd ?? 0))
+          .filter((n: number) => n > 0);
+        if (origCost > 0 && swapCosts.length) {
+          const best = Math.min(...swapCosts);
+          const diff = origCost - best;
+          if (diff > 0) { total += diff; count += 1; }
+        }
+      }
+      setSavings({ total, count });
       setLoading(false);
     })();
   }, [user]);
@@ -76,6 +99,26 @@ const Settings = () => {
         <h1 className="text-3xl font-bold text-primary mb-2">Your preferences</h1>
         <p className="text-muted-foreground mb-8">These power your meal plans, grocery list, and price estimates.</p>
 
+        {savings && (
+          <Card className="p-5 rounded-3xl border-accent/30 bg-gradient-warm shadow-soft mb-6">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-accent/20 flex items-center justify-center shrink-0">
+                <TrendingDown className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">Your potential savings</div>
+                <div className="text-2xl font-bold text-primary tabular-nums">
+                  ${savings.total.toFixed(2)}
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {savings.count === 0
+                    ? "Save swaps from the Equivalency Engine to start tracking."
+                    : `Across ${savings.count} saved swap${savings.count === 1 ? "" : "s"} — picking the cheapest equivalent each time.`}
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : (
