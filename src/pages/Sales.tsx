@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Tag, ThumbsUp, Flag, Loader2, MapPin, Trash2 } from "lucide-react";
+import { Tag, ThumbsUp, Flag, Loader2, MapPin, Trash2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
@@ -28,6 +28,8 @@ type Sale = {
   confirmation_count: number;
   city: string | null;
   region: string | null;
+  address: string | null;
+  google_maps_url: string | null;
 };
 
 const sourceMeta: Record<string, { label: string; cls: string }> = {
@@ -213,9 +215,24 @@ function SaleList({
                 </div>
                 <h3 className="text-base font-semibold text-foreground mt-1.5">{s.title}</h3>
                 <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1.5">
-                  <MapPin className="h-3 w-3" />
-                  {s.store_name}{s.city ? ` · ${s.city}${s.region ? `, ${s.region}` : ""}` : ""}
+                  <MapPin className="h-3 w-3 shrink-0" />
+                  <span className="truncate">
+                    {s.store_name}{s.city ? ` · ${s.city}${s.region ? `, ${s.region}` : ""}` : ""}
+                  </span>
                 </p>
+                {s.address && (
+                  <p className="text-xs text-muted-foreground mt-0.5 pl-[18px]">{s.address}</p>
+                )}
+                {(s.google_maps_url || s.address) && (
+                  <a
+                    href={s.google_maps_url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.store_name} ${s.address ?? ""} ${s.city ?? ""} ${s.region ?? ""}`.trim())}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline mt-1 inline-flex items-center gap-1 pl-[18px]"
+                  >
+                    Open in Google Maps <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
               </div>
               <div className="text-right shrink-0">
                 <div className="text-xl font-bold text-primary tabular-nums">${Number(s.sale_price_usd).toFixed(2)}</div>

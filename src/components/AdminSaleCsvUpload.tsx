@@ -10,12 +10,12 @@ import { toast } from "sonner";
 const TEMPLATE_HEADERS = [
   "food_name", "title", "store_name", "store_chain",
   "sale_price_usd", "regular_price_usd", "pack_size",
-  "city", "region", "ends_in_days",
+  "address", "city", "region", "google_maps_url", "ends_in_days",
 ];
 
 const TEMPLATE_CSV = `${TEMPLATE_HEADERS.join(",")}
-basmati rice,Royal basmati 20 lb — $5 off,Patel Brothers,,19.99,24.99,20 lb bag,Edison,NJ,10
-chicken thighs,Boneless skinless thighs — $2/lb off,Costco,Costco,2.99,4.99,per lb,,,7
+basmati rice,Royal basmati 20 lb — $5 off,Patel Brothers,,19.99,24.99,20 lb bag,1681 Oak Tree Rd,Edison,NJ,https://maps.google.com/?q=Patel+Brothers+Edison+NJ,10
+chicken thighs,Boneless skinless thighs — $2/lb off,Costco,Costco,2.99,4.99,per lb,,,,,7
 `;
 
 type ParsedRow = {
@@ -75,8 +75,10 @@ function buildInsertPayload(data: Record<string, string>, userId: string) {
     regular_price_usd: reg,
     savings_pct,
     pack_size: data.pack_size?.trim() || null,
+    address: data.address?.trim() || null,
     city: data.city?.trim() || null,
     region: data.region?.trim() || null,
+    google_maps_url: data.google_maps_url?.trim() || null,
     ends_at: new Date(Date.now() + days * 86400000).toISOString(),
     source: "admin_curated",
     moderation_status: "approved",

@@ -18,8 +18,10 @@ export function AdminSaleDialog({ userId, onCreated }: { userId: string; onCreat
     sale_price_usd: "",
     regular_price_usd: "",
     pack_size: "",
+    address: "",
     city: "",
     region: "",
+    google_maps_url: "",
     ends_in_days: "7",
   });
 
@@ -45,8 +47,10 @@ export function AdminSaleDialog({ userId, onCreated }: { userId: string; onCreat
       regular_price_usd: reg,
       savings_pct,
       pack_size: form.pack_size.trim() || null,
+      address: form.address.trim() || null,
       city: form.city.trim() || null,
       region: form.region.trim() || null,
+      google_maps_url: form.google_maps_url.trim() || null,
       ends_at,
       source: "admin_curated",
       moderation_status: "approved",
@@ -56,7 +60,7 @@ export function AdminSaleDialog({ userId, onCreated }: { userId: string; onCreat
     if (error) return toast.error(error.message);
     toast.success("Sale published.");
     setOpen(false);
-    setForm({ ...form, food_name: "", title: "", store_name: "", store_chain: "", sale_price_usd: "", regular_price_usd: "", pack_size: "", city: "", region: "" });
+    setForm({ ...form, food_name: "", title: "", store_name: "", store_chain: "", sale_price_usd: "", regular_price_usd: "", pack_size: "", address: "", city: "", region: "", google_maps_url: "" });
     onCreated();
   };
 
@@ -82,6 +86,8 @@ export function AdminSaleDialog({ userId, onCreated }: { userId: string; onCreat
           <Field label="Ends in (days)"><Input type="number" value={form.ends_in_days} onChange={(e) => set("ends_in_days", e.target.value)} /></Field>
           <Field label="City"><Input value={form.city} onChange={(e) => set("city", e.target.value)} /></Field>
           <Field label="Region / state"><Input value={form.region} onChange={(e) => set("region", e.target.value)} /></Field>
+          <div className="col-span-2"><Field label="Street address" hint="e.g. 1681 Oak Tree Rd"><Input value={form.address} onChange={(e) => set("address", e.target.value)} /></Field></div>
+          <div className="col-span-2"><Field label="Google Maps URL" hint="Paste a maps.google.com link, or leave blank to auto-generate from address"><Input value={form.google_maps_url} onChange={(e) => set("google_maps_url", e.target.value)} placeholder="https://maps.google.com/..." /></Field></div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>

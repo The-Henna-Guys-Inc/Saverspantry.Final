@@ -194,12 +194,14 @@ export type Database = {
       }
       sale_observations: {
         Row: {
+          address: string | null
           city: string | null
           confirmation_count: number
           created_at: string
           ends_at: string
           flag_count: number
           food_name: string
+          google_maps_url: string | null
           id: string
           moderation_status: string
           pack_size: string | null
@@ -217,12 +219,14 @@ export type Database = {
           title: string
         }
         Insert: {
+          address?: string | null
           city?: string | null
           confirmation_count?: number
           created_at?: string
           ends_at: string
           flag_count?: number
           food_name: string
+          google_maps_url?: string | null
           id?: string
           moderation_status?: string
           pack_size?: string | null
@@ -240,12 +244,14 @@ export type Database = {
           title: string
         }
         Update: {
+          address?: string | null
           city?: string | null
           confirmation_count?: number
           created_at?: string
           ends_at?: string
           flag_count?: number
           food_name?: string
+          google_maps_url?: string | null
           id?: string
           moderation_status?: string
           pack_size?: string | null
