@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, Trash2, Sparkles, ArrowLeftRight, ChefHat } from "lucide-react";
+import { Loader2, Trash2, Sparkles, ArrowLeftRight, ChefHat, Search } from "lucide-react";
 import { toast } from "sonner";
 
 type Row = { id: string; created_at: string; query?: string; food?: string; result?: any; recipe?: any };
@@ -17,6 +18,13 @@ const Library = () => {
   const [swaps, setSwaps] = useState<Row[]>([]);
   const [recipes, setRecipes] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
+
+  const filt = (rows: Row[], pick: (r: Row) => string) =>
+    !q.trim() ? rows : rows.filter((r) => pick(r).toLowerCase().includes(q.toLowerCase()));
+  const fRecipes = useMemo(() => filt(recipes, (r) => `${r.recipe?.title ?? ""} ${r.recipe?.cuisine ?? ""}`), [recipes, q]);
+  const fSwaps = useMemo(() => filt(swaps, (r) => r.food ?? ""), [swaps, q]);
+  const fLookups = useMemo(() => filt(lookups, (r) => `${r.result?.food ?? ""} ${r.query ?? ""}`), [lookups, q]);
 
   const load = async () => {
     if (!user) return;
@@ -63,14 +71,21 @@ const Library = () => {
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : (
           <Tabs defaultValue="recipes">
-            <TabsList className="bg-secondary rounded-2xl mb-6">
-              <TabsTrigger value="recipes" className="rounded-xl">Recipes ({recipes.length})</TabsTrigger>
-              <TabsTrigger value="swaps" className="rounded-xl">Swaps ({swaps.length})</TabsTrigger>
-              <TabsTrigger value="lookups" className="rounded-xl">Lookups ({lookups.length})</TabsTrigger>
-            </TabsList>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <TabsList className="bg-secondary rounded-2xl">
+                <TabsTrigger value="recipes" className="rounded-xl">Recipes ({fRecipes.length})</TabsTrigger>
+                <TabsTrigger value="swaps" className="rounded-xl">Swaps ({fSwaps.length})</TabsTrigger>
+                <TabsTrigger value="lookups" className="rounded-xl">Lookups ({fLookups.length})</TabsTrigger>
+              </TabsList>
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search saved items"
+                  className="pl-9 rounded-xl" />
+              </div>
+            </div>
 
             <TabsContent value="recipes" className="space-y-3 m-0">
-              {recipes.length === 0 ? <Empty icon={ChefHat} label="recipes" cta="/#recipe" /> : recipes.map(r => (
+              {fRecipes.length === 0 ? <Empty icon={ChefHat} label="recipes" cta="/#recipe" /> : fRecipes.map(r => (
                 <Card key={r.id} className="p-5 rounded-2xl border-border/50 flex items-start justify-between gap-3">
                   <div>
                     <div className="text-xs uppercase tracking-wider text-accent">{r.recipe?.cuisine}</div>
@@ -85,7 +100,7 @@ const Library = () => {
             </TabsContent>
 
             <TabsContent value="swaps" className="space-y-3 m-0">
-              {swaps.length === 0 ? <Empty icon={ArrowLeftRight} label="swaps" cta="/#swap" /> : swaps.map(r => (
+              {fSwaps.length === 0 ? <Empty icon={ArrowLeftRight} label="swaps" cta="/#swap" /> : fSwaps.map(r => (
                 <Card key={r.id} className="p-5 rounded-2xl border-border/50 flex items-start justify-between gap-3">
                   <div>
                     <div className="text-xs uppercase tracking-wider text-muted-foreground">Original</div>
@@ -98,7 +113,7 @@ const Library = () => {
             </TabsContent>
 
             <TabsContent value="lookups" className="space-y-3 m-0">
-              {lookups.length === 0 ? <Empty icon={Sparkles} label="lookups" cta="/#lookup" /> : lookups.map(r => (
+              {fLookups.length === 0 ? <Empty icon={Sparkles} label="lookups" cta="/#lookup" /> : fLookups.map(r => (
                 <Card key={r.id} className="p-5 rounded-2xl border-border/50 flex items-start justify-between gap-3">
                   <div>
                     <h3 className="font-semibold text-primary">{r.result?.food ?? r.query}</h3>

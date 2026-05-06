@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, ShoppingCart, RefreshCw, Calendar, Info } from "lucide-react";
+import { Loader2, Sparkles, ShoppingCart, RefreshCw, Calendar, Info, Copy, Share2, Printer } from "lucide-react";
 import { toast } from "sonner";
 
 type Meal = { title: string; main_ingredients: string[]; estimated_cost_usd: number; time_minutes: number };
@@ -50,6 +50,7 @@ const Planner = () => {
     setRestrictions((prev) => (prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]));
   const [plan, setPlan] = useState<Plan | null>(null);
   const [grocery, setGrocery] = useState<Grocery | null>(null);
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [genLoading, setGenLoading] = useState(false);
   const [groceryLoading, setGroceryLoading] = useState(false);
   const weekStart = mondayOf();
@@ -103,6 +104,7 @@ const Planner = () => {
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
       setGrocery(data as Grocery);
+      setChecked({});
       toast.success("Grocery list ready");
     } catch (e: any) {
       toast.error(e.message ?? "Could not build list");
@@ -117,6 +119,37 @@ const Planner = () => {
   const grouped = grocery ? grocery.items.reduce<Record<string, GroceryItem[]>>((acc, i) => {
     (acc[i.category] ||= []).push(i); return acc;
   }, {}) : null;
+
+  const keyOf = (it: GroceryItem) => `${it.category}::${it.item}`;
+  const toggleItem = (k: string) => setChecked((p) => ({ ...p, [k]: !p[k] }));
+
+  const listAsText = () => {
+    if (!grocery) return "";
+    const lines: string[] = [`Grocery list (week of ${weekStart})`, ""];
+    Object.entries(grouped!).forEach(([cat, items]) => {
+      lines.push(cat.toUpperCase());
+      items.forEach((it) => lines.push(`- ${it.item} · ${it.quantity}`));
+      lines.push("");
+    });
+    lines.push(`Estimated total: $${grocery.total_low_usd?.toFixed(2)}–$${grocery.total_high_usd?.toFixed(2)}`);
+    return lines.join("\n");
+  };
+
+  const copyList = async () => {
+    try {
+      await navigator.clipboard.writeText(listAsText());
+      toast.success("Copied to clipboard");
+    } catch { toast.error("Couldn't copy"); }
+  };
+
+  const shareList = async () => {
+    const text = listAsText();
+    if (navigator.share) {
+      try { await navigator.share({ title: "Grocery list", text }); } catch { /* user cancelled */ }
+    } else { copyList(); }
+  };
+
+  const printList = () => window.print();
 
   return (
     <main className="min-h-screen bg-background">
@@ -222,7 +255,7 @@ const Planner = () => {
         )}
 
         {grouped && (
-          <div>
+          <div id="grocery-print">
             <div className="flex items-baseline justify-between mb-2">
               <h2 className="text-xl font-semibold text-primary">Grocery list</h2>
               <div className="text-sm text-muted-foreground">
@@ -231,7 +264,18 @@ const Planner = () => {
                 </span>
               </div>
             </div>
-            <div className="flex items-start gap-2 text-xs text-muted-foreground mb-4 p-3 rounded-xl bg-secondary/60">
+            <div className="flex flex-wrap gap-2 mb-4 print:hidden">
+              <Button variant="outline" size="sm" onClick={copyList} className="rounded-xl">
+                <Copy className="h-3.5 w-3.5 mr-1.5" />Copy
+              </Button>
+              <Button variant="outline" size="sm" onClick={shareList} className="rounded-xl">
+                <Share2 className="h-3.5 w-3.5 mr-1.5" />Share
+              </Button>
+              <Button variant="outline" size="sm" onClick={printList} className="rounded-xl">
+                <Printer className="h-3.5 w-3.5 mr-1.5" />Print
+              </Button>
+            </div>
+            <div className="flex items-start gap-2 text-xs text-muted-foreground mb-4 p-3 rounded-xl bg-secondary/60 print:hidden">
               <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
               <span>AI estimate — actual prices vary by store, region, and sales. Live local pricing is coming soon.</span>
             </div>
@@ -240,12 +284,26 @@ const Planner = () => {
                 <Card key={cat} className="p-5 rounded-2xl border-border/50">
                   <div className="text-xs uppercase tracking-wider text-accent mb-2">{cat}</div>
                   <ul className="space-y-1.5">
-                    {items.map((it, i) => (
-                      <li key={i} className="flex justify-between text-sm gap-3">
-                        <span className="text-foreground/90">{it.item} <span className="text-muted-foreground">· {it.quantity}</span></span>
-                        <span className="text-muted-foreground whitespace-nowrap">${it.estimated_cost_low_usd?.toFixed(2)}–${it.estimated_cost_high_usd?.toFixed(2)}</span>
-                      </li>
-                    ))}
+                    {items.map((it, i) => {
+                      const k = keyOf(it);
+                      const done = !!checked[k];
+                      return (
+                        <li key={i} className="flex items-start justify-between text-sm gap-3">
+                          <button type="button" onClick={() => toggleItem(k)}
+                            className="flex items-start gap-2 text-left flex-1 group">
+                            <span className={`mt-0.5 h-4 w-4 rounded border flex items-center justify-center shrink-0 transition-smooth ${
+                              done ? "bg-primary border-primary" : "border-border group-hover:border-primary/60"
+                            }`}>
+                              {done && <span className="text-primary-foreground text-[10px] leading-none">✓</span>}
+                            </span>
+                            <span className={done ? "line-through text-muted-foreground" : "text-foreground/90"}>
+                              {it.item} <span className="text-muted-foreground">· {it.quantity}</span>
+                            </span>
+                          </button>
+                          <span className="text-muted-foreground whitespace-nowrap">${it.estimated_cost_low_usd?.toFixed(2)}–${it.estimated_cost_high_usd?.toFixed(2)}</span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </Card>
               ))}

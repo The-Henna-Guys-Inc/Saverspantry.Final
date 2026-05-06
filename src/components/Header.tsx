@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Sprout, LogOut, BookmarkCheck, CalendarDays, Refrigerator } from "lucide-react";
+import { Sprout, LogOut, BookmarkCheck, CalendarDays, Refrigerator, Settings as SettingsIcon } from "lucide-react";
 import { toast } from "sonner";
 
 export const Header = () => {
@@ -39,6 +39,9 @@ export const Header = () => {
               </Button>
               <Button asChild variant="ghost" size="sm" className="rounded-xl">
                 <Link to="/library"><BookmarkCheck className="h-4 w-4 mr-1.5" />Library</Link>
+              </Button>
+              <Button asChild variant="ghost" size="icon" className="rounded-xl">
+                <Link to="/settings" aria-label="Settings"><SettingsIcon className="h-4 w-4" /></Link>
               </Button>
               <Button onClick={signOut} variant="ghost" size="sm" className="rounded-xl">
                 <LogOut className="h-4 w-4" />
