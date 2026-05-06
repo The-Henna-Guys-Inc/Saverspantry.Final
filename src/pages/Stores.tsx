@@ -48,19 +48,26 @@ const Stores = () => {
   const [visited, setVisited] = useState<Record<string, boolean>>({});
   const [active, setActive] = useState<string[]>([]);
   const [q, setQ] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const loadStores = async () => {
+    const { data: s } = await supabase
+      .from("specialty_stores")
+      .select("id, name, chain_name, cuisine_specialties, price_tier, description, address, city, region, latitude, longitude")
+      .order("name");
+    setStores((s as Store[]) ?? []);
+  };
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [{ data: s }, { data: v }] = await Promise.all([
-        supabase
-          .from("specialty_stores")
-          .select("id, name, chain_name, cuisine_specialties, price_tier, description, address, city, region, latitude, longitude")
-          .order("name"),
+      const [{ data: v }, { data: roles }] = await Promise.all([
         supabase.from("store_visits").select("store_id").eq("user_id", user.id),
+        supabase.from("user_roles").select("role").eq("user_id", user.id),
       ]);
-      setStores((s as Store[]) ?? []);
       setVisited(Object.fromEntries((v ?? []).map((r: any) => [r.store_id, true])));
+      setIsAdmin((roles ?? []).some((r: any) => r.role === "admin"));
+      await loadStores();
       setLoading(false);
     })();
   }, [user]);
