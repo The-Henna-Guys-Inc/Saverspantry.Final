@@ -27,6 +27,9 @@ const DIET_STYLES = [
   { value: "pescatarian", label: "Pescatarian" },
 ];
 
+const RESTRICTIONS = ["Halal", "Kosher", "Vegetarian"] as const;
+type Restriction = typeof RESTRICTIONS[number];
+
 // ISO Monday of current week
 const mondayOf = (d = new Date()) => {
   const x = new Date(d);
@@ -42,6 +45,9 @@ const Planner = () => {
   const [budget, setBudget] = useState<string>("");
   const [cuisine, setCuisine] = useState("");
   const [dietStyle, setDietStyle] = useState("balanced");
+  const [restrictions, setRestrictions] = useState<Restriction[]>([]);
+  const toggleRestriction = (r: Restriction) =>
+    setRestrictions((prev) => (prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]));
   const [plan, setPlan] = useState<Plan | null>(null);
   const [grocery, setGrocery] = useState<Grocery | null>(null);
   const [genLoading, setGenLoading] = useState(false);
@@ -66,7 +72,7 @@ const Planner = () => {
     setGrocery(null);
     try {
       const { data, error } = await supabase.functions.invoke("meal-plan-generate", {
-        body: { household_size: householdSize, budget_usd: budget ? Number(budget) : undefined, cuisine_focus: cuisine || undefined, diet_style: dietStyle },
+        body: { household_size: householdSize, budget_usd: budget ? Number(budget) : undefined, cuisine_focus: cuisine || undefined, diet_style: dietStyle, dietary_prefs: restrictions.map((r) => r.toLowerCase()) },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -145,6 +151,25 @@ const Planner = () => {
               <Label htmlFor="c" className="text-xs">Cuisine focus (optional)</Label>
               <Input id="c" value={cuisine} onChange={e => setCuisine(e.target.value)}
                 placeholder="e.g. Mediterranean" className="rounded-xl mt-1" />
+            </div>
+          </div>
+          <div className="mt-5">
+            <Label className="text-xs">Dietary restrictions</Label>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {RESTRICTIONS.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => toggleRestriction(r)}
+                  className={`text-xs px-3 py-1.5 rounded-full transition-smooth ${
+                    restrictions.includes(r)
+                      ? "bg-primary text-primary-foreground shadow-soft"
+                      : "bg-secondary text-secondary-foreground hover:bg-muted"
+                  }`}
+                >
+                  {r}
+                </button>
+              ))}
             </div>
           </div>
           <div className="mt-5 flex gap-3">

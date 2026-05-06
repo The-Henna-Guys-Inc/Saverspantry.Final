@@ -66,7 +66,7 @@ Reuse ingredients across meals to reduce waste. Use realistic 2026 US grocery pr
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "You are a practical, money-conscious meal planner. Always call return_meal_plan. Honor the requested diet style strictly (keto = <30g carbs/day, vegetarian = no meat or fish, vegan = no animal products, high-protein = ≥30g protein per main meal, mediterranean = olive oil + fish + legumes). Keep meals simple and realistic." },
+          { role: "system", content: "You are a practical, money-conscious meal planner. Always call return_meal_plan. Honor the requested diet style strictly (keto = <30g carbs/day, vegetarian = no meat or fish, vegan = no animal products, high-protein = ≥30g protein per main meal, mediterranean = olive oil + fish + legumes). Strictly honor dietary restrictions: halal = no pork or alcohol and meat must be halal-sourced; kosher = no pork/shellfish and never mix meat with dairy in the same meal; vegetarian = no meat or fish. Keep meals simple and realistic." },
           { role: "user", content: userMsg },
         ],
         tools: [TOOL],

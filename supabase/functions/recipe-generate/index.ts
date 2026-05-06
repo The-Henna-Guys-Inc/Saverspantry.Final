@@ -54,9 +54,10 @@ const TOOL = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const { ingredients, cuisine } = await req.json();
+    const { ingredients, cuisine, dietary_prefs = [] } = await req.json();
     if (!ingredients || !cuisine) return new Response(JSON.stringify({ error: "Missing ingredients or cuisine" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
+    const prefs = Array.isArray(dietary_prefs) ? dietary_prefs.join(", ") : "";
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -64,8 +65,8 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "You are a friendly home cook. Generate one practical recipe for the given cuisine using mostly the available ingredients (assume basic pantry: salt, pepper, oil, common spices). Realistic US grocery prices. Always call return_recipe." },
-          { role: "user", content: `Cuisine: ${cuisine}\nAvailable ingredients: ${ingredients}` },
+          { role: "system", content: "You are a friendly home cook. Generate one practical recipe for the given cuisine using mostly the available ingredients (assume basic pantry: salt, pepper, oil, common spices). Realistic US grocery prices. Strictly honor any dietary restrictions: halal = no pork or alcohol and meat must be halal-sourced; kosher = no pork/shellfish and never mix meat with dairy; vegetarian = no meat or fish. Always call return_recipe." },
+          { role: "user", content: `Cuisine: ${cuisine}\nAvailable ingredients: ${ingredients}\nDietary restrictions: ${prefs || "none"}` },
         ],
         tools: [TOOL],
         tool_choice: { type: "function", function: { name: "return_recipe" } },
