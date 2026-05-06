@@ -65,9 +65,10 @@ const TOOL = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const { food } = await req.json();
+    const { food, dietary_prefs = [] } = await req.json();
     if (!food) return new Response(JSON.stringify({ error: "Missing 'food'" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
+    const prefs = Array.isArray(dietary_prefs) ? dietary_prefs.join(", ") : "";
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -75,8 +76,8 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "You are a nutrition equivalency engine. Given a food + portion, return 3 alternative combinations that match the protein and calories within ~15% but typically cost less. Use realistic US grocery prices. Be practical, never moralizing. Always call return_swaps." },
-          { role: "user", content: `Find swaps for: ${food}` },
+          { role: "system", content: "You are a nutrition equivalency engine. Given a food + portion, return 3 alternative combinations that match the protein and calories within ~15% but typically cost less. Use realistic US grocery prices. Strictly honor any dietary restrictions: halal = no pork or alcohol and meat must be halal-sourced; kosher = no pork/shellfish and never combine meat with dairy in one swap; vegetarian = no meat or fish. Be practical, never moralizing. Always call return_swaps." },
+          { role: "user", content: `Find swaps for: ${food}\nDietary restrictions: ${prefs || "none"}` },
         ],
         tools: [TOOL],
         tool_choice: { type: "function", function: { name: "return_swaps" } },
