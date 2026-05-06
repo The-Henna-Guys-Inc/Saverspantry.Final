@@ -109,7 +109,7 @@ export default function Sales() {
   };
 
   const removeSale = async (saleId: string) => {
-    if (!confirm("Remove this sale from the feed?")) return;
+    if (!window.confirm("Remove this sale from the feed?")) return;
     const { error } = await supabase.from("sale_observations").delete().eq("id", saleId);
     if (error) return toast.error(error.message);
     setSales((prev) => prev.filter((s) => s.id !== saleId));
