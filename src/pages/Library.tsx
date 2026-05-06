@@ -18,6 +18,13 @@ const Library = () => {
   const [swaps, setSwaps] = useState<Row[]>([]);
   const [recipes, setRecipes] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
+
+  const filt = (rows: Row[], pick: (r: Row) => string) =>
+    !q.trim() ? rows : rows.filter((r) => pick(r).toLowerCase().includes(q.toLowerCase()));
+  const fRecipes = useMemo(() => filt(recipes, (r) => `${r.recipe?.title ?? ""} ${r.recipe?.cuisine ?? ""}`), [recipes, q]);
+  const fSwaps = useMemo(() => filt(swaps, (r) => r.food ?? ""), [swaps, q]);
+  const fLookups = useMemo(() => filt(lookups, (r) => `${r.result?.food ?? ""} ${r.query ?? ""}`), [lookups, q]);
 
   const load = async () => {
     if (!user) return;
