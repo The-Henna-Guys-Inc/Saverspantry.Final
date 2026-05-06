@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2, ArrowLeftRight, TrendingDown } from "lucide-react";
 import { SaveButton } from "./SaveButton";
+import { WatchlistButton } from "./WatchlistButton";
 
 type Swap = {
   title: string;
@@ -105,7 +106,10 @@ export const EquivalencyEngine = () => {
                   <span className="font-semibold text-foreground ml-1">${result.original.estimated_cost_usd.toFixed(2)}</span>
                 </div>
               </div>
-              <SaveButton table="saved_swaps" payload={{ food: result.original.name, result }} />
+              <div className="flex items-center gap-2 shrink-0">
+                <WatchlistButton foodName={result.original.name} />
+                <SaveButton table="saved_swaps" payload={{ food: result.original.name, result }} />
+              </div>
             </div>
           </Card>
 
