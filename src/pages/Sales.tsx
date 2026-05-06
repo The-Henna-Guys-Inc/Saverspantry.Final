@@ -246,6 +246,11 @@ function SaleList({
                 <Button size="sm" variant="ghost" className="rounded-xl h-8 text-xs text-muted-foreground" onClick={() => onFlag(s.id)}>
                   <Flag className="h-3 w-3" />
                 </Button>
+                {isAdmin && (
+                  <Button size="sm" variant="ghost" className="rounded-xl h-8 text-xs text-destructive" onClick={() => onRemove(s.id)}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
               </div>
             </div>
           </Card>
