@@ -43,10 +43,22 @@ export default function Sales() {
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState<string | null>(null);
   const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set());
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
   }, [authLoading, user, navigate]);
+
+  const loadSales = async () => {
+    const { data: salesData } = await supabase
+      .from("sale_observations")
+      .select("*")
+      .in("moderation_status", ["auto_approved", "approved"])
+      .gt("ends_at", new Date().toISOString())
+      .order("ends_at", { ascending: true })
+      .limit(100);
+    setSales((salesData ?? []) as Sale[]);
+  };
 
   useEffect(() => {
     if (!user) return;
