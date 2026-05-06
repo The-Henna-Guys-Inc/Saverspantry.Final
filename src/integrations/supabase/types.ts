@@ -14,16 +14,165 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          dietary_prefs: Json
+          display_name: string | null
+          household_size: number
+          id: string
+          subscription_expires_at: string | null
+          subscription_tier: string
+          updated_at: string
+          user_id: string
+          zip_code: string | null
+        }
+        Insert: {
+          created_at?: string
+          dietary_prefs?: Json
+          display_name?: string | null
+          household_size?: number
+          id?: string
+          subscription_expires_at?: string | null
+          subscription_tier?: string
+          updated_at?: string
+          user_id: string
+          zip_code?: string | null
+        }
+        Update: {
+          created_at?: string
+          dietary_prefs?: Json
+          display_name?: string | null
+          household_size?: number
+          id?: string
+          subscription_expires_at?: string | null
+          subscription_tier?: string
+          updated_at?: string
+          user_id?: string
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
+      saved_lookups: {
+        Row: {
+          created_at: string
+          household_id: string | null
+          id: string
+          query: string
+          result: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          household_id?: string | null
+          id?: string
+          query: string
+          result: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          household_id?: string | null
+          id?: string
+          query?: string
+          result?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      saved_recipes: {
+        Row: {
+          created_at: string
+          household_id: string | null
+          id: string
+          recipe: Json
+          source: string
+          source_url: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          household_id?: string | null
+          id?: string
+          recipe: Json
+          source?: string
+          source_url?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          household_id?: string | null
+          id?: string
+          recipe?: Json
+          source?: string
+          source_url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      saved_swaps: {
+        Row: {
+          created_at: string
+          food: string
+          household_id: string | null
+          id: string
+          result: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          food: string
+          household_id?: string | null
+          id?: string
+          result: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          food?: string
+          household_id?: string | null
+          id?: string
+          result?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "household_owner" | "household_member"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +299,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "household_owner", "household_member"],
+    },
   },
 } as const
