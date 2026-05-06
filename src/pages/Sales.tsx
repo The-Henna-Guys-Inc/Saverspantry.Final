@@ -174,7 +174,7 @@ export default function Sales() {
                 <p className="text-sm text-muted-foreground">No active sales right now. Check back soon.</p>
               </Card>
             ) : (
-              <SaleList sales={sales} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} isAdmin={isAdmin} onRemove={removeSale} />
+              <SaleList sales={sales} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} isAdmin={isAdmin} onRemove={removeSale} userId={user?.id ?? ""} onRefresh={loadSales} />
             )}
           </TabsContent>
         </Tabs>
