@@ -44,6 +44,45 @@ export type Database = {
         }
         Relationships: []
       }
+      pantry_items: {
+        Row: {
+          category: string | null
+          created_at: string
+          expires_on: string | null
+          household_id: string | null
+          id: string
+          item: string
+          quantity: number
+          unit: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          expires_on?: string | null
+          household_id?: string | null
+          id?: string
+          item: string
+          quantity?: number
+          unit?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          expires_on?: string | null
+          household_id?: string | null
+          id?: string
+          item?: string
+          quantity?: number
+          unit?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
