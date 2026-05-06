@@ -6,10 +6,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Tag, ThumbsUp, Flag, Loader2, MapPin } from "lucide-react";
+import { Tag, ThumbsUp, Flag, Loader2, MapPin, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
+import { AdminSaleDialog } from "@/components/AdminSaleDialog";
 
 type Sale = {
   id: string;
