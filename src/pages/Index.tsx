@@ -122,15 +122,17 @@ const Index = () => {
 
       {/* CTA */}
       <section className="container max-w-4xl mx-auto px-6 py-20 sm:py-24">
-        <Card className="p-10 sm:p-14 rounded-[2rem] bg-gradient-leaf border-0 shadow-glow text-center">
-          <PiggyBank className="h-10 w-10 text-primary-foreground mx-auto mb-4" />
-          <h2 className="text-3xl sm:text-4xl font-bold text-primary-foreground">
-            Build your weekly plan — for less.
-          </h2>
-          <p className="mt-3 text-primary-foreground/80 max-w-lg mx-auto">
-            Auth, meal planning, and grocery lists roll out next.
-          </p>
-        </Card>
+        <a href="/planner" className="block">
+          <Card className="p-10 sm:p-14 rounded-[2rem] bg-gradient-leaf border-0 shadow-glow text-center hover:shadow-soft transition-smooth">
+            <PiggyBank className="h-10 w-10 text-primary-foreground mx-auto mb-4" />
+            <h2 className="text-3xl sm:text-4xl font-bold text-primary-foreground">
+              Build your weekly plan — for less.
+            </h2>
+            <p className="mt-3 text-primary-foreground/80 max-w-lg mx-auto">
+              Generate a 7-day meal plan and a smart grocery list in seconds.
+            </p>
+          </Card>
+        </a>
       </section>
 
       <footer className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground">
