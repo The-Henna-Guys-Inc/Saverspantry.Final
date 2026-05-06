@@ -64,7 +64,7 @@ export default function Sales() {
     if (!user) return;
     (async () => {
       setLoading(true);
-      const [{ data: salesData }, { data: wl }, { data: confirms }] = await Promise.all([
+      const [{ data: salesData }, { data: wl }, { data: confirms }, { data: roles }] = await Promise.all([
         supabase
           .from("sale_observations")
           .select("*")
@@ -74,10 +74,12 @@ export default function Sales() {
           .limit(100),
         supabase.from("watchlist_items").select("food_name").eq("user_id", user.id),
         supabase.from("sale_confirmations").select("sale_observation_id").eq("user_id", user.id),
+        supabase.from("user_roles").select("role").eq("user_id", user.id),
       ]);
       setSales((salesData ?? []) as Sale[]);
       setWatchedFoods((wl ?? []).map((w: any) => w.food_name.toLowerCase()));
       setConfirmedIds(new Set((confirms ?? []).map((c: any) => c.sale_observation_id)));
+      setIsAdmin((roles ?? []).some((r: any) => r.role === "admin"));
       setLoading(false);
     })();
   }, [user]);
