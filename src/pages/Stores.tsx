@@ -6,8 +6,10 @@ import { Header } from "@/components/Header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, MapPin, Store as StoreIcon, ExternalLink, Heart, Search } from "lucide-react";
+import { Loader2, MapPin, Store as StoreIcon, ExternalLink, Heart, Search, Pencil } from "lucide-react";
 import { toast } from "sonner";
+import { AdminStoreDialog, type EditableStore } from "@/components/AdminStoreDialog";
+import { AdminStoreCsvUpload } from "@/components/AdminStoreCsvUpload";
 
 type Store = {
   id: string;
@@ -46,19 +48,26 @@ const Stores = () => {
   const [visited, setVisited] = useState<Record<string, boolean>>({});
   const [active, setActive] = useState<string[]>([]);
   const [q, setQ] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const loadStores = async () => {
+    const { data: s } = await supabase
+      .from("specialty_stores")
+      .select("id, name, chain_name, cuisine_specialties, price_tier, description, address, city, region, latitude, longitude")
+      .order("name");
+    setStores((s as Store[]) ?? []);
+  };
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [{ data: s }, { data: v }] = await Promise.all([
-        supabase
-          .from("specialty_stores")
-          .select("id, name, chain_name, cuisine_specialties, price_tier, description, address, city, region, latitude, longitude")
-          .order("name"),
+      const [{ data: v }, { data: roles }] = await Promise.all([
         supabase.from("store_visits").select("store_id").eq("user_id", user.id),
+        supabase.from("user_roles").select("role").eq("user_id", user.id),
       ]);
-      setStores((s as Store[]) ?? []);
       setVisited(Object.fromEntries((v ?? []).map((r: any) => [r.store_id, true])));
+      setIsAdmin((roles ?? []).some((r: any) => r.role === "admin"));
+      await loadStores();
       setLoading(false);
     })();
   }, [user]);
@@ -106,7 +115,15 @@ const Stores = () => {
         <div className="flex items-center gap-2 text-accent text-xs font-semibold uppercase tracking-widest mb-2">
           <StoreIcon className="h-3.5 w-3.5" /> Stores
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">Cuisine-specific grocers</h1>
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <h1 className="text-3xl sm:text-4xl font-bold text-primary">Cuisine-specific grocers</h1>
+          {isAdmin && (
+            <div className="flex items-center gap-2 shrink-0">
+              <AdminStoreCsvUpload onCreated={loadStores} />
+              <AdminStoreDialog onSaved={loadStores} />
+            </div>
+          )}
+        </div>
         <p className="text-muted-foreground mb-6">
           Indian, Mexican, Asian, Middle Eastern and more — staples for these cuisines <strong className="font-semibold text-foreground">often cost 15-50% less in ethnic grocery stores</strong> than at mainstream supermarkets.
         </p>
@@ -193,12 +210,23 @@ const Stores = () => {
                   </div>
                 )}
 
-                <div className="mt-4">
+                <div className="mt-4 flex items-center gap-2 flex-wrap">
                   <Button asChild variant="outline" size="sm" className="rounded-xl">
                     <a href={mapHref(s)} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="h-3.5 w-3.5 mr-1.5" />Open in Maps
                     </a>
                   </Button>
+                  {isAdmin && (
+                    <AdminStoreDialog
+                      onSaved={loadStores}
+                      store={s as EditableStore}
+                      trigger={
+                        <Button variant="ghost" size="sm" className="rounded-xl">
+                          <Pencil className="h-3.5 w-3.5 mr-1.5" />Edit
+                        </Button>
+                      }
+                    />
+                  )}
                 </div>
               </Card>
             ))}
