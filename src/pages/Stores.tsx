@@ -108,7 +108,7 @@ const Stores = () => {
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">Cuisine-specific grocers</h1>
         <p className="text-muted-foreground mb-6">
-          Indian, Mexican, Asian, Middle Eastern and more — staples for these cuisines often cost 15-50% less here than at mainstream supermarkets.
+          Indian, Mexican, Asian, Middle Eastern and more — staples for these cuisines <strong className="font-semibold text-foreground">often cost 15-50% less in ethnic grocery stores</strong> than at mainstream supermarkets.
         </p>
 
         <Card className="p-5 rounded-3xl border-border/50 shadow-soft mb-6">
