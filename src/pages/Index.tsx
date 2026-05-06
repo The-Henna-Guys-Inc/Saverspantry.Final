@@ -2,12 +2,14 @@ import heroImg from "@/assets/hero-foods.jpg";
 import { NutritionLookup } from "@/components/NutritionLookup";
 import { EquivalencyEngine } from "@/components/EquivalencyEngine";
 import { RecipeGenerator } from "@/components/RecipeGenerator";
+import { Header } from "@/components/Header";
 import { Card } from "@/components/ui/card";
 import { ArrowLeftRight, Sparkles, ChefHat, PiggyBank } from "lucide-react";
 
 const Index = () => {
   return (
     <main className="min-h-screen bg-background">
+      <Header />
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-warm" />

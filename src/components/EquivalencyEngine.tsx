@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2, ArrowLeftRight, TrendingDown } from "lucide-react";
+import { SaveButton } from "./SaveButton";
 
 type Swap = {
   title: string;
@@ -70,13 +71,16 @@ export const EquivalencyEngine = () => {
       {result && (
         <div className="mt-6 space-y-4 animate-fade-up">
           <Card className="p-5 rounded-3xl bg-gradient-warm border-border/50">
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">Original</div>
-            <div className="flex flex-wrap items-baseline justify-between gap-2 mt-1">
-              <h3 className="text-lg font-semibold text-primary">{result.original.name}</h3>
-              <div className="text-sm text-muted-foreground">
-                {Math.round(result.original.calories_kcal)} kcal · {result.original.protein_g.toFixed(0)}g protein ·
-                <span className="font-semibold text-foreground ml-1">${result.original.estimated_cost_usd.toFixed(2)}</span>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">Original</div>
+                <h3 className="text-lg font-semibold text-primary mt-1">{result.original.name}</h3>
+                <div className="text-sm text-muted-foreground mt-1">
+                  {Math.round(result.original.calories_kcal)} kcal · {result.original.protein_g.toFixed(0)}g protein ·
+                  <span className="font-semibold text-foreground ml-1">${result.original.estimated_cost_usd.toFixed(2)}</span>
+                </div>
               </div>
+              <SaveButton table="saved_swaps" payload={{ food: result.original.name, result }} />
             </div>
           </Card>
 

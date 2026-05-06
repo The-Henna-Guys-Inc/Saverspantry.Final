@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2, Sparkles, Search } from "lucide-react";
+import { SaveButton } from "./SaveButton";
 
 type Nutrition = {
   food: string;
@@ -95,10 +96,13 @@ export const NutritionLookup = () => {
 
       {result && (
         <Card className="mt-6 p-6 rounded-3xl shadow-glow border-border/50 animate-fade-up">
-          <h3 className="text-xl font-semibold text-primary">{result.food}</h3>
-          <p className="text-sm text-muted-foreground mb-5">
-            Per ~{Math.round(result.serving_grams)}g serving
-          </p>
+          <div className="flex items-start justify-between gap-3 mb-5">
+            <div>
+              <h3 className="text-xl font-semibold text-primary">{result.food}</h3>
+              <p className="text-sm text-muted-foreground">Per ~{Math.round(result.serving_grams)}g serving</p>
+            </div>
+            <SaveButton table="saved_lookups" payload={{ query, result }} />
+          </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
             {[
