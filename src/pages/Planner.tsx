@@ -255,7 +255,7 @@ const Planner = () => {
         )}
 
         {grouped && (
-          <div>
+          <div id="grocery-print">
             <div className="flex items-baseline justify-between mb-2">
               <h2 className="text-xl font-semibold text-primary">Grocery list</h2>
               <div className="text-sm text-muted-foreground">
@@ -264,7 +264,18 @@ const Planner = () => {
                 </span>
               </div>
             </div>
-            <div className="flex items-start gap-2 text-xs text-muted-foreground mb-4 p-3 rounded-xl bg-secondary/60">
+            <div className="flex flex-wrap gap-2 mb-4 print:hidden">
+              <Button variant="outline" size="sm" onClick={copyList} className="rounded-xl">
+                <Copy className="h-3.5 w-3.5 mr-1.5" />Copy
+              </Button>
+              <Button variant="outline" size="sm" onClick={shareList} className="rounded-xl">
+                <Share2 className="h-3.5 w-3.5 mr-1.5" />Share
+              </Button>
+              <Button variant="outline" size="sm" onClick={printList} className="rounded-xl">
+                <Printer className="h-3.5 w-3.5 mr-1.5" />Print
+              </Button>
+            </div>
+            <div className="flex items-start gap-2 text-xs text-muted-foreground mb-4 p-3 rounded-xl bg-secondary/60 print:hidden">
               <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
               <span>AI estimate — actual prices vary by store, region, and sales. Live local pricing is coming soon.</span>
             </div>
@@ -273,12 +284,26 @@ const Planner = () => {
                 <Card key={cat} className="p-5 rounded-2xl border-border/50">
                   <div className="text-xs uppercase tracking-wider text-accent mb-2">{cat}</div>
                   <ul className="space-y-1.5">
-                    {items.map((it, i) => (
-                      <li key={i} className="flex justify-between text-sm gap-3">
-                        <span className="text-foreground/90">{it.item} <span className="text-muted-foreground">· {it.quantity}</span></span>
-                        <span className="text-muted-foreground whitespace-nowrap">${it.estimated_cost_low_usd?.toFixed(2)}–${it.estimated_cost_high_usd?.toFixed(2)}</span>
-                      </li>
-                    ))}
+                    {items.map((it, i) => {
+                      const k = keyOf(it);
+                      const done = !!checked[k];
+                      return (
+                        <li key={i} className="flex items-start justify-between text-sm gap-3">
+                          <button type="button" onClick={() => toggleItem(k)}
+                            className="flex items-start gap-2 text-left flex-1 group">
+                            <span className={`mt-0.5 h-4 w-4 rounded border flex items-center justify-center shrink-0 transition-smooth ${
+                              done ? "bg-primary border-primary" : "border-border group-hover:border-primary/60"
+                            }`}>
+                              {done && <span className="text-primary-foreground text-[10px] leading-none">✓</span>}
+                            </span>
+                            <span className={done ? "line-through text-muted-foreground" : "text-foreground/90"}>
+                              {it.item} <span className="text-muted-foreground">· {it.quantity}</span>
+                            </span>
+                          </button>
+                          <span className="text-muted-foreground whitespace-nowrap">${it.estimated_cost_low_usd?.toFixed(2)}–${it.estimated_cost_high_usd?.toFixed(2)}</span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </Card>
               ))}
