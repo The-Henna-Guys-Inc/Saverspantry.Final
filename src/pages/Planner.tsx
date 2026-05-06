@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Sparkles, ShoppingCart, RefreshCw, Calendar, Info, Copy, Share2, Printer } from "lucide-react";
 import { toast } from "sonner";
+import { SpecialtyStoreBanner } from "@/components/SpecialtyStoreBanner";
+import { detectItemCuisines, summarizeCuisines, CUISINE_LABEL } from "@/lib/cuisineHints";
 
 type Meal = { title: string; main_ingredients: string[]; estimated_cost_usd: number; time_minutes: number };
 type Day = { day: string; breakfast: Meal; lunch: Meal; dinner: Meal };
