@@ -295,6 +295,7 @@ const Planner = () => {
                     {items.map((it, i) => {
                       const k = keyOf(it);
                       const done = !!checked[k];
+                      const itemCuisines = detectItemCuisines(it.item);
                       return (
                         <li key={i} className="flex items-start justify-between text-sm gap-3">
                           <button type="button" onClick={() => toggleItem(k)}
@@ -306,6 +307,14 @@ const Planner = () => {
                             </span>
                             <span className={done ? "line-through text-muted-foreground" : "text-foreground/90"}>
                               {it.item} <span className="text-muted-foreground">· {it.quantity}</span>
+                              {itemCuisines.length > 0 && (
+                                <span
+                                  className="ml-1.5 inline-block text-[10px] px-1.5 py-0.5 rounded-full bg-accent/15 text-accent font-medium align-middle"
+                                  title={`Often cheaper at ${itemCuisines.map(c => CUISINE_LABEL[c]).join(" / ")} grocers`}
+                                >
+                                  {CUISINE_LABEL[itemCuisines[0]]}
+                                </span>
+                              )}
                             </span>
                           </button>
                           <span className="text-muted-foreground whitespace-nowrap">${it.estimated_cost_low_usd?.toFixed(2)}–${it.estimated_cost_high_usd?.toFixed(2)}</span>
@@ -317,7 +326,8 @@ const Planner = () => {
               ))}
             </div>
           </div>
-        )}
+          );
+        })()}
       </div>
     </main>
   );
