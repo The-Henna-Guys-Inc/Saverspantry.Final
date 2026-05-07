@@ -70,10 +70,19 @@ const TOOL = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const { food, dietary_prefs = [] } = await req.json();
+    const { food, dietary_prefs = [], profile = null } = await req.json();
     if (!food) return new Response(JSON.stringify({ error: "Missing 'food'" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const prefs = Array.isArray(dietary_prefs) ? dietary_prefs.join(", ") : "";
+    const profileLines: string[] = [];
+    if (profile) {
+      if (Array.isArray(profile.cuisines) && profile.cuisines.length) profileLines.push(`Favorite cuisines: ${profile.cuisines.join(", ")}.`);
+      if (profile.spice) profileLines.push(`Spice tolerance: ${profile.spice}.`);
+      if (Array.isArray(profile.loves) && profile.loves.length) profileLines.push(`Foods they love (prefer these in swaps): ${profile.loves.join(", ")}.`);
+      if (Array.isArray(profile.dislikes) && profile.dislikes.length) profileLines.push(`Foods they dislike (avoid): ${profile.dislikes.join(", ")}.`);
+      if (Array.isArray(profile.allergies) && profile.allergies.length) profileLines.push(`ALLERGIES — STRICTLY EXCLUDE: ${profile.allergies.join(", ")}.`);
+    }
+    const profileBlock = profileLines.length ? `\nUser food profile:\n${profileLines.join("\n")}` : "";
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
