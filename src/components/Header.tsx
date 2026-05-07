@@ -23,7 +23,7 @@ export const Header = () => {
           <div className="w-8 h-8 rounded-xl bg-gradient-leaf flex items-center justify-center shadow-soft">
             <Sprout className="h-4 w-4 text-primary-foreground" />
           </div>
-          <span className="font-bold text-primary">NutriSwap</span>
+          <span className="font-bold text-primary">ThriftPantry</span>
         </Link>
 
         <nav className="flex items-center gap-2">
