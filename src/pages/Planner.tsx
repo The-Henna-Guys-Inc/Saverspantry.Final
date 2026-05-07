@@ -57,15 +57,29 @@ const Planner = () => {
   const [groceryLoading, setGroceryLoading] = useState(false);
   const weekStart = mondayOf();
 
+  const [profilePrefs, setProfilePrefs] = useState<any>(null);
+
   // Load existing plan + profile defaults
   useEffect(() => {
     if (!user) return;
     (async () => {
       const [{ data: prof }, { data: existing }] = await Promise.all([
-        supabase.from("profiles").select("household_size").eq("user_id", user.id).maybeSingle(),
+        supabase.from("profiles").select("household_size, dietary_prefs").eq("user_id", user.id).maybeSingle(),
         supabase.from("meal_plans").select("plan").eq("user_id", user.id).eq("week_start_date", weekStart).maybeSingle(),
       ]);
       if (prof?.household_size) setHouseholdSize(prof.household_size);
+      const prefs = (prof?.dietary_prefs ?? {}) as any;
+      setProfilePrefs(prefs);
+      if (prefs.style) setDietStyle(prefs.style);
+      if (Array.isArray(prefs.cuisines) && prefs.cuisines.length && !cuisine) {
+        setCuisine(prefs.cuisines.slice(0, 2).join(", "));
+      }
+      if (Array.isArray(prefs.restrictions)) {
+        const fromProfile = prefs.restrictions
+          .map((r: string) => r.charAt(0).toUpperCase() + r.slice(1))
+          .filter((r: string): r is Restriction => (RESTRICTIONS as readonly string[]).includes(r));
+        if (fromProfile.length) setRestrictions(fromProfile);
+      }
       if (existing?.plan) setPlan(existing.plan as unknown as Plan);
     })();
   }, [user, weekStart]);
