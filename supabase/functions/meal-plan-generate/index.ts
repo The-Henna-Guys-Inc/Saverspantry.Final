@@ -51,13 +51,22 @@ const TOOL = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const { household_size = 2, dietary_prefs = [], budget_usd, cuisine_focus, diet_style } = await req.json().catch(() => ({}));
+    const { household_size = 2, dietary_prefs = [], budget_usd, cuisine_focus, diet_style, profile = null } = await req.json().catch(() => ({}));
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const profileLines: string[] = [];
+    if (profile) {
+      if (Array.isArray(profile.cuisines) && profile.cuisines.length) profileLines.push(`Favorite cuisines: ${profile.cuisines.join(", ")}.`);
+      if (profile.spice) profileLines.push(`Spice tolerance: ${profile.spice} — respect this in seasoning.`);
+      if (Array.isArray(profile.loves) && profile.loves.length) profileLines.push(`Foods they love (work these in across the week): ${profile.loves.join(", ")}.`);
+      if (Array.isArray(profile.dislikes) && profile.dislikes.length) profileLines.push(`Foods they dislike (do NOT use): ${profile.dislikes.join(", ")}.`);
+      if (Array.isArray(profile.allergies) && profile.allergies.length) profileLines.push(`ALLERGIES — STRICTLY EXCLUDE from every meal: ${profile.allergies.join(", ")}.`);
+    }
+    const profileBlock = profileLines.length ? `\nUser food profile:\n${profileLines.join("\n")}` : "";
     const userMsg = `Plan 7 days of meals for a household of ${household_size}.
 Diet style: ${diet_style || "balanced"}.
 Dietary prefs: ${Array.isArray(dietary_prefs) && dietary_prefs.length ? dietary_prefs.join(", ") : "none"}.
 ${budget_usd ? `Weekly grocery budget: $${budget_usd}.` : "Keep it budget-friendly."}
-${cuisine_focus ? `Lean toward: ${cuisine_focus}.` : "Mix common cuisines."}
+${cuisine_focus ? `Lean toward: ${cuisine_focus}.` : "Mix common cuisines."}${profileBlock}
 Reuse ingredients across meals to reduce waste. Use realistic 2026 US grocery prices (~8-12% above 2023 baseline).`;
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
