@@ -136,7 +136,7 @@ const Index = () => {
       </section>
 
       <footer className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground">
-        NutriSwap — built with care.
+        ThriftPantry — built with care.
       </footer>
     </main>
   );
