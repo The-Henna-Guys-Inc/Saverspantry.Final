@@ -135,7 +135,8 @@ const Dashboard = () => {
           <BarChart3 className="h-3.5 w-3.5" /> Dashboard
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">Your dashboard</h1>
-        <p className="text-muted-foreground mb-8">Savings, pantry insights, and weekly grocery spend — all in one place.</p>
+        <p className="text-muted-foreground mb-6">Savings, pantry insights, and weekly grocery spend — all in one place.</p>
+        <div className="mb-8"><ExportButtons /></div>
 
         <Tabs defaultValue="savings" className="w-full">
           <TabsList className="rounded-2xl mb-6">
