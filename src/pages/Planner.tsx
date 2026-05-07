@@ -89,7 +89,20 @@ const Planner = () => {
     setGrocery(null);
     try {
       const { data, error } = await supabase.functions.invoke("meal-plan-generate", {
-        body: { household_size: householdSize, budget_usd: budget ? Number(budget) : undefined, cuisine_focus: cuisine || undefined, diet_style: dietStyle, dietary_prefs: restrictions.map((r) => r.toLowerCase()) },
+        body: {
+          household_size: householdSize,
+          budget_usd: budget ? Number(budget) : undefined,
+          cuisine_focus: cuisine || undefined,
+          diet_style: dietStyle,
+          dietary_prefs: restrictions.map((r) => r.toLowerCase()),
+          profile: profilePrefs ? {
+            cuisines: profilePrefs.cuisines ?? [],
+            spice: profilePrefs.spice ?? null,
+            loves: profilePrefs.loves ?? [],
+            dislikes: profilePrefs.dislikes ?? [],
+            allergies: profilePrefs.allergies ?? [],
+          } : null,
+        },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
