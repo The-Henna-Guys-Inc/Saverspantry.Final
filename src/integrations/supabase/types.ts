@@ -83,6 +83,48 @@ export type Database = {
         }
         Relationships: []
       }
+      pantry_consumption_log: {
+        Row: {
+          days_to_expiry: number | null
+          expires_on: string | null
+          household_id: string | null
+          id: string
+          item_name: string
+          pantry_item_id: string | null
+          quantity_used: number
+          unit: string | null
+          used_at: string
+          user_id: string
+          was_before_expiry: boolean | null
+        }
+        Insert: {
+          days_to_expiry?: number | null
+          expires_on?: string | null
+          household_id?: string | null
+          id?: string
+          item_name: string
+          pantry_item_id?: string | null
+          quantity_used?: number
+          unit?: string | null
+          used_at?: string
+          user_id: string
+          was_before_expiry?: boolean | null
+        }
+        Update: {
+          days_to_expiry?: number | null
+          expires_on?: string | null
+          household_id?: string | null
+          id?: string
+          item_name?: string
+          pantry_item_id?: string | null
+          quantity_used?: number
+          unit?: string | null
+          used_at?: string
+          user_id?: string
+          was_before_expiry?: boolean | null
+        }
+        Relationships: []
+      }
       pantry_items: {
         Row: {
           category: string | null
