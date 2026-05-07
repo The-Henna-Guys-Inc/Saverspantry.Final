@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
             "Use cheap pantry add-ons (a tbsp of seeds, a handful of nuts, a fortified item) so savings are preserved. In `nutrient_coverage`, list the specific nutrients the add-ons restore. In `notes`, briefly explain WHY the add-on is there (e.g., 'walnuts add omega-3 that lentils lack').",
             "Be practical and money-conscious, never moralizing. Always call return_swaps.",
           ].join(" ") },
-          { role: "user", content: `Find swaps for: ${food}\nDietary restrictions: ${prefs || "none"}` },
+          { role: "user", content: `Find swaps for: ${food}\nDietary restrictions: ${prefs || "none"}${profileBlock}` },
         ],
         tools: [TOOL],
         tool_choice: { type: "function", function: { name: "return_swaps" } },
