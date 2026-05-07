@@ -52,9 +52,18 @@ const Settings = () => {
         setDisplayName(data.display_name ?? "");
         setHousehold(data.household_size ?? 2);
         setZip(data.zip_code ?? "");
-        const prefs = (data.dietary_prefs ?? {}) as { style?: string; restrictions?: string[] };
+        const prefs = (data.dietary_prefs ?? {}) as {
+          style?: string; restrictions?: string[];
+          cuisines?: string[]; spice?: string;
+          loves?: string[]; dislikes?: string[]; allergies?: string[];
+        };
         if (prefs.style) setDietStyle(prefs.style);
         if (Array.isArray(prefs.restrictions)) setRestrictions(prefs.restrictions);
+        if (Array.isArray(prefs.cuisines)) setCuisines(prefs.cuisines);
+        if (prefs.spice) setSpice(prefs.spice);
+        if (Array.isArray(prefs.loves)) setLoves(prefs.loves.join(", "));
+        if (Array.isArray(prefs.dislikes)) setDislikes(prefs.dislikes.join(", "));
+        if (Array.isArray(prefs.allergies)) setAllergies(prefs.allergies.join(", "));
       }
       // Compute potential savings from equivalency engine history
       let total = 0;
