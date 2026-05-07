@@ -87,6 +87,8 @@ const Settings = () => {
 
   const toggle = (r: string) =>
     setRestrictions((p) => (p.includes(r) ? p.filter((x) => x !== r) : [...p, r]));
+  const toggleCuisine = (c: string) =>
+    setCuisines((p) => (p.includes(c) ? p.filter((x) => x !== c) : [...p, c]));
 
   const save = async () => {
     if (!user) return;
@@ -97,7 +99,15 @@ const Settings = () => {
         display_name: displayName.trim() || null,
         household_size: Math.max(1, household),
         zip_code: zip.trim() || null,
-        dietary_prefs: { style: dietStyle, restrictions },
+        dietary_prefs: {
+          style: dietStyle,
+          restrictions,
+          cuisines,
+          spice,
+          loves: splitList(loves),
+          dislikes: splitList(dislikes),
+          allergies: splitList(allergies),
+        },
       })
       .eq("user_id", user.id);
     setSaving(false);
