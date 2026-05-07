@@ -130,12 +130,30 @@ const Pantry = () => {
     }
   };
 
+  const logConsumption = async (it: PantryItem, qtyUsed: number) => {
+    if (qtyUsed <= 0 || !user) return;
+    let wasBeforeExpiry: boolean | null = null;
+    let daysToExpiry: number | null = null;
+    if (it.expires_on) {
+      const exp = new Date(it.expires_on); exp.setHours(0,0,0,0);
+      const today = new Date(); today.setHours(0,0,0,0);
+      daysToExpiry = Math.round((exp.getTime() - today.getTime()) / 86400000);
+      wasBeforeExpiry = daysToExpiry >= 0;
+    }
+    await supabase.from("pantry_consumption_log").insert({
+      user_id: user.id, pantry_item_id: it.id, item_name: it.item,
+      quantity_used: qtyUsed, unit: it.unit, expires_on: it.expires_on,
+      was_before_expiry: wasBeforeExpiry, days_to_expiry: daysToExpiry,
+    });
+  };
+
   const adjust = async (it: PantryItem, delta: number) => {
     const next = Math.max(0, Number((it.quantity + delta).toFixed(2)));
     const prev = items;
     setItems((p) => p.map((x) => (x.id === it.id ? { ...x, quantity: next } : x)));
     const { error } = await supabase.from("pantry_items").update({ quantity: next }).eq("id", it.id);
     if (error) { setItems(prev); return toast.error(error.message); }
+    if (delta < 0) await logConsumption(it, -delta);
     checkLowStock(it, next);
     if (next === 0) toast.message(`${it.item} is out — remove it?`);
   };
@@ -146,6 +164,7 @@ const Pantry = () => {
     setItems((p) => p.map((x) => (x.id === it.id ? { ...x, quantity: n } : x)));
     const { error } = await supabase.from("pantry_items").update({ quantity: n }).eq("id", it.id);
     if (error) { setItems(prev); toast.error(error.message); return; }
+    if (n < it.quantity) await logConsumption(it, it.quantity - n);
     checkLowStock(it, n);
   };
 
