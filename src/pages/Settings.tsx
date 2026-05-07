@@ -27,6 +27,11 @@ const Settings = () => {
   const [zip, setZip] = useState("");
   const [dietStyle, setDietStyle] = useState<string>("balanced");
   const [restrictions, setRestrictions] = useState<string[]>([]);
+  const [cuisines, setCuisines] = useState<string[]>([]);
+  const [spice, setSpice] = useState<string>("medium");
+  const [loves, setLoves] = useState("");
+  const [dislikes, setDislikes] = useState("");
+  const [allergies, setAllergies] = useState("");
   const [savings, setSavings] = useState<{ total: number; count: number } | null>(null);
 
   useEffect(() => {
