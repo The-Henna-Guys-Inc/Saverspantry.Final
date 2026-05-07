@@ -14,6 +14,7 @@ import Settings from "./pages/Settings.tsx";
 import Stores from "./pages/Stores.tsx";
 import Sales from "./pages/Sales.tsx";
 import Watchlist from "./pages/Watchlist.tsx";
+import Dashboard from "./pages/Dashboard.tsx";
 
 const queryClient = new QueryClient();
 
