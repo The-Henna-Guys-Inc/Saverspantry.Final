@@ -32,6 +32,23 @@ export const EquivalencyEngine = () => {
   const [restrictions, setRestrictions] = useState<Restriction[]>([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
+  const [profilePrefs, setProfilePrefs] = useState<any>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from("profiles").select("dietary_prefs").eq("user_id", user.id).maybeSingle();
+      const prefs = (data?.dietary_prefs ?? {}) as any;
+      setProfilePrefs(prefs);
+      if (Array.isArray(prefs.restrictions)) {
+        const fromProfile = prefs.restrictions
+          .map((r: string) => r.charAt(0).toUpperCase() + r.slice(1))
+          .filter((r: string): r is Restriction => (RESTRICTIONS as readonly string[]).includes(r));
+        if (fromProfile.length) setRestrictions(fromProfile);
+      }
+    })();
+  }, []);
 
   const toggle = (r: Restriction) =>
     setRestrictions((prev) => (prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]));
@@ -42,7 +59,17 @@ export const EquivalencyEngine = () => {
     setResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("equivalency-swap", {
-        body: { food: q, dietary_prefs: restrictions.map((r) => r.toLowerCase()) },
+        body: {
+          food: q,
+          dietary_prefs: restrictions.map((r) => r.toLowerCase()),
+          profile: profilePrefs ? {
+            cuisines: profilePrefs.cuisines ?? [],
+            spice: profilePrefs.spice ?? null,
+            loves: profilePrefs.loves ?? [],
+            dislikes: profilePrefs.dislikes ?? [],
+            allergies: profilePrefs.allergies ?? [],
+          } : null,
+        },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
