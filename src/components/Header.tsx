@@ -1,14 +1,27 @@
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Sprout, LogOut, BookmarkCheck, CalendarDays, Refrigerator, Settings as SettingsIcon, Store as StoreIcon, Tag, BarChart3 } from "lucide-react";
+import { Sprout, LogOut, BookmarkCheck, CalendarDays, Refrigerator, Settings as SettingsIcon, Store as StoreIcon, Tag, BarChart3, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { SavingsCounter } from "@/components/SavingsCounter";
 
 export const Header = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle()
+      .then(({ data }) => setIsAdmin(!!data));
+  }, [user]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -48,6 +61,11 @@ export const Header = () => {
               <Button asChild variant="ghost" size="sm" className="rounded-xl">
                 <Link to="/dashboard"><BarChart3 className="h-4 w-4 mr-1.5" />Dashboard</Link>
               </Button>
+              {isAdmin && (
+                <Button asChild variant="ghost" size="sm" className="rounded-xl">
+                  <Link to="/admin/analytics"><Shield className="h-4 w-4 mr-1.5" />Admin</Link>
+                </Button>
+              )}
               <Button asChild variant="ghost" size="sm" className="rounded-xl">
                 <Link to="/library"><BookmarkCheck className="h-4 w-4 mr-1.5" />Library</Link>
               </Button>
