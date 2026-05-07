@@ -132,9 +132,17 @@ const Dashboard = () => {
         <div className="flex items-center gap-2 text-accent text-xs font-semibold uppercase tracking-widest mb-2">
           <BarChart3 className="h-3.5 w-3.5" /> Dashboard
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">Your savings</h1>
-        <p className="text-muted-foreground mb-8">A running picture of money you've saved with ThriftPantry.</p>
+        <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">Your dashboard</h1>
+        <p className="text-muted-foreground mb-8">Savings, pantry insights, and weekly grocery spend — all in one place.</p>
 
+        <Tabs defaultValue="savings" className="w-full">
+          <TabsList className="rounded-2xl mb-6">
+            <TabsTrigger value="savings" className="rounded-xl">Savings</TabsTrigger>
+            <TabsTrigger value="pantry" className="rounded-xl">Pantry</TabsTrigger>
+            <TabsTrigger value="spend" className="rounded-xl">Spend</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="savings">
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : stats.count === 0 ? (
