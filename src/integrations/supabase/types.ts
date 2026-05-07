@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_snapshots: {
+        Row: {
+          by_category: Json
+          created_at: string
+          id: string
+          meal_plan_count: number
+          sale_count: number
+          swap_count: number
+          total_savings_usd: number
+          updated_at: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          by_category?: Json
+          created_at?: string
+          id?: string
+          meal_plan_count?: number
+          sale_count?: number
+          swap_count?: number
+          total_savings_usd?: number
+          updated_at?: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          by_category?: Json
+          created_at?: string
+          id?: string
+          meal_plan_count?: number
+          sale_count?: number
+          swap_count?: number
+          total_savings_usd?: number
+          updated_at?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       meal_plans: {
         Row: {
           created_at: string
@@ -385,6 +424,45 @@ export type Database = {
           household_id?: string | null
           id?: string
           result?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      savings_events: {
+        Row: {
+          amount_usd: number
+          category: string
+          created_at: string
+          food_name: string | null
+          household_id: string | null
+          id: string
+          metadata: Json
+          occurred_at: string
+          source_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_usd?: number
+          category: string
+          created_at?: string
+          food_name?: string | null
+          household_id?: string | null
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          source_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_usd?: number
+          category?: string
+          created_at?: string
+          food_name?: string | null
+          household_id?: string | null
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          source_id?: string | null
           user_id?: string
         }
         Relationships: []
