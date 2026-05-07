@@ -1,0 +1,1 @@
+ALTER TABLE public.pantry_items ADD COLUMN IF NOT EXISTS location text NOT NULL DEFAULT 'pantry';
