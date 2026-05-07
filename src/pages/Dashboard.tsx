@@ -13,6 +13,7 @@ import {
 import { PantryInsights } from "@/components/dashboard/PantryInsights";
 import { SpendReport } from "@/components/dashboard/SpendReport";
 import { WatchlistActivity } from "@/components/dashboard/WatchlistActivity";
+import { ExportButtons } from "@/components/dashboard/ExportButtons";
 
 type Event = {
   id: string;
