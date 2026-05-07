@@ -267,6 +267,16 @@ const Dashboard = () => {
             </div>
           </>
         )}
+          </TabsContent>
+
+          <TabsContent value="pantry">
+            <PantryInsights userId={user.id} />
+          </TabsContent>
+
+          <TabsContent value="spend">
+            <SpendReport userId={user.id} />
+          </TabsContent>
+        </Tabs>
       </div>
     </main>
   );
