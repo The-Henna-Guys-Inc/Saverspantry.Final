@@ -14,3 +14,18 @@ verify_jwt = false
 
 [functions.grocery-list-generate]
 verify_jwt = false
+
+[functions.export-analytics]
+verify_jwt = false
+
+[functions.monthly-recap-pdf]
+verify_jwt = false
+
+[functions.pantry-expiry-check]
+verify_jwt = false
+
+[functions.weekly-savings-rollup]
+verify_jwt = false
+
+[functions.watchlist-sale-matcher]
+verify_jwt = false

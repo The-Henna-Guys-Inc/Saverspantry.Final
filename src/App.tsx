@@ -16,6 +16,7 @@ import Sales from "./pages/Sales.tsx";
 import Watchlist from "./pages/Watchlist.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import AdminAnalytics from "./pages/AdminAnalytics.tsx";
+import { InstallPrompt } from "./components/InstallPrompt";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <InstallPrompt />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
