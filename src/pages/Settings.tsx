@@ -7,11 +7,16 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Save, Settings as SettingsIcon, TrendingDown } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, Save, Settings as SettingsIcon, TrendingDown, Utensils } from "lucide-react";
 import { toast } from "sonner";
 
 const RESTRICTIONS = ["halal", "kosher", "vegetarian", "vegan", "gluten-free", "dairy-free", "nut-free"] as const;
 const DIET_STYLES = ["balanced", "high-protein", "keto", "mediterranean", "pescatarian"] as const;
+const CUISINES = ["mediterranean", "italian", "mexican", "indian", "chinese", "japanese", "thai", "middle-eastern", "american", "korean", "vietnamese", "french", "ethiopian", "caribbean"] as const;
+const SPICE_LEVELS = ["mild", "medium", "spicy", "very-spicy"] as const;
+
+const splitList = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
 
 const Settings = () => {
   const { user, loading: authLoading } = useAuth();
