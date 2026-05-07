@@ -52,6 +52,7 @@ export type Database = {
           household_id: string | null
           id: string
           item: string
+          location: string
           quantity: number
           unit: string
           updated_at: string
@@ -64,6 +65,7 @@ export type Database = {
           household_id?: string | null
           id?: string
           item: string
+          location?: string
           quantity?: number
           unit?: string
           updated_at?: string
@@ -76,6 +78,7 @@ export type Database = {
           household_id?: string | null
           id?: string
           item?: string
+          location?: string
           quantity?: number
           unit?: string
           updated_at?: string
