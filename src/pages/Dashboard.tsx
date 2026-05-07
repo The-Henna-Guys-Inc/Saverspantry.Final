@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { PantryInsights } from "@/components/dashboard/PantryInsights";
 import { SpendReport } from "@/components/dashboard/SpendReport";
+import { WatchlistActivity } from "@/components/dashboard/WatchlistActivity";
 
 type Event = {
   id: string;
@@ -140,6 +141,7 @@ const Dashboard = () => {
             <TabsTrigger value="savings" className="rounded-xl">Savings</TabsTrigger>
             <TabsTrigger value="pantry" className="rounded-xl">Pantry</TabsTrigger>
             <TabsTrigger value="spend" className="rounded-xl">Spend</TabsTrigger>
+            <TabsTrigger value="watchlist" className="rounded-xl">Watchlist</TabsTrigger>
           </TabsList>
 
           <TabsContent value="savings">
@@ -275,6 +277,10 @@ const Dashboard = () => {
 
           <TabsContent value="spend">
             <SpendReport userId={user.id} />
+          </TabsContent>
+
+          <TabsContent value="watchlist">
+            <WatchlistActivity userId={user.id} />
           </TabsContent>
         </Tabs>
       </div>
