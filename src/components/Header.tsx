@@ -46,6 +46,9 @@ export const Header = () => {
               </Button>
               <SavingsCounter />
               <Button asChild variant="ghost" size="sm" className="rounded-xl">
+                <Link to="/dashboard"><BarChart3 className="h-4 w-4 mr-1.5" />Dashboard</Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="rounded-xl">
                 <Link to="/library"><BookmarkCheck className="h-4 w-4 mr-1.5" />Library</Link>
               </Button>
               <Button asChild variant="ghost" size="icon" className="rounded-xl">
