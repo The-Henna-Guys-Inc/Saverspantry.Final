@@ -7,11 +7,16 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Save, Settings as SettingsIcon, TrendingDown } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, Save, Settings as SettingsIcon, TrendingDown, Utensils } from "lucide-react";
 import { toast } from "sonner";
 
 const RESTRICTIONS = ["halal", "kosher", "vegetarian", "vegan", "gluten-free", "dairy-free", "nut-free"] as const;
 const DIET_STYLES = ["balanced", "high-protein", "keto", "mediterranean", "pescatarian"] as const;
+const CUISINES = ["mediterranean", "italian", "mexican", "indian", "chinese", "japanese", "thai", "middle-eastern", "american", "korean", "vietnamese", "french", "ethiopian", "caribbean"] as const;
+const SPICE_LEVELS = ["mild", "medium", "spicy", "very-spicy"] as const;
+
+const splitList = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
 
 const Settings = () => {
   const { user, loading: authLoading } = useAuth();
@@ -22,6 +27,11 @@ const Settings = () => {
   const [zip, setZip] = useState("");
   const [dietStyle, setDietStyle] = useState<string>("balanced");
   const [restrictions, setRestrictions] = useState<string[]>([]);
+  const [cuisines, setCuisines] = useState<string[]>([]);
+  const [spice, setSpice] = useState<string>("medium");
+  const [loves, setLoves] = useState("");
+  const [dislikes, setDislikes] = useState("");
+  const [allergies, setAllergies] = useState("");
   const [savings, setSavings] = useState<{ total: number; count: number } | null>(null);
 
   useEffect(() => {
@@ -42,9 +52,18 @@ const Settings = () => {
         setDisplayName(data.display_name ?? "");
         setHousehold(data.household_size ?? 2);
         setZip(data.zip_code ?? "");
-        const prefs = (data.dietary_prefs ?? {}) as { style?: string; restrictions?: string[] };
+        const prefs = (data.dietary_prefs ?? {}) as {
+          style?: string; restrictions?: string[];
+          cuisines?: string[]; spice?: string;
+          loves?: string[]; dislikes?: string[]; allergies?: string[];
+        };
         if (prefs.style) setDietStyle(prefs.style);
         if (Array.isArray(prefs.restrictions)) setRestrictions(prefs.restrictions);
+        if (Array.isArray(prefs.cuisines)) setCuisines(prefs.cuisines);
+        if (prefs.spice) setSpice(prefs.spice);
+        if (Array.isArray(prefs.loves)) setLoves(prefs.loves.join(", "));
+        if (Array.isArray(prefs.dislikes)) setDislikes(prefs.dislikes.join(", "));
+        if (Array.isArray(prefs.allergies)) setAllergies(prefs.allergies.join(", "));
       }
       // Compute potential savings from equivalency engine history
       let total = 0;
@@ -68,6 +87,8 @@ const Settings = () => {
 
   const toggle = (r: string) =>
     setRestrictions((p) => (p.includes(r) ? p.filter((x) => x !== r) : [...p, r]));
+  const toggleCuisine = (c: string) =>
+    setCuisines((p) => (p.includes(c) ? p.filter((x) => x !== c) : [...p, c]));
 
   const save = async () => {
     if (!user) return;
@@ -78,7 +99,15 @@ const Settings = () => {
         display_name: displayName.trim() || null,
         household_size: Math.max(1, household),
         zip_code: zip.trim() || null,
-        dietary_prefs: { style: dietStyle, restrictions },
+        dietary_prefs: {
+          style: dietStyle,
+          restrictions,
+          cuisines,
+          spice,
+          loves: splitList(loves),
+          dislikes: splitList(dislikes),
+          allergies: splitList(allergies),
+        },
       })
       .eq("user_id", user.id);
     setSaving(false);
@@ -161,6 +190,58 @@ const Settings = () => {
                 ))}
               </div>
             </div>
+
+            <div className="pt-4 border-t border-border/50">
+              <div className="flex items-center gap-2 text-accent text-xs font-semibold uppercase tracking-widest mb-3">
+                <Utensils className="h-3.5 w-3.5" /> Food profile
+              </div>
+              <p className="text-xs text-muted-foreground mb-4">Used to tailor swaps, meal plans, and recipes to what you actually eat.</p>
+
+              <Label className="text-xs">Favorite cuisines</Label>
+              <div className="flex flex-wrap gap-2 mt-2 mb-4">
+                {CUISINES.map((c) => (
+                  <button key={c} type="button" onClick={() => toggleCuisine(c)}
+                    className={`text-xs px-3 py-1.5 rounded-full transition-smooth capitalize ${
+                      cuisines.includes(c) ? "bg-primary text-primary-foreground shadow-soft" : "bg-secondary text-secondary-foreground hover:bg-muted"
+                    }`}>{c.replace("-", " ")}</button>
+                ))}
+              </div>
+
+              <Label className="text-xs">Spice tolerance</Label>
+              <div className="flex flex-wrap gap-2 mt-2 mb-4">
+                {SPICE_LEVELS.map((s) => (
+                  <button key={s} type="button" onClick={() => setSpice(s)}
+                    className={`text-xs px-3 py-1.5 rounded-full transition-smooth capitalize ${
+                      spice === s ? "bg-primary text-primary-foreground shadow-soft" : "bg-secondary text-secondary-foreground hover:bg-muted"
+                    }`}>{s.replace("-", " ")}</button>
+                ))}
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="loves" className="text-xs">Foods you love</Label>
+                  <Textarea id="loves" value={loves} onChange={(e) => setLoves(e.target.value)}
+                    placeholder="e.g. salmon, chickpeas, sweet potato, paneer"
+                    className="rounded-xl mt-1 min-h-[60px]" />
+                  <p className="text-[11px] text-muted-foreground mt-1">Comma-separated. We'll lean toward these.</p>
+                </div>
+                <div>
+                  <Label htmlFor="dislikes" className="text-xs">Foods you dislike</Label>
+                  <Textarea id="dislikes" value={dislikes} onChange={(e) => setDislikes(e.target.value)}
+                    placeholder="e.g. cilantro, mushrooms, tofu"
+                    className="rounded-xl mt-1 min-h-[60px]" />
+                  <p className="text-[11px] text-muted-foreground mt-1">Comma-separated. We'll avoid these.</p>
+                </div>
+                <div>
+                  <Label htmlFor="allergies" className="text-xs">Allergies</Label>
+                  <Textarea id="allergies" value={allergies} onChange={(e) => setAllergies(e.target.value)}
+                    placeholder="e.g. peanuts, shellfish"
+                    className="rounded-xl mt-1 min-h-[60px]" />
+                  <p className="text-[11px] text-destructive/80 mt-1">Strictly excluded from all suggestions.</p>
+                </div>
+              </div>
+            </div>
+
             <div className="pt-2">
               <Button variant="hero" onClick={save} disabled={saving} className="rounded-xl">
                 {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
