@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sprout, LogOut, BookmarkCheck, CalendarDays, Refrigerator, Settings as SettingsIcon, Store as StoreIcon, Tag, BarChart3, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { SavingsCounter } from "@/components/SavingsCounter";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export const Header = () => {
   const { user, loading } = useAuth();
@@ -61,6 +62,7 @@ export const Header = () => {
               <Button asChild variant="ghost" size="sm" className="rounded-xl">
                 <Link to="/dashboard"><BarChart3 className="h-4 w-4 mr-1.5" />Dashboard</Link>
               </Button>
+              <NotificationBell />
               {isAdmin && (
                 <Button asChild variant="ghost" size="sm" className="rounded-xl">
                   <Link to="/admin/analytics"><Shield className="h-4 w-4 mr-1.5" />Admin</Link>
