@@ -21,7 +21,7 @@ const Index = () => {
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-card border border-border shadow-soft mb-6">
               <Sparkles className="h-3.5 w-3.5 text-accent" />
               <span className="text-xs font-medium tracking-wide text-foreground/80">
-                AI-powered nutrition swaps
+                Intelligent nutrition swaps
               </span>
             </div>
 
