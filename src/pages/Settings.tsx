@@ -190,6 +190,58 @@ const Settings = () => {
                 ))}
               </div>
             </div>
+
+            <div className="pt-4 border-t border-border/50">
+              <div className="flex items-center gap-2 text-accent text-xs font-semibold uppercase tracking-widest mb-3">
+                <Utensils className="h-3.5 w-3.5" /> Food profile
+              </div>
+              <p className="text-xs text-muted-foreground mb-4">Used to tailor swaps, meal plans, and recipes to what you actually eat.</p>
+
+              <Label className="text-xs">Favorite cuisines</Label>
+              <div className="flex flex-wrap gap-2 mt-2 mb-4">
+                {CUISINES.map((c) => (
+                  <button key={c} type="button" onClick={() => toggleCuisine(c)}
+                    className={`text-xs px-3 py-1.5 rounded-full transition-smooth capitalize ${
+                      cuisines.includes(c) ? "bg-primary text-primary-foreground shadow-soft" : "bg-secondary text-secondary-foreground hover:bg-muted"
+                    }`}>{c.replace("-", " ")}</button>
+                ))}
+              </div>
+
+              <Label className="text-xs">Spice tolerance</Label>
+              <div className="flex flex-wrap gap-2 mt-2 mb-4">
+                {SPICE_LEVELS.map((s) => (
+                  <button key={s} type="button" onClick={() => setSpice(s)}
+                    className={`text-xs px-3 py-1.5 rounded-full transition-smooth capitalize ${
+                      spice === s ? "bg-primary text-primary-foreground shadow-soft" : "bg-secondary text-secondary-foreground hover:bg-muted"
+                    }`}>{s.replace("-", " ")}</button>
+                ))}
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="loves" className="text-xs">Foods you love</Label>
+                  <Textarea id="loves" value={loves} onChange={(e) => setLoves(e.target.value)}
+                    placeholder="e.g. salmon, chickpeas, sweet potato, paneer"
+                    className="rounded-xl mt-1 min-h-[60px]" />
+                  <p className="text-[11px] text-muted-foreground mt-1">Comma-separated. We'll lean toward these.</p>
+                </div>
+                <div>
+                  <Label htmlFor="dislikes" className="text-xs">Foods you dislike</Label>
+                  <Textarea id="dislikes" value={dislikes} onChange={(e) => setDislikes(e.target.value)}
+                    placeholder="e.g. cilantro, mushrooms, tofu"
+                    className="rounded-xl mt-1 min-h-[60px]" />
+                  <p className="text-[11px] text-muted-foreground mt-1">Comma-separated. We'll avoid these.</p>
+                </div>
+                <div>
+                  <Label htmlFor="allergies" className="text-xs">Allergies</Label>
+                  <Textarea id="allergies" value={allergies} onChange={(e) => setAllergies(e.target.value)}
+                    placeholder="e.g. peanuts, shellfish"
+                    className="rounded-xl mt-1 min-h-[60px]" />
+                  <p className="text-[11px] text-destructive/80 mt-1">Strictly excluded from all suggestions.</p>
+                </div>
+              </div>
+            </div>
+
             <div className="pt-2">
               <Button variant="hero" onClick={save} disabled={saving} className="rounded-xl">
                 {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
