@@ -1,44 +1,70 @@
-## Plan: Analytics, reports & background jobs
+## v1.5 — Cuisine personalization + Bulk-Buy engine
 
-You picked a lot — that's good, but shipping it all in one go would create a fragile mess. I'll deliver in 4 slices, each independently useful and testable.
+This slice does two things at once because they share the same spine: a per-user **cuisine profile** that filters every discovery surface (Pantry, Stores, Sales) and feeds a new **data-driven Bulk-Buy** recommender that replaces today's static curated UI.
 
-### Slice 1 — Foundation + Savings Dashboard *(building now)*
-- New table `savings_events` — every time a swap is saved, a meal plan is generated, or a sale alert is captured, we log a row with `category`, `amount_usd`, `metadata`. This becomes the spine of every chart later.
-- New table `analytics_snapshots` — pre-aggregated weekly totals (savings, plans, alerts). Cron writes here so dashboards load instantly.
-- New page `/dashboard` — your personal savings dashboard:
-  - Total saved (lifetime + this month)
-  - Trend chart (last 12 weeks)
-  - Breakdown by source (swaps / sales / meal-plan budgeting)
-  - Top categories
-- Backfill: a one-time migration populates `savings_events` from existing `saved_swaps`.
+### 1. Cuisine profile (the spine)
 
-### Slice 2 — Pantry insights + Meal-plan/spend report
-- `/dashboard` gets two more tabs:
-  - **Pantry**: items expiring this week, waste avoided ($ from items used before expiry), most-restocked, low-stock summary.
-  - **Spend**: weekly grocery cost vs. budget, cost-per-meal, cost-per-person, plan adherence (did you actually generate a list each week).
-- New table `pantry_consumption_log` to track deductions for the waste-avoided math.
+- Add `profiles.cuisine_preferences text[]` (e.g. `['korean','south_asian','mexican']`) and `profiles.cuisine_filter_enabled bool default true`.
+- Settings page gets a "My cuisines" multi-select using the existing `CuisineTag` list from `src/lib/cuisineHints.ts`.
+- New tiny hook `useCuisinePrefs()` — reads/writes profile, exposed app-wide.
+- New shared `<CuisineFilterBar />` component that shows the active cuisines as chips with a single **"Show everything"** toggle. Drops on Pantry / Stores / Sales / Bulk-Buy.
+- Auto-bootstrap: first time a user lands with no cuisines set, infer from their pantry + saved recipes (run `detectItemCuisines` over recent items, take top 3) and seed the profile. They can override anytime.
 
-### Slice 3 — Watchlist & sales activity + Admin global view
-- Watchlist tab on `/dashboard`: alerts triggered, deals captured, top stores, biggest price drops.
-- New `/admin/analytics` page (gated by existing `has_role('admin')`): aggregated, anonymized stats — DAU/WAU, swaps run, savings generated platform-wide, top foods, top stores. No PII.
+### 2. Pantry — cuisine-aware
 
-### Slice 4 — Exports + scheduled jobs
-- **CSV exports**: edge function `export-analytics` streams CSVs (savings log, pantry history, grocery spend) → "Download" buttons on dashboard.
-- **PDF monthly recap**: edge function `monthly-recap-pdf` generates a personal PDF (totals, top wins, savings chart). Surfaced on dashboard + emailable later.
-- **Cron jobs** (pg_cron + pg_net):
-  - Daily 8am UTC → `pantry-expiry-check` edge fn (low-stock + expiring-soon notifications, written to a `notifications` table for in-app display).
-  - Sunday 11pm UTC → `weekly-savings-rollup` edge fn (writes `analytics_snapshots`).
-  - Every 30 min → `watchlist-sale-matcher` edge fn (matches new `sale_observations` against `watchlist_items`, writes notifications).
+- Pantry list gets a small "Cuisines" column/chip per item (computed via `detectItemCuisines`).
+- When filter is on: show items whose cuisine matches the user's preferences first, others collapsed under a "Other items (N)" expand.
+- The existing **SpecialtyStoreBanner** already uses topCuisines — wire it so when the user has explicit prefs, those win over inferred ones.
 
-### Technical details
-- All new tables get RLS: `user_id = auth.uid()` for personal data; admin-readable via `has_role`.
-- Aggregations done server-side via SQL views or pre-rolled snapshots — never pull all rows to the client.
-- Charts use `recharts` (already in shadcn/ui).
-- Notifications: simple `notifications` table (Slice 4) — bell icon in header, no push/email yet.
-- All edge functions follow existing pattern: CORS headers, Lovable AI gateway only when AI is needed (most of these are pure data).
-- Backfill of `savings_events` from `saved_swaps` runs as part of Slice 1 migration.
+### 3. Stores — cuisine-aware default
+
+- `/stores` defaults active filter chips to the user's cuisine prefs (instead of empty).
+- Header shows "Showing stores for Korean / South Asian — [Show all stores]".
+- Empty state copy adjusts: "No Korean / South Asian stores nearby — [Show all stores]".
+
+### 4. Sales — cuisine-aware default
+
+- `/sales` filters `sale_observations` to ones whose `food_name` maps (via `detectItemCuisines`) to the user's cuisines, OR generic staples (no cuisine tag) — those always show because rice/milk/eggs aren't ethnic.
+- Same "Show everything" toggle in the header.
+
+### 5. Bulk-Buy engine (data-driven, replaces static UI)
+
+Replaces `BulkStoragePlanner` with a real recommender driven by what the user actually buys + cuisine.
+
+**New table `bulk_buy_candidates`** — pre-computed nightly:
+- `food_name`, `cuisine_tags text[]`, `typical_unit_price_usd`, `bulk_unit_price_usd`, `bulk_pack_size`, `est_savings_pct`, `shelf_life_days`, `storage_tip`, `best_store_type` (e.g. "south_asian_grocer"), `confidence` (low/med/high), `source` (`derived` | `curated`).
+
+**Edge function `bulk-buy-recommend`** (called from new `/bulk-buy` page):
+- Inputs: user's cuisine prefs, household_size, pantry consumption frequency from `pantry_consumption_log`.
+- Logic:
+  1. Pull `bulk_buy_candidates` matching cuisine prefs.
+  2. Cross-reference with the user's `pantry_consumption_log` — items they actually use frequently get boosted score.
+  3. Cross-reference active `sale_observations` — if any candidate is currently on sale, surface it at top with "On sale now" badge.
+  4. Compute personalized `est_monthly_savings_usd` from consumption rate × savings_pct.
+  5. Return ranked list with reasoning.
+
+**New page `/bulk-buy`** (replaces the BulkStoragePlanner widget on Pantry — link out to it):
+- Hero shows total potential monthly savings.
+- Cards per recommendation: food, pack size, bulk vs typical price, where to buy (links to specialty stores nearby with that cuisine tag), shelf life, storage tip, current sale flag.
+- Filter bar at top — same cuisine bar as everywhere else.
+- "Add to grocery list" + "Add to watchlist" actions per card.
+
+**Seed `bulk_buy_candidates`** with ~40 curated entries covering all 10 cuisines (rice in 20lb bags, lentils, gochujang tubs, masa, etc.) so the page has content immediately. Nightly cron `bulk-buy-rebuild` (deferred — schema-ready but not wired this slice) will later derive new candidates from sale/price observations.
+
+### 6. Pantry page cleanup
+
+- Remove the inline `BulkStoragePlanner` card; replace with a compact "Bulk-buy savings → $X/mo potential" link card pointing to `/bulk-buy`.
+
+### Order of operations within this slice
+
+1. Migration: profile columns + `bulk_buy_candidates` table + RLS + seed data.
+2. `useCuisinePrefs` hook + `<CuisineFilterBar />` + Settings UI.
+3. Wire filter into Pantry, Stores, Sales (smallest changes first).
+4. `bulk-buy-recommend` edge fn + `/bulk-buy` page.
+5. Replace BulkStoragePlanner card on Pantry with the new link card.
 
 ### Why this order
-Slice 1 establishes the data spine — every later slice writes to or reads from `savings_events` / `analytics_snapshots`. Building the admin view or PDFs first would mean rewriting them once the spine exists.
 
-I'll start Slice 1 once you approve.
+The cuisine profile is the dependency for everything else. Without it, the Bulk-Buy engine has no signal beyond raw consumption, and the Pantry/Stores/Sales filters are guesses. Built first, every later screen just reads from it.
+
+Approve and I'll start with step 1 (migration).
