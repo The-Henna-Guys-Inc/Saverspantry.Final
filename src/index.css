@@ -58,6 +58,16 @@
     font-feature-settings: "ss01", "cv11";
   }
 
+  @media (max-width: 767px) {
+    body {
+      padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+    }
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
   h1, h2, h3 {
     @apply tracking-tight;
   }
