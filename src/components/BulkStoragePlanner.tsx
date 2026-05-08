@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Boxes, Loader2, Plus, Trash2, TrendingDown, Sparkles, Pencil, RotateCcw } from "lucide-react";
+import { Boxes, Loader2, Plus, Trash2, TrendingDown, Sparkles, Pencil, RotateCcw, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 // Per-person daily consumption in POUNDS, typical weekly retail $/lb (small pkg),
