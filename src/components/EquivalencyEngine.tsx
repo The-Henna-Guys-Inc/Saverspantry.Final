@@ -64,13 +64,14 @@ export const EquivalencyEngine = () => {
         body: {
           food: q,
           dietary_prefs: restrictions.map((r) => r.toLowerCase()),
+          cuisine: cuisine ?? undefined,
           profile: profilePrefs ? {
-            cuisines: profilePrefs.cuisines ?? [],
+            cuisines: cuisine ? [cuisine] : (profilePrefs.cuisines ?? []),
             spice: profilePrefs.spice ?? null,
             loves: profilePrefs.loves ?? [],
             dislikes: profilePrefs.dislikes ?? [],
             allergies: profilePrefs.allergies ?? [],
-          } : null,
+          } : (cuisine ? { cuisines: [cuisine] } : null),
         },
       });
       if (error) throw error;
