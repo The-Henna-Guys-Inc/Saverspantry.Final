@@ -51,7 +51,7 @@ const Settings = () => {
       const [{ data }, { data: swaps }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("display_name, household_size, zip_code, dietary_prefs")
+          .select("display_name, household_size, zip_code, dietary_prefs, cuisine_preferences, cuisine_filter_enabled")
           .eq("user_id", user.id)
           .maybeSingle(),
         supabase
