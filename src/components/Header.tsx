@@ -54,6 +54,9 @@ export const Header = () => {
                 <Link to="/pantry"><Refrigerator className="h-4 w-4 mr-1.5" />Pantry</Link>
               </Button>
               <Button asChild variant="ghost" size="sm" className="rounded-xl">
+                <Link to="/cook"><Utensils className="h-4 w-4 mr-1.5" />Cook</Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="rounded-xl">
                 <Link to="/deals"><Tag className="h-4 w-4 mr-1.5" />Deals</Link>
               </Button>
               <SavingsCounter />
