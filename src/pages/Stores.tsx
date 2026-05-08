@@ -115,14 +115,14 @@ const Stores = () => {
 
   const filtered = useMemo(() => {
     return stores.filter((s) => {
-      if (active.length && !s.cuisine_specialties.some((c) => active.includes(c))) return false;
+      if (effectiveActive.length && !s.cuisine_specialties.some((c) => effectiveActive.includes(c))) return false;
       if (q.trim()) {
         const hay = `${s.name} ${s.chain_name ?? ""} ${s.city ?? ""} ${s.region ?? ""}`.toLowerCase();
         if (!hay.includes(q.toLowerCase())) return false;
       }
       return true;
     });
-  }, [stores, active, q]);
+  }, [stores, effectiveActive, q]);
 
   const mapHref = (s: Store) => {
     const query = s.address ? encodeURIComponent(`${s.name}, ${s.address}, ${s.city ?? ""}`) : encodeURIComponent(s.name);
