@@ -37,6 +37,7 @@ const App = () => (
       <InstallPrompt />
       <BrowserRouter>
         <LegalAcceptanceGate />
+        <SessionEnforcer />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/legal/:type" element={<Legal />} />
