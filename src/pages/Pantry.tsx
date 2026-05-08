@@ -276,11 +276,16 @@ const Pantry = () => {
         <Tabs value={tab} onValueChange={setTab} className="w-full">
           <TabsList className="rounded-2xl mb-6">
             <TabsTrigger value="items" className="rounded-xl gap-1.5"><Package className="h-4 w-4" />Items</TabsTrigger>
-            <TabsTrigger value="expiry" className="rounded-xl gap-1.5"><CalendarDays className="h-4 w-4" />Expiry calendar</TabsTrigger>
+            <TabsTrigger value="expiry" className="rounded-xl gap-1.5"><CalendarDays className="h-4 w-4" />Expiry</TabsTrigger>
+            <TabsTrigger value="bulk-buy" className="rounded-xl gap-1.5"><PackageOpen className="h-4 w-4" />Bulk-Buy</TabsTrigger>
           </TabsList>
 
           <TabsContent value="expiry" className="mt-0">
             <PantryExpiryView />
+          </TabsContent>
+
+          <TabsContent value="bulk-buy" className="mt-0">
+            <BulkBuy embedded />
           </TabsContent>
 
           <TabsContent value="items" className="mt-0">
