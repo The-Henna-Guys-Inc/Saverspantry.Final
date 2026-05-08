@@ -49,11 +49,24 @@ type CustomItem = {
   shelfLifeMonths: number;
 };
 
-type Selection = Record<string, boolean>;
-type LiveBulkPrice = Record<string, number | undefined>; // overrides bulkPerLb (still $/lb estimated)
+// Per-staple user overrides (any subset of fields)
+type StapleOverride = Partial<Pick<Staple, "label" | "lbsPerPersonPerDay" | "retailPerLb" | "bulkPerLb" | "shelfLifeMonths">>;
+type Overrides = Record<string, StapleOverride>;
+type LiveBulkPrice = Record<string, number | undefined>;
 
 const HORIZONS = [3, 6, 12] as const;
 type Horizon = typeof HORIZONS[number];
+
+// Anything we can edit in the dialog (curated or custom)
+type Editable = {
+  id: string;
+  isCustom: boolean;
+  label: string;
+  lbsPerPersonPerDay: number;
+  retailPerLb: number;
+  bulkPerLb: number;
+  shelfLifeMonths: number;
+};
 
 interface Props {
   zip?: string | null;
