@@ -287,6 +287,8 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
   const [livePrices, setLivePrices] = useState<LiveBulkPrice>({});
   const [storeName, setStoreName] = useState<string | null>(null);
   const [pricesLoading, setPricesLoading] = useState(false);
+  const [activePacks, setActivePacks] = useState<Set<string>>(new Set());
+  const [displayName, setDisplayName] = useState<string>("");
 
   // edit dialog
   const [editing, setEditing] = useState<Editable | null>(null);
@@ -303,21 +305,36 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
       if (!user) return;
       const { data } = await supabase
         .from("profiles")
-        .select("household_size, zip_code")
+        .select("household_size, zip_code, dietary_prefs, display_name")
         .eq("user_id", user.id)
         .maybeSingle();
       if (data?.household_size) setHousehold(data.household_size);
       if (data?.zip_code && !initialZip) setZip(data.zip_code);
+      if (data?.display_name) setDisplayName(data.display_name);
+      const prefs = (data?.dietary_prefs ?? {}) as { cuisines?: string[] };
+      const fromProfile = (prefs.cuisines ?? []).filter((c) => CUISINE_PACKS[c]);
+      if (fromProfile.length) setActivePacks(new Set(fromProfile));
     })();
   }, [initialZip]);
 
   const days = horizon * 30;
-  // Apply overrides to curated, then drop hidden ones
+
+  // Combined staple list = base STAPLES + active cuisine packs (deduped by key)
+  const combinedStaples = useMemo(() => {
+    const seen = new Set<string>();
+    const out: Staple[] = [];
+    const push = (s: Staple) => { if (!seen.has(s.key)) { seen.add(s.key); out.push(s); } };
+    activePacks.forEach((pk) => CUISINE_PACKS[pk]?.staples.forEach(push));
+    STAPLES.forEach(push);
+    return out;
+  }, [activePacks]);
+
+  // Apply overrides, drop hidden
   const effectiveStaples = useMemo(
-    () => STAPLES.filter((s) => !hidden.has(s.key)).map((s) => ({ ...s, ...overrides[s.key] })),
-    [hidden, overrides]
+    () => combinedStaples.filter((s) => !hidden.has(s.key)).map((s) => ({ ...s, ...overrides[s.key] })),
+    [combinedStaples, hidden, overrides]
   );
-  const hiddenStaples = STAPLES.filter((s) => hidden.has(s.key));
+  const hiddenStaples = combinedStaples.filter((s) => hidden.has(s.key));
 
   const rows = useMemo(() => {
     const built = effectiveStaples.map((s) => {
