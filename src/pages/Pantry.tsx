@@ -426,6 +426,8 @@ const Pantry = () => {
             ))}
           </div>
         )}
+
+        <BulkStoragePlanner />
       </div>
     </main>
   );
