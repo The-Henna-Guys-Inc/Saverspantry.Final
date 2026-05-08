@@ -456,7 +456,42 @@ const Pantry = () => {
           </div>
         )}
 
-        <BulkStoragePlanner />
+        {otherItems.length > 0 && (
+          <Card className="p-4 rounded-2xl border-border/50 mt-4">
+            <button
+              onClick={() => setShowOther((v) => !v)}
+              className="w-full text-left text-sm font-medium text-muted-foreground hover:text-primary flex items-center justify-between min-h-[44px]"
+            >
+              <span>Other items not in your cuisines ({otherItems.length})</span>
+              <span className="text-xs">{showOther ? "Hide" : "Show"}</span>
+            </button>
+            {showOther && (
+              <ul className="mt-3 space-y-1 text-sm text-foreground/80">
+                {otherItems.map((it) => (
+                  <li key={it.id} className="flex justify-between gap-2 py-1 border-b border-border/30 last:border-0">
+                    <span className="truncate">{it.item}</span>
+                    <span className="text-xs text-muted-foreground shrink-0">{it.quantity} {it.unit} · {it.location}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        )}
+
+        <Card className="p-5 rounded-3xl border-accent/30 bg-gradient-warm shadow-soft mt-6">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="h-10 w-10 rounded-2xl bg-accent/20 flex items-center justify-center shrink-0">
+              <Sparkles className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-[180px]">
+              <div className="font-semibold text-primary">Bulk-buy savings</div>
+              <div className="text-xs text-muted-foreground">Personalized picks based on your cuisines and what you actually use.</div>
+            </div>
+            <Button asChild variant="hero" size="sm" className="rounded-xl">
+              <Link to="/bulk-buy">See recommendations →</Link>
+            </Button>
+          </div>
+        </Card>
       </div>
     </main>
   );
