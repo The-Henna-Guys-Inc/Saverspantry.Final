@@ -253,6 +253,7 @@ const Settings = () => {
           </Card>
         )}
 
+        <SupportTickets />
         <AccountManagement />
       </div>
     </main>
