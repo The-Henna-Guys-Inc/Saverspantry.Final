@@ -52,6 +52,25 @@ const Library = () => {
     load();
   };
 
+  const sendToPlanner = (recipe: any) => {
+    try {
+      const queue = JSON.parse(sessionStorage.getItem("planner_queue") || "[]");
+      const exists = queue.some((r: any) => r.title === recipe?.title);
+      if (exists) { toast.info("Already queued for next plan"); return; }
+      queue.push({
+        title: recipe?.title,
+        cuisine: recipe?.cuisine,
+        ingredients: recipe?.ingredients ?? [],
+      });
+      sessionStorage.setItem("planner_queue", JSON.stringify(queue));
+      toast.success("Queued — open Planner & generate", {
+        action: { label: "Open Planner", onClick: () => navigate("/planner") },
+      });
+    } catch {
+      toast.error("Could not queue recipe");
+    }
+  };
+
   if (authLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   if (!user) return <Navigate to="/auth" replace />;
 
