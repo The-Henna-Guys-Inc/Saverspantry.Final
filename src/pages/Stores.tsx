@@ -61,6 +61,18 @@ const Stores = () => {
   const [active, setActive] = useState<string[]>([]);
   const [q, setQ] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const { cuisines: prefCuisines, isFiltering: cuisineFilterOn, setEnabled: setCuisineEnabled, loading: prefsLoading } = useCuisinePrefs();
+
+  // Effective filter ids = manual chips + (if cuisine filter on) expansion of pref cuisines
+  const prefStoreIds = useMemo(
+    () => prefCuisines.flatMap((c) => CUISINE_TAG_TO_STORE_IDS[c] ?? [c]),
+    [prefCuisines],
+  );
+  const effectiveActive = useMemo(() => {
+    const ids = new Set<string>(active);
+    if (cuisineFilterOn) prefStoreIds.forEach((id) => ids.add(id));
+    return [...ids];
+  }, [active, prefStoreIds, cuisineFilterOn]);
 
   const loadStores = async () => {
     const { data: s } = await supabase
