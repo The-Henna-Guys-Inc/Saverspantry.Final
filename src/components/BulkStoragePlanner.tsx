@@ -344,11 +344,14 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
                       {r.totalLbs.toFixed(1)} lb · ${r.retailPerLb.toFixed(2)}/lb retail · ${r.bulkPerLb.toFixed(2)}/lb bulk
                     </div>
                   </div>
-                  {(r as any).custom && (
-                    <button onClick={() => removeCustom(r.key)} className="text-muted-foreground hover:text-destructive p-2 -m-2" aria-label="Remove">
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button onClick={() => openEdit(r)} className="text-muted-foreground hover:text-primary p-2 -m-2" aria-label="Edit">
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button onClick={() => removeRow(r.key, r.isCustom)} className="text-muted-foreground hover:text-destructive p-2 -m-2" aria-label={r.isCustom ? "Remove" : "Hide"}>
                       <Trash2 className="h-4 w-4" />
                     </button>
-                  )}
+                  </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-sm">
                   <div>
