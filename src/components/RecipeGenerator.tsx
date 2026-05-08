@@ -64,7 +64,7 @@ export const RecipeGenerator = () => {
       const { data, error } = await supabase.functions.invoke("recipe-generate", {
         body: {
           ingredients,
-          cuisine,
+          cuisine: cuisine ?? "Any",
           dietary_prefs: restrictions.map((r) => r.toLowerCase()),
           max_calories_per_serving: filters.cals,
           max_protein_g: filters.protein,
