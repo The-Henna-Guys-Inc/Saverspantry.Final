@@ -42,6 +42,8 @@ const Pantry = () => {
   const [locations, setLocations] = useState<PantryLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
+  const [showOther, setShowOther] = useState(false);
+  const { cuisines: prefCuisines, isFiltering, setEnabled } = useCuisinePrefs();
 
   // form state
   const [name, setName] = useState("");
