@@ -12,7 +12,7 @@ import { Loader2, Save, Settings as SettingsIcon, TrendingDown, Utensils } from 
 import { toast } from "sonner";
 import { AccountManagement } from "@/components/AccountManagement";
 import { SupportTickets } from "@/components/SupportTickets";
-import { CUISINE_LABEL, type CuisineTag } from "@/lib/cuisineHints";
+import { CUISINE_LABEL, mapLegacyCuisines, type CuisineTag } from "@/lib/cuisineHints";
 import { Switch } from "@/components/ui/switch";
 
 const DISCOVERY_CUISINES: CuisineTag[] = [
