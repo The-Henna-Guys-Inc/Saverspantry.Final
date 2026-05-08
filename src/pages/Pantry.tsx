@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash2, Refrigerator, Minus, AlertTriangle, X } from "lucide-react";
+import { Loader2, Plus, Trash2, Refrigerator, Minus, AlertTriangle, X, ScanLine } from "lucide-react";
 import { toast } from "sonner";
+import { BarcodeScanner } from "@/components/BarcodeScanner";
 
 type PantryItem = {
   id: string;
