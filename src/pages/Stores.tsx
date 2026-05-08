@@ -148,9 +148,17 @@ const Stores = () => {
             </div>
           )}
         </div>
-        <p className="text-muted-foreground mb-6">
+        <p className="text-muted-foreground mb-4">
           Indian, Mexican, Asian, Middle Eastern and more — staples for these cuisines <strong className="font-semibold text-foreground">often cost 15-50% less in ethnic grocery stores</strong> than at mainstream supermarkets.
         </p>
+
+        <CuisineFilterBar
+          cuisines={prefCuisines}
+          isFiltering={cuisineFilterOn}
+          onShowAll={() => setCuisineEnabled(false)}
+          onResume={() => setCuisineEnabled(true)}
+          className="mb-4"
+        />
 
         <Card className="p-5 rounded-3xl border-border/50 shadow-soft mb-6">
           <div className="relative mb-4">
