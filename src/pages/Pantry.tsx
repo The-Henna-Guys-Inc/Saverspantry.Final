@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash2, Refrigerator, Minus, AlertTriangle, X } from "lucide-react";
+import { Loader2, Plus, Trash2, Refrigerator, Minus, AlertTriangle, X, ScanLine } from "lucide-react";
 import { toast } from "sonner";
+import { BarcodeScanner } from "@/components/BarcodeScanner";
 
 type PantryItem = {
   id: string;
@@ -46,6 +47,29 @@ const Pantry = () => {
 
   // new location input
   const [newLoc, setNewLoc] = useState("");
+
+  // barcode scanner
+  const [scannerOpen, setScannerOpen] = useState(false);
+
+  const handleScanned = (r: { code: string; productName?: string; brand?: string; quantity?: string; categories?: string }) => {
+    const label = r.productName ? (r.brand ? `${r.brand} ${r.productName}` : r.productName) : `Item ${r.code}`;
+    setName(label);
+    if (r.quantity) {
+      const m = r.quantity.match(/([\d.]+)\s*(g|kg|ml|l|oz|lb)?/i);
+      if (m) {
+        setQty(m[1]);
+        if (m[2]) {
+          const u = m[2].toLowerCase() === "l" ? "L" : m[2].toLowerCase();
+          if (UNITS.includes(u)) setUnit(u);
+        }
+      }
+    }
+    if (r.categories) {
+      const lower = r.categories.toLowerCase();
+      const match = CATEGORIES.find((c) => lower.includes(c));
+      if (match) setCategory(match);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -296,13 +320,18 @@ const Pantry = () => {
               <Input id="t" type="number" min={0} step="0.1" value={threshold} onChange={(e) => setThreshold(e.target.value)} placeholder="opt." className="rounded-xl mt-1" />
             </div>
           </div>
-          <div className="mt-4">
+          <div className="mt-4 flex flex-wrap gap-2">
             <Button variant="hero" onClick={add} disabled={adding} className="rounded-xl">
               {adding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
               Add to pantry
             </Button>
+            <Button variant="outline" onClick={() => setScannerOpen(true)} className="rounded-xl">
+              <ScanLine className="h-4 w-4 mr-2" /> Scan barcode
+            </Button>
           </div>
         </Card>
+
+        <BarcodeScanner open={scannerOpen} onOpenChange={setScannerOpen} onDetected={handleScanned} />
 
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
