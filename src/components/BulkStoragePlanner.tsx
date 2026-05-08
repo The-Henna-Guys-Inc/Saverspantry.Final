@@ -83,6 +83,34 @@ const CUISINE_PACKS: Record<string, { label: string; emoji: string; staples: Sta
       { key: "in_masala",    label: "Garam masala",      searchTerm: "garam masala",       lbsPerPersonPerDay: 0.005, retailPerLb: 24.0, bulkPerLb: 12.0, shelfLifeMonths: 24 },
     ],
   },
+  persian: {
+    label: "Persian pantry", emoji: "🇮🇷",
+    staples: [
+      { key: "ir_basmati",   label: "Basmati rice",       searchTerm: "basmati rice",         lbsPerPersonPerDay: 0.12, retailPerLb: 2.40, bulkPerLb: 1.40, shelfLifeMonths: 240,
+        bulkSources: [{ store: "Costco", pricePerLb: 1.30, searchUrl: costco("basmati rice 20 lb") }, { store: "Amazon", pricePerLb: 1.55, searchUrl: amazon("basmati rice") }] },
+      { key: "ir_saffron",   label: "Saffron",            searchTerm: "saffron threads",      lbsPerPersonPerDay: 0.0005,retailPerLb: 2200, bulkPerLb: 1400, shelfLifeMonths: 36 },
+      { key: "ir_dried_lime",label: "Dried limes (limoo amani)",searchTerm: "dried lime",     lbsPerPersonPerDay: 0.003,retailPerLb: 24.0, bulkPerLb: 12.0, shelfLifeMonths: 24 },
+      { key: "ir_split_peas",label: "Yellow split peas",  searchTerm: "yellow split peas",    lbsPerPersonPerDay: 0.04, retailPerLb: 2.40, bulkPerLb: 1.20, shelfLifeMonths: 60 },
+      { key: "ir_barberries",label: "Barberries (zereshk)",searchTerm: "barberries zereshk",  lbsPerPersonPerDay: 0.005,retailPerLb: 28.0, bulkPerLb: 16.0, shelfLifeMonths: 18 },
+      { key: "ir_advieh",    label: "Advieh spice blend", searchTerm: "advieh persian spice", lbsPerPersonPerDay: 0.004,retailPerLb: 22.0, bulkPerLb: 11.0, shelfLifeMonths: 24 },
+      { key: "ir_rose",      label: "Rose water",         searchTerm: "rose water",           lbsPerPersonPerDay: 0.005,retailPerLb: 6.00, bulkPerLb: 3.50, shelfLifeMonths: 24 },
+    ],
+  },
+  afghani: {
+    label: "Afghani pantry", emoji: "🇦🇫",
+    staples: [
+      { key: "af_basmati",   label: "Long-grain basmati", searchTerm: "basmati rice",         lbsPerPersonPerDay: 0.12, retailPerLb: 2.40, bulkPerLb: 1.40, shelfLifeMonths: 240,
+        bulkSources: [{ store: "Costco", pricePerLb: 1.30, searchUrl: costco("basmati rice 20 lb") }] },
+      { key: "af_atta",      label: "Whole wheat flour",  searchTerm: "atta flour",           lbsPerPersonPerDay: 0.12, retailPerLb: 1.80, bulkPerLb: 0.95, shelfLifeMonths: 9,
+        bulkSources: [{ store: "Costco", pricePerLb: 0.85, searchUrl: costco("atta 20 lb") }] },
+      { key: "af_split_peas",label: "Yellow split peas (chana dal)",searchTerm: "yellow split peas",lbsPerPersonPerDay: 0.04, retailPerLb: 2.40, bulkPerLb: 1.20, shelfLifeMonths: 60 },
+      { key: "af_kidney",    label: "Red kidney beans (lubia)",searchTerm: "dried kidney beans",lbsPerPersonPerDay: 0.04, retailPerLb: 2.40, bulkPerLb: 1.30, shelfLifeMonths: 60 },
+      { key: "af_oil",       label: "Cooking oil",        searchTerm: "vegetable oil",        lbsPerPersonPerDay: 0.04, retailPerLb: 3.20, bulkPerLb: 1.80, shelfLifeMonths: 12,
+        bulkSources: [{ store: "Costco", pricePerLb: 1.65, searchUrl: costco("vegetable oil") }] },
+      { key: "af_cardamom",  label: "Green cardamom",     searchTerm: "green cardamom pods",  lbsPerPersonPerDay: 0.002,retailPerLb: 60.0, bulkPerLb: 32.0, shelfLifeMonths: 36 },
+      { key: "af_tea",       label: "Loose green tea",    searchTerm: "loose green tea",      lbsPerPersonPerDay: 0.005,retailPerLb: 16.0, bulkPerLb: 8.00, shelfLifeMonths: 24 },
+    ],
+  },
   pakistani: {
     label: "Pakistani pantry", emoji: "🇵🇰",
     staples: [

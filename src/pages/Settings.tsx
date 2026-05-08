@@ -13,7 +13,7 @@ import { toast } from "sonner";
 
 const RESTRICTIONS = ["halal", "kosher", "vegetarian", "vegan", "gluten-free", "dairy-free", "nut-free"] as const;
 const DIET_STYLES = ["balanced", "high-protein", "keto", "mediterranean", "pescatarian"] as const;
-const CUISINES = ["mediterranean", "italian", "mexican", "indian", "chinese", "japanese", "thai", "middle-eastern", "american", "korean", "vietnamese", "french", "ethiopian", "caribbean"] as const;
+const CUISINES = ["mediterranean", "italian", "mexican", "indian", "pakistani", "afghani", "persian", "chinese", "japanese", "thai", "middle-eastern", "american", "korean", "vietnamese", "french", "ethiopian", "caribbean"] as const;
 const SPICE_LEVELS = ["mild", "medium", "spicy", "very-spicy"] as const;
 
 const splitList = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
