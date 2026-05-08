@@ -47,6 +47,81 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_response_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          expires_at: string
+          function_name: string
+          hit_count: number
+          response: Json
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          expires_at: string
+          function_name: string
+          hit_count?: number
+          response: Json
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          expires_at?: string
+          function_name?: string
+          hit_count?: number
+          response?: Json
+        }
+        Relationships: []
+      }
+      ai_usage_log: {
+        Row: {
+          cached: boolean
+          completion_tokens: number
+          cost_estimate_usd: number
+          created_at: string
+          error: string | null
+          function_name: string
+          id: string
+          latency_ms: number | null
+          model: string | null
+          prompt_tokens: number
+          status: string
+          total_tokens: number
+          user_id: string | null
+        }
+        Insert: {
+          cached?: boolean
+          completion_tokens?: number
+          cost_estimate_usd?: number
+          created_at?: string
+          error?: string | null
+          function_name: string
+          id?: string
+          latency_ms?: number | null
+          model?: string | null
+          prompt_tokens?: number
+          status?: string
+          total_tokens?: number
+          user_id?: string | null
+        }
+        Update: {
+          cached?: boolean
+          completion_tokens?: number
+          cost_estimate_usd?: number
+          created_at?: string
+          error?: string | null
+          function_name?: string
+          id?: string
+          latency_ms?: number | null
+          model?: string | null
+          prompt_tokens?: number
+          status?: string
+          total_tokens?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       analytics_snapshots: {
         Row: {
           by_category: Json
