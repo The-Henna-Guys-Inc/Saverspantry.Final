@@ -108,13 +108,23 @@ export const RecipeGenerator = () => {
         />
 
         <label className="block text-xs uppercase tracking-wider text-muted-foreground font-semibold mt-5 mb-2">
-          Cuisine
+          Cuisine <span className="normal-case text-muted-foreground/70">(optional)</span>
         </label>
         <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setCuisine(null)}
+            className={`text-sm px-4 py-2 rounded-full transition-smooth min-h-[44px] ${
+              cuisine === null
+                ? "bg-primary text-primary-foreground shadow-soft"
+                : "bg-secondary text-secondary-foreground hover:bg-muted"
+            }`}
+          >
+            Any
+          </button>
           {CUISINES.map((c) => (
             <button
               key={c}
-              onClick={() => setCuisine(c)}
+              onClick={() => setCuisine((prev) => (prev === c ? null : c))}
               className={`text-sm px-4 py-2 rounded-full transition-smooth min-h-[44px] ${
                 cuisine === c
                   ? "bg-primary text-primary-foreground shadow-soft"
