@@ -16,6 +16,7 @@ type Row = { id: string; created_at: string; query?: string; food?: string; resu
 
 const Library = () => {
   const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [lookups, setLookups] = useState<Row[]>([]);
   const [swaps, setSwaps] = useState<Row[]>([]);
   const [recipes, setRecipes] = useState<Row[]>([]);
