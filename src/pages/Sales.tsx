@@ -189,12 +189,14 @@ export default function Sales() {
           <TabsContent value="all" className="mt-5">
             {loading ? (
               <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
-            ) : sales.length === 0 ? (
+            ) : cuisineFiltered.length === 0 ? (
               <Card className="p-8 rounded-3xl text-center bg-gradient-warm">
-                <p className="text-sm text-muted-foreground">No active sales right now. Check back soon.</p>
+                <p className="text-sm text-muted-foreground">
+                  {isFiltering ? "No active sales match your cuisines. Try toggling \"Show everything\"." : "No active sales right now. Check back soon."}
+                </p>
               </Card>
             ) : (
-              <SaleList sales={sales} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} isAdmin={isAdmin} onRemove={removeSale} userId={user?.id ?? ""} onRefresh={loadSales} />
+              <SaleList sales={cuisineFiltered} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} isAdmin={isAdmin} onRemove={removeSale} userId={user?.id ?? ""} onRefresh={loadSales} />
             )}
           </TabsContent>
         </Tabs>
