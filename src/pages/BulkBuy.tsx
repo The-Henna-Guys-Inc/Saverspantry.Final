@@ -224,7 +224,15 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
             })}
           </div>
         )}
-      </div>
+    </>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <main className="min-h-screen bg-background">
+      <Header />
+      <div className="container max-w-5xl mx-auto px-6 py-12">{body}</div>
     </main>
   );
 };
