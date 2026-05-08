@@ -53,7 +53,7 @@ const tierDot = (t: string) =>
 const tierLabel = (t: string) =>
   t === "low" ? "Budget-friendly" : t === "medium" ? "Mid-range" : t === "high" ? "Higher-end" : "Price varies";
 
-const Stores = () => {
+const Stores = ({ embedded = false }: { embedded?: boolean }) => {
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stores, setStores] = useState<Store[]>([]);
