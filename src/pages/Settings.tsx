@@ -12,7 +12,7 @@ import { Loader2, Save, Settings as SettingsIcon, TrendingDown, Utensils } from 
 import { toast } from "sonner";
 import { AccountManagement } from "@/components/AccountManagement";
 import { SupportTickets } from "@/components/SupportTickets";
-import { CUISINE_LABEL, type CuisineTag } from "@/lib/cuisineHints";
+import { CUISINE_LABEL, mapLegacyCuisines, type CuisineTag } from "@/lib/cuisineHints";
 import { Switch } from "@/components/ui/switch";
 
 const DISCOVERY_CUISINES: CuisineTag[] = [
@@ -75,7 +75,9 @@ const Settings = () => {
         if (Array.isArray(prefs.loves)) setLoves(prefs.loves.join(", "));
         if (Array.isArray(prefs.dislikes)) setDislikes(prefs.dislikes.join(", "));
         if (Array.isArray(prefs.allergies)) setAllergies(prefs.allergies.join(", "));
-        setDiscoveryCuisines(((data as any).cuisine_preferences ?? []) as CuisineTag[]);
+        let dc = (((data as any).cuisine_preferences ?? []) as CuisineTag[]);
+        if (!dc.length && Array.isArray(prefs.cuisines)) dc = mapLegacyCuisines(prefs.cuisines);
+        setDiscoveryCuisines(dc);
         setCuisineFilterOn((data as any).cuisine_filter_enabled ?? true);
       }
       // Compute potential savings from equivalency engine history

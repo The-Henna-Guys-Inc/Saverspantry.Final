@@ -5,6 +5,58 @@ export type CuisineTag =
   | "korean" | "japanese" | "chinese" | "south_asian" | "southeast_asian"
   | "middle_eastern" | "mexican" | "latin_american" | "african" | "mediterranean";
 
+// Maps free-form / legacy cuisine names users may have saved into our CuisineTag taxonomy.
+export const LEGACY_CUISINE_MAP: Record<string, CuisineTag[]> = {
+  pakistani: ["south_asian"],
+  indian: ["south_asian"],
+  bangladeshi: ["south_asian"],
+  "sri lankan": ["south_asian"],
+  nepali: ["south_asian"],
+  afghani: ["south_asian", "middle_eastern"],
+  persian: ["middle_eastern"],
+  iranian: ["middle_eastern"],
+  lebanese: ["middle_eastern", "mediterranean"],
+  turkish: ["middle_eastern", "mediterranean"],
+  "middle-eastern": ["middle_eastern"],
+  "middle eastern": ["middle_eastern"],
+  arab: ["middle_eastern"],
+  moroccan: ["middle_eastern", "african"],
+  ethiopian: ["african"],
+  nigerian: ["african"],
+  italian: ["mediterranean"],
+  greek: ["mediterranean"],
+  spanish: ["mediterranean"],
+  french: ["mediterranean"],
+  mediterranean: ["mediterranean"],
+  thai: ["southeast_asian"],
+  vietnamese: ["southeast_asian"],
+  filipino: ["southeast_asian"],
+  indonesian: ["southeast_asian"],
+  malaysian: ["southeast_asian"],
+  korean: ["korean"],
+  japanese: ["japanese"],
+  chinese: ["chinese"],
+  taiwanese: ["chinese"],
+  mexican: ["mexican"],
+  "tex-mex": ["mexican"],
+  cuban: ["latin_american"],
+  peruvian: ["latin_american"],
+  brazilian: ["latin_american"],
+  caribbean: ["latin_american", "african"],
+  american: [],
+};
+
+export function mapLegacyCuisines(names: string[] | undefined | null): CuisineTag[] {
+  if (!Array.isArray(names)) return [];
+  const out = new Set<CuisineTag>();
+  for (const raw of names) {
+    const key = String(raw ?? "").trim().toLowerCase();
+    const tags = LEGACY_CUISINE_MAP[key];
+    if (tags) tags.forEach((t) => out.add(t));
+  }
+  return [...out];
+}
+
 export const CUISINE_LABEL: Record<CuisineTag, string> = {
   korean: "Korean",
   japanese: "Japanese",

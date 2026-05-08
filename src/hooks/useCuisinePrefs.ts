@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import type { CuisineTag } from "@/lib/cuisineHints";
+import { mapLegacyCuisines, type CuisineTag } from "@/lib/cuisineHints";
 
 export function useCuisinePrefs() {
   const { user } = useAuth();
@@ -13,10 +13,15 @@ export function useCuisinePrefs() {
     if (!user) { setLoading(false); return; }
     const { data } = await supabase
       .from("profiles")
-      .select("cuisine_preferences, cuisine_filter_enabled")
+      .select("cuisine_preferences, cuisine_filter_enabled, dietary_prefs")
       .eq("user_id", user.id)
       .maybeSingle();
-    setCuisines(((data?.cuisine_preferences ?? []) as string[]) as CuisineTag[]);
+    let prefs = ((data?.cuisine_preferences ?? []) as string[]) as CuisineTag[];
+    if (!prefs.length) {
+      const legacy = (data?.dietary_prefs as any)?.cuisines as string[] | undefined;
+      prefs = mapLegacyCuisines(legacy);
+    }
+    setCuisines(prefs);
     setFilterEnabled(data?.cuisine_filter_enabled ?? true);
     setLoading(false);
   }, [user]);
