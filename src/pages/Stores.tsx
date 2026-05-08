@@ -266,7 +266,7 @@ const Stores = ({ embedded = false }: { embedded?: boolean }) => {
           </div>
         )}
       </div>
-    </main>
+    </Wrapper>
   );
 };
 
