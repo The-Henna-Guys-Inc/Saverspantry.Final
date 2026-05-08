@@ -76,15 +76,16 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
   const [household, setHousehold] = useState<number>(2);
   const [horizon, setHorizon] = useState<Horizon>(6);
   const [zip, setZip] = useState<string>(initialZip ?? "");
-  const [selected, setSelected] = useState<Selection>(
-    Object.fromEntries(STAPLES.map((s) => [s.key, true])) as Selection
-  );
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const [overrides, setOverrides] = useState<Overrides>({});
   const [customs, setCustoms] = useState<CustomItem[]>([]);
   const [livePrices, setLivePrices] = useState<LiveBulkPrice>({});
   const [storeName, setStoreName] = useState<string | null>(null);
   const [pricesLoading, setPricesLoading] = useState(false);
 
-  // custom form
+  // edit dialog
+  const [editing, setEditing] = useState<Editable | null>(null);
+  // add-custom form
   const [cName, setCName] = useState("");
   const [cLbs, setCLbs] = useState("0.10");
   const [cRetail, setCRetail] = useState("3.00");
@@ -106,21 +107,33 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
   }, [initialZip]);
 
   const days = horizon * 30;
-  const activeStaples = STAPLES.filter((s) => selected[s.key]);
+  // Apply overrides to curated, then drop hidden ones
+  const effectiveStaples = useMemo(
+    () => STAPLES.filter((s) => !hidden.has(s.key)).map((s) => ({ ...s, ...overrides[s.key] })),
+    [hidden, overrides]
+  );
+  const hiddenStaples = STAPLES.filter((s) => hidden.has(s.key));
 
   const rows = useMemo(() => {
-    const built = activeStaples.map((s) => {
+    const built = effectiveStaples.map((s) => {
       const totalLbs = s.lbsPerPersonPerDay * household * days;
       const live = livePrices[s.key];
-      // Live Kroger price is retail-package price/lb. Use it to refine retail$/lb,
-      // and assume bulk stays ~55% of retail when no real bulk source exists.
-      const retailPerLb = live ?? s.retailPerLb;
-      const bulkPerLb = live ? Math.max(retailPerLb * 0.55, s.bulkPerLb * 0.9) : s.bulkPerLb;
+      // If user manually overrode retailPerLb, respect it; otherwise live wins.
+      const userOverrodeRetail = overrides[s.key]?.retailPerLb != null;
+      const retailPerLb = userOverrodeRetail ? s.retailPerLb : (live ?? s.retailPerLb);
+      const bulkPerLb = (live && !userOverrodeRetail)
+        ? Math.max(retailPerLb * 0.55, s.bulkPerLb * 0.9)
+        : s.bulkPerLb;
       const retailCost = totalLbs * retailPerLb;
       const bulkCost = totalLbs * bulkPerLb;
       const savings = retailCost - bulkCost;
       const fitsShelf = s.shelfLifeMonths >= horizon;
-      return { ...s, totalLbs, retailPerLb, bulkPerLb, retailCost, bulkCost, savings, fitsShelf, isLive: !!live };
+      return {
+        ...s,
+        totalLbs, retailPerLb, bulkPerLb, retailCost, bulkCost, savings, fitsShelf,
+        isLive: !!live && !userOverrodeRetail,
+        isCustom: false,
+      };
     });
     const customRows = customs.map((c) => {
       const totalLbs = c.lbsPerPersonPerDay * household * days;
@@ -140,11 +153,11 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
         savings: retailCost - bulkCost,
         fitsShelf: c.shelfLifeMonths >= horizon,
         isLive: false,
-        custom: true,
+        isCustom: true,
       };
     });
     return [...built, ...customRows];
-  }, [activeStaples, customs, household, days, horizon, livePrices]);
+  }, [effectiveStaples, customs, household, days, horizon, livePrices, overrides]);
 
   const totals = useMemo(() => {
     const retail = rows.reduce((s, r) => s + r.retailCost, 0);
@@ -152,7 +165,47 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
     return { retail, bulk, savings: retail - bulk, weeklyEquivalent: retail / (horizon * 4.345) };
   }, [rows, horizon]);
 
-  const toggle = (k: string) => setSelected((p) => ({ ...p, [k]: !p[k] }));
+  const removeRow = (id: string, isCustom: boolean) => {
+    if (isCustom) {
+      setCustoms((p) => p.filter((c) => c.id !== id));
+    } else {
+      setHidden((p) => { const n = new Set(p); n.add(id); return n; });
+    }
+  };
+  const restoreStaple = (key: string) => setHidden((p) => { const n = new Set(p); n.delete(key); return n; });
+  const resetCurated = (key: string) => setOverrides((p) => { const n = { ...p }; delete n[key]; return n; });
+
+  const openEdit = (r: any) => {
+    setEditing({
+      id: r.key,
+      isCustom: !!r.isCustom,
+      label: r.label,
+      lbsPerPersonPerDay: r.lbsPerPersonPerDay,
+      retailPerLb: r.retailPerLb,
+      bulkPerLb: r.bulkPerLb,
+      shelfLifeMonths: r.shelfLifeMonths,
+    });
+  };
+
+  const saveEdit = () => {
+    if (!editing) return;
+    const { id, isCustom, label, lbsPerPersonPerDay, retailPerLb, bulkPerLb, shelfLifeMonths } = editing;
+    if (!label.trim() || !(lbsPerPersonPerDay > 0) || !(retailPerLb > 0) || !(bulkPerLb > 0) || !(shelfLifeMonths > 0)) {
+      toast.error("All fields need positive numbers.");
+      return;
+    }
+    if (bulkPerLb >= retailPerLb) {
+      toast.error("Bulk $/lb should be lower than retail.");
+      return;
+    }
+    if (isCustom) {
+      setCustoms((p) => p.map((c) => c.id === id ? { ...c, label: label.trim(), lbsPerPersonPerDay, retailPerLb, bulkPerLb, shelfLifeMonths } : c));
+    } else {
+      setOverrides((p) => ({ ...p, [id]: { label: label.trim(), lbsPerPersonPerDay, retailPerLb, bulkPerLb, shelfLifeMonths } }));
+    }
+    setEditing(null);
+    toast.success("Updated");
+  };
 
   const addCustom = () => {
     const lbs = parseFloat(cLbs), r = parseFloat(cRetail), b = parseFloat(cBulk), sh = parseInt(cShelf);
@@ -174,8 +227,6 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
     }]);
     setCName("");
   };
-
-  const removeCustom = (id: string) => setCustoms((p) => p.filter((c) => c.id !== id));
 
   const fetchLive = async () => {
     if (!zip || zip.length < 5) {
