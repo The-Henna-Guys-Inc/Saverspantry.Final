@@ -11,8 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Plus, Trash2, Refrigerator, Minus, AlertTriangle, X, ScanLine } from "lucide-react";
 import { toast } from "sonner";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
-import { BulkStoragePlanner } from "@/components/BulkStoragePlanner";
 import { ExpiryDateScanner } from "@/components/ExpiryDateScanner";
+import { CuisineFilterBar } from "@/components/CuisineFilterBar";
+import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
+import { detectItemCuisines, CUISINE_LABEL } from "@/lib/cuisineHints";
+import { Link } from "react-router-dom";
+import { Sparkles } from "lucide-react";
 
 type PantryItem = {
   id: string;
