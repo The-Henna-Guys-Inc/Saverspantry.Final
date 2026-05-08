@@ -18,6 +18,7 @@ import Dashboard from "./pages/Dashboard.tsx";
 import AdminAnalytics from "./pages/AdminAnalytics.tsx";
 import AdminSupport from "./pages/AdminSupport.tsx";
 import AdminAiUsage from "./pages/AdminAiUsage.tsx";
+import AdminAlerts from "./pages/AdminAlerts.tsx";
 import Legal from "./pages/Legal.tsx";
 import { InstallPrompt } from "./components/InstallPrompt";
 import { LegalAcceptanceGate } from "./components/LegalAcceptanceGate";
