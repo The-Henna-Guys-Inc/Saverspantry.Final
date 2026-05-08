@@ -1,5 +1,9 @@
 // Lovable AI nutrition lookup — structured tool-call output
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { cacheGet, cachePut, getUserIdFromAuth, logAiUsage, stableHash } from "../_shared/aiUsage.ts";
+
+const FN = "nutrition-lookup";
+const MODEL = "google/gemini-2.5-flash";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
