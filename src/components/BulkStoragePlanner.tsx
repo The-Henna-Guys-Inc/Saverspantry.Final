@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Boxes, Loader2, Plus, Trash2, TrendingDown, Sparkles } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Boxes, Loader2, Plus, Trash2, TrendingDown, Sparkles, Pencil, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 // Per-person daily consumption in POUNDS, typical weekly retail $/lb (small pkg),
@@ -48,11 +49,24 @@ type CustomItem = {
   shelfLifeMonths: number;
 };
 
-type Selection = Record<string, boolean>;
-type LiveBulkPrice = Record<string, number | undefined>; // overrides bulkPerLb (still $/lb estimated)
+// Per-staple user overrides (any subset of fields)
+type StapleOverride = Partial<Pick<Staple, "label" | "lbsPerPersonPerDay" | "retailPerLb" | "bulkPerLb" | "shelfLifeMonths">>;
+type Overrides = Record<string, StapleOverride>;
+type LiveBulkPrice = Record<string, number | undefined>;
 
 const HORIZONS = [3, 6, 12] as const;
 type Horizon = typeof HORIZONS[number];
+
+// Anything we can edit in the dialog (curated or custom)
+type Editable = {
+  id: string;
+  isCustom: boolean;
+  label: string;
+  lbsPerPersonPerDay: number;
+  retailPerLb: number;
+  bulkPerLb: number;
+  shelfLifeMonths: number;
+};
 
 interface Props {
   zip?: string | null;
@@ -62,15 +76,16 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
   const [household, setHousehold] = useState<number>(2);
   const [horizon, setHorizon] = useState<Horizon>(6);
   const [zip, setZip] = useState<string>(initialZip ?? "");
-  const [selected, setSelected] = useState<Selection>(
-    Object.fromEntries(STAPLES.map((s) => [s.key, true])) as Selection
-  );
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const [overrides, setOverrides] = useState<Overrides>({});
   const [customs, setCustoms] = useState<CustomItem[]>([]);
   const [livePrices, setLivePrices] = useState<LiveBulkPrice>({});
   const [storeName, setStoreName] = useState<string | null>(null);
   const [pricesLoading, setPricesLoading] = useState(false);
 
-  // custom form
+  // edit dialog
+  const [editing, setEditing] = useState<Editable | null>(null);
+  // add-custom form
   const [cName, setCName] = useState("");
   const [cLbs, setCLbs] = useState("0.10");
   const [cRetail, setCRetail] = useState("3.00");
@@ -92,21 +107,33 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
   }, [initialZip]);
 
   const days = horizon * 30;
-  const activeStaples = STAPLES.filter((s) => selected[s.key]);
+  // Apply overrides to curated, then drop hidden ones
+  const effectiveStaples = useMemo(
+    () => STAPLES.filter((s) => !hidden.has(s.key)).map((s) => ({ ...s, ...overrides[s.key] })),
+    [hidden, overrides]
+  );
+  const hiddenStaples = STAPLES.filter((s) => hidden.has(s.key));
 
   const rows = useMemo(() => {
-    const built = activeStaples.map((s) => {
+    const built = effectiveStaples.map((s) => {
       const totalLbs = s.lbsPerPersonPerDay * household * days;
       const live = livePrices[s.key];
-      // Live Kroger price is retail-package price/lb. Use it to refine retail$/lb,
-      // and assume bulk stays ~55% of retail when no real bulk source exists.
-      const retailPerLb = live ?? s.retailPerLb;
-      const bulkPerLb = live ? Math.max(retailPerLb * 0.55, s.bulkPerLb * 0.9) : s.bulkPerLb;
+      // If user manually overrode retailPerLb, respect it; otherwise live wins.
+      const userOverrodeRetail = overrides[s.key]?.retailPerLb != null;
+      const retailPerLb = userOverrodeRetail ? s.retailPerLb : (live ?? s.retailPerLb);
+      const bulkPerLb = (live && !userOverrodeRetail)
+        ? Math.max(retailPerLb * 0.55, s.bulkPerLb * 0.9)
+        : s.bulkPerLb;
       const retailCost = totalLbs * retailPerLb;
       const bulkCost = totalLbs * bulkPerLb;
       const savings = retailCost - bulkCost;
       const fitsShelf = s.shelfLifeMonths >= horizon;
-      return { ...s, totalLbs, retailPerLb, bulkPerLb, retailCost, bulkCost, savings, fitsShelf, isLive: !!live };
+      return {
+        ...s,
+        totalLbs, retailPerLb, bulkPerLb, retailCost, bulkCost, savings, fitsShelf,
+        isLive: !!live && !userOverrodeRetail,
+        isCustom: false,
+      };
     });
     const customRows = customs.map((c) => {
       const totalLbs = c.lbsPerPersonPerDay * household * days;
@@ -126,11 +153,11 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
         savings: retailCost - bulkCost,
         fitsShelf: c.shelfLifeMonths >= horizon,
         isLive: false,
-        custom: true,
+        isCustom: true,
       };
     });
     return [...built, ...customRows];
-  }, [activeStaples, customs, household, days, horizon, livePrices]);
+  }, [effectiveStaples, customs, household, days, horizon, livePrices, overrides]);
 
   const totals = useMemo(() => {
     const retail = rows.reduce((s, r) => s + r.retailCost, 0);
@@ -138,7 +165,47 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
     return { retail, bulk, savings: retail - bulk, weeklyEquivalent: retail / (horizon * 4.345) };
   }, [rows, horizon]);
 
-  const toggle = (k: string) => setSelected((p) => ({ ...p, [k]: !p[k] }));
+  const removeRow = (id: string, isCustom: boolean) => {
+    if (isCustom) {
+      setCustoms((p) => p.filter((c) => c.id !== id));
+    } else {
+      setHidden((p) => { const n = new Set(p); n.add(id); return n; });
+    }
+  };
+  const restoreStaple = (key: string) => setHidden((p) => { const n = new Set(p); n.delete(key); return n; });
+  const resetCurated = (key: string) => setOverrides((p) => { const n = { ...p }; delete n[key]; return n; });
+
+  const openEdit = (r: any) => {
+    setEditing({
+      id: r.key,
+      isCustom: !!r.isCustom,
+      label: r.label,
+      lbsPerPersonPerDay: r.lbsPerPersonPerDay,
+      retailPerLb: r.retailPerLb,
+      bulkPerLb: r.bulkPerLb,
+      shelfLifeMonths: r.shelfLifeMonths,
+    });
+  };
+
+  const saveEdit = () => {
+    if (!editing) return;
+    const { id, isCustom, label, lbsPerPersonPerDay, retailPerLb, bulkPerLb, shelfLifeMonths } = editing;
+    if (!label.trim() || !(lbsPerPersonPerDay > 0) || !(retailPerLb > 0) || !(bulkPerLb > 0) || !(shelfLifeMonths > 0)) {
+      toast.error("All fields need positive numbers.");
+      return;
+    }
+    if (bulkPerLb >= retailPerLb) {
+      toast.error("Bulk $/lb should be lower than retail.");
+      return;
+    }
+    if (isCustom) {
+      setCustoms((p) => p.map((c) => c.id === id ? { ...c, label: label.trim(), lbsPerPersonPerDay, retailPerLb, bulkPerLb, shelfLifeMonths } : c));
+    } else {
+      setOverrides((p) => ({ ...p, [id]: { label: label.trim(), lbsPerPersonPerDay, retailPerLb, bulkPerLb, shelfLifeMonths } }));
+    }
+    setEditing(null);
+    toast.success("Updated");
+  };
 
   const addCustom = () => {
     const lbs = parseFloat(cLbs), r = parseFloat(cRetail), b = parseFloat(cBulk), sh = parseInt(cShelf);
@@ -161,8 +228,6 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
     setCName("");
   };
 
-  const removeCustom = (id: string) => setCustoms((p) => p.filter((c) => c.id !== id));
-
   const fetchLive = async () => {
     if (!zip || zip.length < 5) {
       toast.error("Enter a 5-digit ZIP to look up live prices.");
@@ -170,7 +235,7 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
     }
     setPricesLoading(true);
     try {
-      const items = activeStaples.map((s) => ({ item: s.searchTerm, key: s.key }));
+      const items = effectiveStaples.map((s) => ({ item: s.searchTerm, key: s.key }));
       const { data, error } = await supabase.functions.invoke("kroger-prices", {
         body: { zip, items: items.map((i) => ({ item: i.item })) },
       });
@@ -241,22 +306,23 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
         <div className="text-xs text-muted-foreground mb-4">Live prices from <span className="font-medium text-primary">{storeName}</span></div>
       )}
 
-      {/* Staple toggles */}
-      <div className="flex flex-wrap gap-2 mb-5">
-        {STAPLES.map((s) => (
-          <button
-            key={s.key}
-            onClick={() => toggle(s.key)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
-              selected[s.key]
-                ? "bg-primary/10 text-primary border-primary/30"
-                : "bg-muted text-muted-foreground border-border hover:bg-muted/70"
-            }`}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
+      {/* Restore hidden curated items */}
+      {hiddenStaples.length > 0 && (
+        <div className="mb-5">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Hidden — tap to restore</div>
+          <div className="flex flex-wrap gap-2">
+            {hiddenStaples.map((s) => (
+              <button
+                key={s.key}
+                onClick={() => restoreStaple(s.key)}
+                className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-muted text-muted-foreground hover:bg-muted/70 inline-flex items-center gap-1"
+              >
+                <RotateCcw className="h-3 w-3" /> {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Results — cards on mobile, table on sm+ */}
       {rows.length === 0 ? (
@@ -278,11 +344,14 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
                       {r.totalLbs.toFixed(1)} lb · ${r.retailPerLb.toFixed(2)}/lb retail · ${r.bulkPerLb.toFixed(2)}/lb bulk
                     </div>
                   </div>
-                  {(r as any).custom && (
-                    <button onClick={() => removeCustom(r.key)} className="text-muted-foreground hover:text-destructive p-2 -m-2" aria-label="Remove">
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button onClick={() => openEdit(r)} className="text-muted-foreground hover:text-primary p-2 -m-2" aria-label="Edit">
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button onClick={() => removeRow(r.key, r.isCustom)} className="text-muted-foreground hover:text-destructive p-2 -m-2" aria-label={r.isCustom ? "Remove" : "Hide"}>
                       <Trash2 className="h-4 w-4" />
                     </button>
-                  )}
+                  </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-sm">
                   <div>
@@ -361,11 +430,14 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
                       )}
                     </td>
                     <td className="p-3 text-right">
-                      {(r as any).custom && (
-                        <button onClick={() => removeCustom(r.key)} className="text-muted-foreground hover:text-destructive p-2 -m-2" aria-label="Remove">
+                      <div className="inline-flex items-center gap-1">
+                        <button onClick={() => openEdit(r)} className="text-muted-foreground hover:text-primary p-2 -m-2" aria-label="Edit">
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => removeRow(r.key, r.isCustom)} className="text-muted-foreground hover:text-destructive p-2 -m-2" aria-label={r.isCustom ? "Remove" : "Hide"}>
                           <Trash2 className="h-4 w-4" />
                         </button>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -428,6 +500,59 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
           <Plus className="h-4 w-4 mr-2" /> Add custom item
         </Button>
       </div>
+
+      {/* Edit dialog */}
+      <Dialog open={!!editing} onOpenChange={(o) => { if (!o) setEditing(null); }}>
+        <DialogContent className="rounded-2xl max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-primary">Edit {editing?.label}</DialogTitle>
+            <DialogDescription>Tune the consumption rate, prices, or shelf life for your household.</DialogDescription>
+          </DialogHeader>
+          {editing && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <Label className="text-xs">Name</Label>
+                <Input value={editing.label} onChange={(e) => setEditing({ ...editing, label: e.target.value })} className="rounded-xl mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs">Lb/person/day</Label>
+                <Input type="number" step="0.01" value={editing.lbsPerPersonPerDay}
+                  onChange={(e) => setEditing({ ...editing, lbsPerPersonPerDay: parseFloat(e.target.value) || 0 })}
+                  className="rounded-xl mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs">Shelf (months)</Label>
+                <Input type="number" value={editing.shelfLifeMonths}
+                  onChange={(e) => setEditing({ ...editing, shelfLifeMonths: parseInt(e.target.value) || 0 })}
+                  className="rounded-xl mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs">Retail $/lb</Label>
+                <Input type="number" step="0.01" value={editing.retailPerLb}
+                  onChange={(e) => setEditing({ ...editing, retailPerLb: parseFloat(e.target.value) || 0 })}
+                  className="rounded-xl mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs">Bulk $/lb</Label>
+                <Input type="number" step="0.01" value={editing.bulkPerLb}
+                  onChange={(e) => setEditing({ ...editing, bulkPerLb: parseFloat(e.target.value) || 0 })}
+                  className="rounded-xl mt-1" />
+              </div>
+            </div>
+          )}
+          <DialogFooter className="flex-row justify-between sm:justify-between gap-2">
+            {editing && !editing.isCustom && overrides[editing.id] ? (
+              <Button variant="ghost" className="rounded-xl" onClick={() => { resetCurated(editing.id); setEditing(null); toast.success("Reset to defaults"); }}>
+                <RotateCcw className="h-4 w-4 mr-1.5" /> Reset to default
+              </Button>
+            ) : <span />}
+            <div className="flex gap-2">
+              <Button variant="outline" className="rounded-xl" onClick={() => setEditing(null)}>Cancel</Button>
+              <Button variant="hero" className="rounded-xl" onClick={saveEdit}>Save</Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
