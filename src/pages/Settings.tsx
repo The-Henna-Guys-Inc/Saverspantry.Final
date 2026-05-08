@@ -41,6 +41,8 @@ const Settings = () => {
   const [loves, setLoves] = useState("");
   const [dislikes, setDislikes] = useState("");
   const [allergies, setAllergies] = useState("");
+  const [discoveryCuisines, setDiscoveryCuisines] = useState<CuisineTag[]>([]);
+  const [cuisineFilterOn, setCuisineFilterOn] = useState(true);
   const [savings, setSavings] = useState<{ total: number; count: number } | null>(null);
 
   useEffect(() => {
