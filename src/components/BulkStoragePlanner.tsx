@@ -285,7 +285,14 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
                   <td className="p-3 text-right tabular-nums">{r.totalLbs.toFixed(1)} lb</td>
                   <td className="p-3 text-right tabular-nums">${r.retailCost.toFixed(0)}</td>
                   <td className="p-3 text-right tabular-nums font-semibold text-primary">${r.bulkCost.toFixed(0)}</td>
-                  <td className="p-3 text-right tabular-nums font-semibold text-accent">${r.savings.toFixed(0)}</td>
+                  <td className="p-3 text-right tabular-nums font-semibold text-accent">
+                    ${r.savings.toFixed(0)}
+                    {r.retailCost > 0 && (
+                      <div className="text-[10px] font-normal text-muted-foreground">
+                        {Math.round((r.savings / r.retailCost) * 100)}% off
+                      </div>
+                    )}
+                  </td>
                   <td className="p-3 text-right">
                     {(r as any).custom && (
                       <button onClick={() => removeCustom(r.key)} className="text-muted-foreground hover:text-destructive">
@@ -304,6 +311,11 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
                 <td className="p-3 text-right tabular-nums font-bold text-primary">${totals.bulk.toFixed(0)}</td>
                 <td className="p-3 text-right tabular-nums font-bold text-accent">
                   <span className="inline-flex items-center gap-1"><TrendingDown className="h-3.5 w-3.5" />${totals.savings.toFixed(0)}</span>
+                  {totals.retail > 0 && (
+                    <div className="text-[10px] font-normal text-muted-foreground">
+                      {Math.round((totals.savings / totals.retail) * 100)}% off
+                    </div>
+                  )}
                 </td>
                 <td />
               </tr>
