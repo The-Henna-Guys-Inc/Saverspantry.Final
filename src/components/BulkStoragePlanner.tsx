@@ -21,19 +21,22 @@ type Staple = {
   shelfLifeMonths: number;
 };
 
+// Per-person daily consumption tuned to REALISTIC household use
+// (assuming a mixed diet — not any one staple as the sole calorie source).
+// Sources: USDA per-capita food availability + LDS home-storage guidelines scaled down.
 const STAPLES: Staple[] = [
-  { key: "rice",          label: "White rice",       searchTerm: "long grain white rice", lbsPerPersonPerDay: 0.50, retailPerLb: 1.80, bulkPerLb: 0.85, shelfLifeMonths: 360 },
-  { key: "beans",         label: "Dried beans",      searchTerm: "dried pinto beans",     lbsPerPersonPerDay: 0.20, retailPerLb: 2.20, bulkPerLb: 1.10, shelfLifeMonths: 96  },
-  { key: "pasta",         label: "Pasta",            searchTerm: "spaghetti pasta",       lbsPerPersonPerDay: 0.25, retailPerLb: 2.00, bulkPerLb: 1.10, shelfLifeMonths: 24  },
-  { key: "flour",         label: "All-purpose flour",searchTerm: "all purpose flour",     lbsPerPersonPerDay: 0.20, retailPerLb: 1.40, bulkPerLb: 0.65, shelfLifeMonths: 12  },
-  { key: "sugar",         label: "Sugar",            searchTerm: "granulated sugar",      lbsPerPersonPerDay: 0.10, retailPerLb: 1.20, bulkPerLb: 0.70, shelfLifeMonths: 360 },
-  { key: "oats",          label: "Rolled oats",      searchTerm: "old fashioned rolled oats", lbsPerPersonPerDay: 0.15, retailPerLb: 2.40, bulkPerLb: 1.20, shelfLifeMonths: 24 },
-  { key: "oil",           label: "Cooking oil",      searchTerm: "vegetable oil",         lbsPerPersonPerDay: 0.06, retailPerLb: 3.20, bulkPerLb: 1.80, shelfLifeMonths: 12  },
-  { key: "salt",          label: "Salt",             searchTerm: "iodized salt",          lbsPerPersonPerDay: 0.02, retailPerLb: 0.90, bulkPerLb: 0.35, shelfLifeMonths: 360 },
-  { key: "tomatoes",      label: "Canned tomatoes",  searchTerm: "canned diced tomatoes", lbsPerPersonPerDay: 0.20, retailPerLb: 1.60, bulkPerLb: 0.95, shelfLifeMonths: 24  },
-  { key: "peanut_butter", label: "Peanut butter",    searchTerm: "peanut butter",         lbsPerPersonPerDay: 0.05, retailPerLb: 4.20, bulkPerLb: 2.60, shelfLifeMonths: 18  },
-  { key: "lentils",       label: "Lentils",          searchTerm: "dried lentils",         lbsPerPersonPerDay: 0.10, retailPerLb: 2.40, bulkPerLb: 1.20, shelfLifeMonths: 60  },
-  { key: "powdered_milk", label: "Powdered milk",    searchTerm: "nonfat dry milk",       lbsPerPersonPerDay: 0.06, retailPerLb: 6.00, bulkPerLb: 3.50, shelfLifeMonths: 36  },
+  { key: "rice",          label: "White rice",       searchTerm: "long grain white rice",     lbsPerPersonPerDay: 0.07, retailPerLb: 1.80, bulkPerLb: 0.85, shelfLifeMonths: 360 },
+  { key: "beans",         label: "Dried beans",      searchTerm: "dried pinto beans",         lbsPerPersonPerDay: 0.05, retailPerLb: 2.20, bulkPerLb: 1.10, shelfLifeMonths: 96  },
+  { key: "pasta",         label: "Pasta",            searchTerm: "spaghetti pasta",           lbsPerPersonPerDay: 0.07, retailPerLb: 2.00, bulkPerLb: 1.10, shelfLifeMonths: 24  },
+  { key: "flour",         label: "All-purpose flour",searchTerm: "all purpose flour",         lbsPerPersonPerDay: 0.08, retailPerLb: 1.40, bulkPerLb: 0.65, shelfLifeMonths: 12  },
+  { key: "sugar",         label: "Sugar",            searchTerm: "granulated sugar",          lbsPerPersonPerDay: 0.04, retailPerLb: 1.20, bulkPerLb: 0.70, shelfLifeMonths: 360 },
+  { key: "oats",          label: "Rolled oats",      searchTerm: "old fashioned rolled oats", lbsPerPersonPerDay: 0.05, retailPerLb: 2.40, bulkPerLb: 1.20, shelfLifeMonths: 24  },
+  { key: "oil",           label: "Cooking oil",      searchTerm: "vegetable oil",             lbsPerPersonPerDay: 0.04, retailPerLb: 3.20, bulkPerLb: 1.80, shelfLifeMonths: 12  },
+  { key: "salt",          label: "Salt",             searchTerm: "iodized salt",              lbsPerPersonPerDay: 0.01, retailPerLb: 0.90, bulkPerLb: 0.35, shelfLifeMonths: 360 },
+  { key: "tomatoes",      label: "Canned tomatoes",  searchTerm: "canned diced tomatoes",     lbsPerPersonPerDay: 0.10, retailPerLb: 1.60, bulkPerLb: 0.95, shelfLifeMonths: 24  },
+  { key: "peanut_butter", label: "Peanut butter",    searchTerm: "peanut butter",             lbsPerPersonPerDay: 0.03, retailPerLb: 4.20, bulkPerLb: 2.60, shelfLifeMonths: 18  },
+  { key: "lentils",       label: "Lentils",          searchTerm: "dried lentils",             lbsPerPersonPerDay: 0.03, retailPerLb: 2.40, bulkPerLb: 1.20, shelfLifeMonths: 60  },
+  { key: "powdered_milk", label: "Powdered milk",    searchTerm: "nonfat dry milk",           lbsPerPersonPerDay: 0.04, retailPerLb: 6.00, bulkPerLb: 3.50, shelfLifeMonths: 36  },
 ];
 
 type CustomItem = {
