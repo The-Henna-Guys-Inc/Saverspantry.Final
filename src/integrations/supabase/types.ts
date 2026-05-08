@@ -293,6 +293,48 @@ export type Database = {
         }
         Relationships: []
       }
+      operational_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          id: string
+          message: string | null
+          metadata: Json
+          resolved: boolean
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          metadata?: Json
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          metadata?: Json
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pantry_consumption_log: {
         Row: {
           days_to_expiry: number | null
@@ -1009,6 +1051,17 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      record_alert: {
+        Args: {
+          _alert_type: string
+          _dedupe_minutes?: number
+          _message: string
+          _metadata?: Json
+          _severity: string
+          _title: string
+        }
+        Returns: string
       }
     }
     Enums: {
