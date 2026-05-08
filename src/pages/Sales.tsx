@@ -91,10 +91,19 @@ export default function Sales() {
     })();
   }, [user]);
 
+  const cuisineFiltered = useMemo(() => {
+    if (!isFiltering) return sales;
+    return sales.filter((s) => {
+      const tags = detectItemCuisines(s.food_name);
+      // No cuisine tag => generic staple, always show. Otherwise must overlap.
+      return tags.length === 0 || tags.some((t) => cuisines.includes(t));
+    });
+  }, [sales, cuisines, isFiltering]);
+
   const matched = useMemo(() => {
     if (!watchedFoods.length) return [];
-    return sales.filter((s) => watchedFoods.some((w) => s.food_name.toLowerCase().includes(w) || w.includes(s.food_name.toLowerCase())));
-  }, [sales, watchedFoods]);
+    return cuisineFiltered.filter((s) => watchedFoods.some((w) => s.food_name.toLowerCase().includes(w) || w.includes(s.food_name.toLowerCase())));
+  }, [cuisineFiltered, watchedFoods]);
 
   const confirm = async (saleId: string) => {
     if (!user || confirmedIds.has(saleId)) return;
