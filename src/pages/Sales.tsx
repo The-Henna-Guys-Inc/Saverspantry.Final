@@ -152,6 +152,13 @@ export default function Sales() {
           </div>
         </div>
 
+        <CuisineFilterBar
+          cuisines={cuisines}
+          isFiltering={isFiltering}
+          onShowAll={() => setEnabled(false)}
+          onResume={() => setEnabled(true)}
+          className="mb-4"
+        />
         <Tabs defaultValue="watching" className="w-full">
           <TabsList className="rounded-xl">
             <TabsTrigger value="watching" className="rounded-lg">
