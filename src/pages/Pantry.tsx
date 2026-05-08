@@ -8,15 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash2, Refrigerator, Minus, AlertTriangle, X, ScanLine } from "lucide-react";
+import { Loader2, Plus, Trash2, Refrigerator, Minus, AlertTriangle, X, ScanLine, CalendarDays, Package } from "lucide-react";
 import { toast } from "sonner";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { ExpiryDateScanner } from "@/components/ExpiryDateScanner";
 import { CuisineFilterBar } from "@/components/CuisineFilterBar";
 import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
 import { detectItemCuisines, CUISINE_LABEL } from "@/lib/cuisineHints";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Sparkles } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PantryExpiryView } from "@/components/PantryExpiryView";
 
 type PantryItem = {
   id: string;
@@ -44,6 +46,9 @@ const Pantry = () => {
   const [adding, setAdding] = useState(false);
   const [showOther, setShowOther] = useState(false);
   const { cuisines: prefCuisines, isFiltering, setEnabled } = useCuisinePrefs();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get("tab") === "expiry" ? "expiry" : "items";
+  const setTab = (v: string) => setSearchParams(v === "items" ? {} : { tab: v });
 
   // form state
   const [name, setName] = useState("");
@@ -265,6 +270,17 @@ const Pantry = () => {
           className="mb-6"
         />
 
+        <Tabs value={tab} onValueChange={setTab} className="w-full">
+          <TabsList className="rounded-2xl mb-6">
+            <TabsTrigger value="items" className="rounded-xl gap-1.5"><Package className="h-4 w-4" />Items</TabsTrigger>
+            <TabsTrigger value="expiry" className="rounded-xl gap-1.5"><CalendarDays className="h-4 w-4" />Expiry calendar</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="expiry" className="mt-0">
+            <PantryExpiryView />
+          </TabsContent>
+
+          <TabsContent value="items" className="mt-0">
         {lowItems.length > 0 && (
           <Card className="p-4 rounded-2xl border-destructive/40 bg-destructive/5 mb-6">
             <div className="flex items-start gap-3">
@@ -492,6 +508,8 @@ const Pantry = () => {
             </Button>
           </div>
         </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </main>
   );

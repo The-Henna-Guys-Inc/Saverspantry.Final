@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,10 +9,8 @@ import Auth from "./pages/Auth.tsx";
 import Library from "./pages/Library.tsx";
 import Planner from "./pages/Planner.tsx";
 import Pantry from "./pages/Pantry.tsx";
-import PantryCalendar from "./pages/PantryCalendar.tsx";
 import Settings from "./pages/Settings.tsx";
-import Stores from "./pages/Stores.tsx";
-import Sales from "./pages/Sales.tsx";
+import Deals from "./pages/Deals.tsx";
 import Watchlist from "./pages/Watchlist.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import BulkBuy from "./pages/BulkBuy.tsx";
@@ -46,10 +44,11 @@ const App = () => (
           <Route path="/library" element={<Library />} />
           <Route path="/planner" element={<Planner />} />
           <Route path="/pantry" element={<Pantry />} />
-          <Route path="/pantry/calendar" element={<PantryCalendar />} />
+          <Route path="/pantry/calendar" element={<Navigate to="/pantry?tab=expiry" replace />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/stores" element={<Stores />} />
-          <Route path="/sales" element={<Sales />} />
+          <Route path="/deals" element={<Deals />} />
+          <Route path="/stores" element={<Navigate to="/deals?tab=stores" replace />} />
+          <Route path="/sales" element={<Navigate to="/deals?tab=sales" replace />} />
           <Route path="/watchlist" element={<Watchlist />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/bulk-buy" element={<BulkBuy />} />

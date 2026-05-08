@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Sprout, LogOut, BookmarkCheck, CalendarDays, Refrigerator, Settings as SettingsIcon, Store as StoreIcon, Tag, BarChart3, Shield, ChevronDown, PackageOpen } from "lucide-react";
+import { Sprout, LogOut, BookmarkCheck, CalendarDays, Refrigerator, Settings as SettingsIcon, Tag, BarChart3, Shield, ChevronDown, PackageOpen } from "lucide-react";
 import { toast } from "sonner";
 import { SavingsCounter } from "@/components/SavingsCounter";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -54,13 +54,7 @@ export const Header = () => {
                 <Link to="/pantry"><Refrigerator className="h-4 w-4 mr-1.5" />Pantry</Link>
               </Button>
               <Button asChild variant="ghost" size="sm" className="rounded-xl">
-                <Link to="/pantry/calendar"><CalendarDays className="h-4 w-4 mr-1.5" />Expiry</Link>
-              </Button>
-              <Button asChild variant="ghost" size="sm" className="rounded-xl">
-                <Link to="/stores"><StoreIcon className="h-4 w-4 mr-1.5" />Stores</Link>
-              </Button>
-              <Button asChild variant="ghost" size="sm" className="rounded-xl">
-                <Link to="/sales"><Tag className="h-4 w-4 mr-1.5" />Sales</Link>
+                <Link to="/deals"><Tag className="h-4 w-4 mr-1.5" />Deals</Link>
               </Button>
               <Button asChild variant="ghost" size="sm" className="rounded-xl">
                 <Link to="/bulk-buy"><PackageOpen className="h-4 w-4 mr-1.5" />Bulk-Buy</Link>

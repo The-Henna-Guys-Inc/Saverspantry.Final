@@ -41,7 +41,7 @@ const sourceMeta: Record<string, { label: string; cls: string }> = {
   admin_curated: { label: "Curated", cls: "bg-primary/10 text-primary" },
 };
 
-export default function Sales() {
+export default function Sales({ embedded = false }: { embedded?: boolean } = {}) {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [sales, setSales] = useState<Sale[]>([]);
@@ -132,10 +132,11 @@ export default function Sales() {
     toast.success("Removed.");
   };
 
+  const Outer: any = embedded ? "div" : "div";
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="container max-w-4xl mx-auto px-6 py-10">
+    <Outer className={embedded ? "" : "min-h-screen bg-background"}>
+      {!embedded && <Header />}
+      <main className={embedded ? "" : "container max-w-4xl mx-auto px-6 py-10"}>
         <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold text-primary">Sales near you</h1>
@@ -201,7 +202,7 @@ export default function Sales() {
           </TabsContent>
         </Tabs>
       </main>
-    </div>
+    </Outer>
   );
 }
 
