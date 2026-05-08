@@ -409,6 +409,20 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
                     </div>
                   </div>
                 </div>
+                {r.bestDeal && (
+                  <a
+                    href={r.bestDeal.searchUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 flex items-center gap-2 rounded-xl bg-accent/10 border border-accent/30 px-3 py-2 text-xs text-accent hover:bg-accent/15 active:bg-accent/20"
+                  >
+                    <TrendingDown className="h-3.5 w-3.5 shrink-0" />
+                    <span className="flex-1">
+                      Save <span className="font-bold">{r.bestDeal.pctVsBulk}%</span> more (~${r.bestDeal.extraSavings.toFixed(0)}) at <span className="font-semibold">{r.bestDeal.store}</span> — ${r.bestDeal.pricePerLb.toFixed(2)}/lb
+                    </span>
+                    <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                  </a>
+                )}
               </div>
             ))}
             <div className="rounded-2xl bg-muted/30 border-2 border-border p-4">
