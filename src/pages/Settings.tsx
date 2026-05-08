@@ -121,7 +121,9 @@ const Settings = () => {
           dislikes: splitList(dislikes),
           allergies: splitList(allergies),
         },
-      })
+        cuisine_preferences: discoveryCuisines,
+        cuisine_filter_enabled: cuisineFilterOn,
+      } as any)
       .eq("user_id", user.id);
     setSaving(false);
     if (error) return toast.error(error.message);
