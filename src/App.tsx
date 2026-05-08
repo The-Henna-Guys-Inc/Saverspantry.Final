@@ -16,6 +16,7 @@ import Sales from "./pages/Sales.tsx";
 import Watchlist from "./pages/Watchlist.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import AdminAnalytics from "./pages/AdminAnalytics.tsx";
+import AdminSupport from "./pages/AdminSupport.tsx";
 import Legal from "./pages/Legal.tsx";
 import { InstallPrompt } from "./components/InstallPrompt";
 import { LegalAcceptanceGate } from "./components/LegalAcceptanceGate";
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/watchlist" element={<Watchlist />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/admin/analytics" element={<AdminAnalytics />} />
+          <Route path="/admin/support" element={<AdminSupport />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
