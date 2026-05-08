@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Boxes, Loader2, Plus, Trash2, TrendingDown, Sparkles, Pencil, RotateCcw, ExternalLink, Heart } from "lucide-react";
+import { Boxes, Loader2, Plus, Trash2, TrendingDown, Sparkles, Pencil, RotateCcw, ExternalLink} from "lucide-react";
 import { toast } from "sonner";
 
 // Per-person daily consumption in POUNDS, typical weekly retail $/lb (small pkg),
@@ -316,7 +316,7 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
   const [storeName, setStoreName] = useState<string | null>(null);
   const [pricesLoading, setPricesLoading] = useState(false);
   const [activePacks, setActivePacks] = useState<Set<string>>(new Set());
-  const [displayName, setDisplayName] = useState<string>("");
+  
 
   // edit dialog
   const [editing, setEditing] = useState<Editable | null>(null);
@@ -338,7 +338,7 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
         .maybeSingle();
       if (data?.household_size) setHousehold(data.household_size);
       if (data?.zip_code && !initialZip) setZip(data.zip_code);
-      if (data?.display_name) setDisplayName(data.display_name);
+      
       const prefs = (data?.dietary_prefs ?? {}) as { cuisines?: string[] };
       const fromProfile = (prefs.cuisines ?? []).filter((c) => CUISINE_PACKS[c]);
       if (fromProfile.length) setActivePacks(new Set(fromProfile));
@@ -570,42 +570,6 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
       {storeName && (
         <div className="text-xs text-muted-foreground mb-4">Live prices from <span className="font-medium text-primary">{storeName}</span></div>
       )}
-
-      {/* Cuisine packs — personalized curated staples */}
-      <div className="mb-5 rounded-2xl border border-accent/30 bg-accent/5 p-4">
-        <div className="flex items-center gap-2 text-xs font-semibold text-accent mb-1">
-          <Heart className="h-3.5 w-3.5" /> Curated for {displayName ? displayName.split(" ")[0] : "you"}
-        </div>
-        <p className="text-xs text-muted-foreground mb-3">
-          Tap a cuisine to add its signature staples to your stock-up plan. {activePacks.size === 0 && (
-            <>Set favorites in <span className="font-medium text-primary">Settings → Favorite cuisines</span> to auto-load these.</>
-          )}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {Object.entries(CUISINE_PACKS).map(([key, pack]) => {
-            const on = activePacks.has(key);
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setActivePacks((p) => {
-                  const n = new Set(p);
-                  if (n.has(key)) n.delete(key); else n.add(key);
-                  return n;
-                })}
-                className={`text-xs px-3 py-1.5 rounded-full border transition-smooth inline-flex items-center gap-1.5 ${
-                  on
-                    ? "bg-primary text-primary-foreground border-primary shadow-soft"
-                    : "bg-background text-muted-foreground border-border hover:border-primary/40 hover:text-primary"
-                }`}
-              >
-                <span>{pack.emoji}</span>
-                <span>{pack.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       {/* Restore hidden curated items */}
       {hiddenStaples.length > 0 && (
