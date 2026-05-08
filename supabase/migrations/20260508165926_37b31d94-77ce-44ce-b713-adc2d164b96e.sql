@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.log_admin_action(TEXT, TEXT, TEXT, JSONB);

@@ -1112,15 +1112,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      log_admin_action: {
-        Args: {
-          _action: string
-          _metadata?: Json
-          _target_id?: string
-          _target_type?: string
-        }
-        Returns: string
-      }
       record_alert: {
         Args: {
           _alert_type: string
