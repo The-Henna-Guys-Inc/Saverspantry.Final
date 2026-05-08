@@ -21,6 +21,7 @@ type PantryItem = {
   location: string;
   expires_on: string | null;
   low_stock_threshold: number | null;
+  image_url: string | null;
 };
 
 type PantryLocation = { id: string; name: string };
@@ -44,6 +45,7 @@ const Pantry = () => {
   const [location, setLocation] = useState("pantry");
   const [expires, setExpires] = useState("");
   const [threshold, setThreshold] = useState("");
+  const [imageUrl, setImageUrl] = useState<string>("");
 
   // new location input
   const [newLoc, setNewLoc] = useState("");
@@ -51,9 +53,10 @@ const Pantry = () => {
   // barcode scanner
   const [scannerOpen, setScannerOpen] = useState(false);
 
-  const handleScanned = (r: { code: string; productName?: string; brand?: string; quantity?: string; categories?: string }) => {
+  const handleScanned = (r: { code: string; productName?: string; brand?: string; quantity?: string; categories?: string; imageUrl?: string }) => {
     const label = r.productName ? (r.brand ? `${r.brand} ${r.productName}` : r.productName) : `Item ${r.code}`;
     setName(label);
+    if (r.imageUrl) setImageUrl(r.imageUrl);
     if (r.quantity) {
       const m = r.quantity.match(/([\d.]+)\s*(g|kg|ml|l|oz|lb)?/i);
       if (m) {
@@ -75,7 +78,7 @@ const Pantry = () => {
     if (!user) return;
     (async () => {
       const [itemsRes, locsRes] = await Promise.all([
-        supabase.from("pantry_items").select("id, item, quantity, unit, category, location, expires_on, low_stock_threshold").order("created_at", { ascending: false }),
+        supabase.from("pantry_items").select("id, item, quantity, unit, category, location, expires_on, low_stock_threshold, image_url").order("created_at", { ascending: false }),
         supabase.from("pantry_locations").select("id, name").order("name"),
       ]);
       if (itemsRes.error) toast.error(itemsRes.error.message);
@@ -135,13 +138,14 @@ const Pantry = () => {
         location,
         expires_on: expires || null,
         low_stock_threshold: threshold === "" ? null : Number(threshold),
+        image_url: imageUrl || null,
       })
-      .select("id, item, quantity, unit, category, location, expires_on, low_stock_threshold")
+      .select("id, item, quantity, unit, category, location, expires_on, low_stock_threshold, image_url")
       .single();
     setAdding(false);
     if (error) return toast.error(error.message);
     setItems((p) => [data as PantryItem, ...p]);
-    setName(""); setQty("1"); setExpires(""); setThreshold("");
+    setName(""); setQty("1"); setExpires(""); setThreshold(""); setImageUrl("");
     toast.success("Added to pantry");
   };
 
