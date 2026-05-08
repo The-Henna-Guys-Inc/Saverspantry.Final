@@ -41,7 +41,7 @@ const sourceMeta: Record<string, { label: string; cls: string }> = {
   admin_curated: { label: "Curated", cls: "bg-primary/10 text-primary" },
 };
 
-export default function Sales() {
+export default function Sales({ embedded = false }: { embedded?: boolean } = {}) {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [sales, setSales] = useState<Sale[]>([]);
