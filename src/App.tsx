@@ -19,9 +19,13 @@ import AdminAnalytics from "./pages/AdminAnalytics.tsx";
 import AdminSupport from "./pages/AdminSupport.tsx";
 import AdminAiUsage from "./pages/AdminAiUsage.tsx";
 import AdminAlerts from "./pages/AdminAlerts.tsx";
+import AdminUsers from "./pages/AdminUsers.tsx";
+import AdminAudit from "./pages/AdminAudit.tsx";
+import AdminSessions from "./pages/AdminSessions.tsx";
 import Legal from "./pages/Legal.tsx";
 import { InstallPrompt } from "./components/InstallPrompt";
 import { LegalAcceptanceGate } from "./components/LegalAcceptanceGate";
+import { SessionEnforcer } from "./components/SessionEnforcer";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +37,7 @@ const App = () => (
       <InstallPrompt />
       <BrowserRouter>
         <LegalAcceptanceGate />
+        <SessionEnforcer />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/legal/:type" element={<Legal />} />
@@ -50,6 +55,9 @@ const App = () => (
           <Route path="/admin/support" element={<AdminSupport />} />
           <Route path="/admin/ai-usage" element={<AdminAiUsage />} />
           <Route path="/admin/alerts" element={<AdminAlerts />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/audit" element={<AdminAudit />} />
+          <Route path="/admin/sessions" element={<AdminSessions />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
