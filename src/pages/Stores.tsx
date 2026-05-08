@@ -10,6 +10,8 @@ import { Loader2, MapPin, Store as StoreIcon, ExternalLink, Heart, Search, Penci
 import { toast } from "sonner";
 import { AdminStoreDialog, type EditableStore } from "@/components/AdminStoreDialog";
 import { AdminStoreCsvUpload } from "@/components/AdminStoreCsvUpload";
+import { CuisineFilterBar } from "@/components/CuisineFilterBar";
+import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
 
 type Store = {
   id: string;
