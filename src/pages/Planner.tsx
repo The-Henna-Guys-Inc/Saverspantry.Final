@@ -162,6 +162,32 @@ const Planner = () => {
     }
   };
 
+  const fetchKrogerPrices = async () => {
+    if (!grocery) return;
+    if (!zip || zip.trim().length < 5) {
+      toast.error("Add a ZIP code in Settings to look up live prices");
+      return;
+    }
+    setKrogerLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("kroger-prices", {
+        body: { zip: zip.trim(), items: grocery.items.map((i) => ({ item: i.item })) },
+      });
+      if (error) throw error;
+      if ((data as any)?.error && !(data as any)?.store) throw new Error((data as any).error);
+      setKrogerData(data as KrogerResult);
+      const r = data as KrogerResult;
+      if (!r.store) toast.error("No Kroger-family store found near that ZIP");
+      else {
+        const matched = r.prices.filter((p) => p.match).length;
+        toast.success(`${r.store.name}: ${matched}/${r.prices.length} items priced`);
+      }
+    } catch (e: any) {
+      toast.error(e.message ?? "Couldn't fetch live prices");
+    } finally {
+      setKrogerLoading(false);
+    }
+
   if (authLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   if (!user) return <Navigate to="/auth" replace />;
 
