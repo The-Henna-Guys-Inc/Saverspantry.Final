@@ -16,6 +16,7 @@ import Sales from "./pages/Sales.tsx";
 import Watchlist from "./pages/Watchlist.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import AdminAnalytics from "./pages/AdminAnalytics.tsx";
+import AdminSupport from "./pages/AdminSupport.tsx";
 import Legal from "./pages/Legal.tsx";
 import { InstallPrompt } from "./components/InstallPrompt";
 import { LegalAcceptanceGate } from "./components/LegalAcceptanceGate";
