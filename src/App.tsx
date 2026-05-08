@@ -14,6 +14,7 @@ import Deals from "./pages/Deals.tsx";
 import Watchlist from "./pages/Watchlist.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import BulkBuy from "./pages/BulkBuy.tsx";
+import Cook from "./pages/Cook.tsx";
 import AdminAnalytics from "./pages/AdminAnalytics.tsx";
 import AdminSupport from "./pages/AdminSupport.tsx";
 import AdminAiUsage from "./pages/AdminAiUsage.tsx";
@@ -52,6 +53,7 @@ const App = () => (
           <Route path="/watchlist" element={<Watchlist />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/bulk-buy" element={<Navigate to="/pantry?tab=bulk-buy" replace />} />
+          <Route path="/cook" element={<Cook />} />
           <Route path="/admin/analytics" element={<AdminAnalytics />} />
           <Route path="/admin/support" element={<AdminSupport />} />
           <Route path="/admin/ai-usage" element={<AdminAiUsage />} />
