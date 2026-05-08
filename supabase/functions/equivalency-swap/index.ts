@@ -1,5 +1,9 @@
 // Nutrition equivalency engine — swap a food for cheaper, nutritionally-equivalent alternatives
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { cacheGet, cachePut, getUserIdFromAuth, logAiUsage, stableHash } from "../_shared/aiUsage.ts";
+
+const FN = "equivalency-swap";
+const MODEL = "google/gemini-2.5-flash";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -69,9 +73,18 @@ const TOOL = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const userId = await getUserIdFromAuth(req);
+  const startedAt = Date.now();
   try {
     const { food, dietary_prefs = [], profile = null } = await req.json();
     if (!food) return new Response(JSON.stringify({ error: "Missing 'food'" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    const cacheKey = await stableHash({ food: String(food).toLowerCase().trim(), dietary_prefs, profile });
+    const cached = await cacheGet(FN, cacheKey);
+    if (cached) {
+      logAiUsage({ userId, functionName: FN, model: MODEL, cached: true, latencyMs: Date.now() - startedAt });
+      return new Response(JSON.stringify(cached), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     const prefs = Array.isArray(dietary_prefs) ? dietary_prefs.join(", ") : "";
     const profileLines: string[] = [];
@@ -88,7 +101,7 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: MODEL,
         messages: [
           { role: "system", content: [
             "You are a nutrition equivalency engine. Given a food + portion, return 3 alternative combinations that match protein and calories within ~15% but typically cost less. Use realistic US grocery prices.",
@@ -109,16 +122,31 @@ Deno.serve(async (req) => {
       }),
     });
     if (!resp.ok) {
-      if (resp.status === 429) return new Response(JSON.stringify({ error: "Rate limit hit — try again shortly." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      if (resp.status === 402) return new Response(JSON.stringify({ error: "AI credits exhausted." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const status = resp.status;
+      logAiUsage({ userId, functionName: FN, model: MODEL, status: "error", error: `gateway ${status}`, latencyMs: Date.now() - startedAt });
+      if (status === 429) return new Response(JSON.stringify({ error: "Rate limit hit — try again shortly." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (status === 402) return new Response(JSON.stringify({ error: "AI credits exhausted." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       return new Response(JSON.stringify({ error: "AI gateway error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     const data = await resp.json();
     const args = data?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
-    if (!args) return new Response(JSON.stringify({ error: "No structured response" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    return new Response(JSON.stringify(JSON.parse(args)), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (!args) {
+      logAiUsage({ userId, functionName: FN, model: MODEL, status: "error", error: "no tool args", latencyMs: Date.now() - startedAt });
+      return new Response(JSON.stringify({ error: "No structured response" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const parsed = JSON.parse(args);
+    const usage = data?.usage ?? {};
+    logAiUsage({
+      userId, functionName: FN, model: MODEL,
+      promptTokens: usage.prompt_tokens ?? 0,
+      completionTokens: usage.completion_tokens ?? 0,
+      latencyMs: Date.now() - startedAt,
+    });
+    cachePut(FN, cacheKey, parsed, 24 * 7);
+    return new Response(JSON.stringify(parsed), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("equivalency error:", e);
+    logAiUsage({ userId, functionName: FN, model: MODEL, status: "error", error: e instanceof Error ? e.message : "unknown", latencyMs: Date.now() - startedAt });
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
