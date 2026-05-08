@@ -510,7 +510,7 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 ))}
               </tbody>
               <tfoot>
