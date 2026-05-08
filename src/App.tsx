@@ -15,6 +15,7 @@ import Stores from "./pages/Stores.tsx";
 import Sales from "./pages/Sales.tsx";
 import Watchlist from "./pages/Watchlist.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
+import BulkBuy from "./pages/BulkBuy.tsx";
 import AdminAnalytics from "./pages/AdminAnalytics.tsx";
 import AdminSupport from "./pages/AdminSupport.tsx";
 import AdminAiUsage from "./pages/AdminAiUsage.tsx";
