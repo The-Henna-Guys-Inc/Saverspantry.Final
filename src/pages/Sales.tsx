@@ -50,6 +50,7 @@ export default function Sales() {
   const [confirming, setConfirming] = useState<string | null>(null);
   const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set());
   const [isAdmin, setIsAdmin] = useState(false);
+  const { cuisines, isFiltering, setEnabled } = useCuisinePrefs();
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
