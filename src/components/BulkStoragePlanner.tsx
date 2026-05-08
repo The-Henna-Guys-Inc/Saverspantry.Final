@@ -500,6 +500,59 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
           <Plus className="h-4 w-4 mr-2" /> Add custom item
         </Button>
       </div>
+
+      {/* Edit dialog */}
+      <Dialog open={!!editing} onOpenChange={(o) => { if (!o) setEditing(null); }}>
+        <DialogContent className="rounded-2xl max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-primary">Edit {editing?.label}</DialogTitle>
+            <DialogDescription>Tune the consumption rate, prices, or shelf life for your household.</DialogDescription>
+          </DialogHeader>
+          {editing && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <Label className="text-xs">Name</Label>
+                <Input value={editing.label} onChange={(e) => setEditing({ ...editing, label: e.target.value })} className="rounded-xl mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs">Lb/person/day</Label>
+                <Input type="number" step="0.01" value={editing.lbsPerPersonPerDay}
+                  onChange={(e) => setEditing({ ...editing, lbsPerPersonPerDay: parseFloat(e.target.value) || 0 })}
+                  className="rounded-xl mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs">Shelf (months)</Label>
+                <Input type="number" value={editing.shelfLifeMonths}
+                  onChange={(e) => setEditing({ ...editing, shelfLifeMonths: parseInt(e.target.value) || 0 })}
+                  className="rounded-xl mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs">Retail $/lb</Label>
+                <Input type="number" step="0.01" value={editing.retailPerLb}
+                  onChange={(e) => setEditing({ ...editing, retailPerLb: parseFloat(e.target.value) || 0 })}
+                  className="rounded-xl mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs">Bulk $/lb</Label>
+                <Input type="number" step="0.01" value={editing.bulkPerLb}
+                  onChange={(e) => setEditing({ ...editing, bulkPerLb: parseFloat(e.target.value) || 0 })}
+                  className="rounded-xl mt-1" />
+              </div>
+            </div>
+          )}
+          <DialogFooter className="flex-row justify-between sm:justify-between gap-2">
+            {editing && !editing.isCustom && overrides[editing.id] ? (
+              <Button variant="ghost" className="rounded-xl" onClick={() => { resetCurated(editing.id); setEditing(null); toast.success("Reset to defaults"); }}>
+                <RotateCcw className="h-4 w-4 mr-1.5" /> Reset to default
+              </Button>
+            ) : <span />}
+            <div className="flex gap-2">
+              <Button variant="outline" className="rounded-xl" onClick={() => setEditing(null)}>Cancel</Button>
+              <Button variant="hero" className="rounded-xl" onClick={saveEdit}>Save</Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
