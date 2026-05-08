@@ -33,7 +33,7 @@ const numOrUndef = (v: string) => {
 
 export const RecipeGenerator = () => {
   const [ingredients, setIngredients] = useState("");
-  const [cuisine, setCuisine] = useState("Mediterranean");
+  const [cuisine, setCuisine] = useState<string | null>(null);
   const [restrictions, setRestrictions] = useState<Restriction[]>([]);
   const [advOpen, setAdvOpen] = useState(false);
   const [maxCals, setMaxCals] = useState("");
@@ -64,7 +64,7 @@ export const RecipeGenerator = () => {
       const { data, error } = await supabase.functions.invoke("recipe-generate", {
         body: {
           ingredients,
-          cuisine,
+          cuisine: cuisine ?? "Any",
           dietary_prefs: restrictions.map((r) => r.toLowerCase()),
           max_calories_per_serving: filters.cals,
           max_protein_g: filters.protein,
@@ -108,13 +108,23 @@ export const RecipeGenerator = () => {
         />
 
         <label className="block text-xs uppercase tracking-wider text-muted-foreground font-semibold mt-5 mb-2">
-          Cuisine
+          Cuisine <span className="normal-case text-muted-foreground/70">(optional)</span>
         </label>
         <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setCuisine(null)}
+            className={`text-sm px-4 py-2 rounded-full transition-smooth min-h-[44px] ${
+              cuisine === null
+                ? "bg-primary text-primary-foreground shadow-soft"
+                : "bg-secondary text-secondary-foreground hover:bg-muted"
+            }`}
+          >
+            Any
+          </button>
           {CUISINES.map((c) => (
             <button
               key={c}
-              onClick={() => setCuisine(c)}
+              onClick={() => setCuisine((prev) => (prev === c ? null : c))}
               className={`text-sm px-4 py-2 rounded-full transition-smooth min-h-[44px] ${
                 cuisine === c
                   ? "bg-primary text-primary-foreground shadow-soft"

@@ -76,10 +76,10 @@ Deno.serve(async (req) => {
   const userId = await getUserIdFromAuth(req);
   const startedAt = Date.now();
   try {
-    const { food, dietary_prefs = [], profile = null } = await req.json();
+    const { food, dietary_prefs = [], profile = null, cuisine = null } = await req.json();
     if (!food) return new Response(JSON.stringify({ error: "Missing 'food'" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const cacheKey = await stableHash({ food: String(food).toLowerCase().trim(), dietary_prefs, profile });
+    const cacheKey = await stableHash({ food: String(food).toLowerCase().trim(), dietary_prefs, profile, cuisine });
     const cached = await cacheGet(FN, cacheKey);
     if (cached) {
       logAiUsage({ userId, functionName: FN, model: MODEL, cached: true, latencyMs: Date.now() - startedAt });
@@ -95,7 +95,8 @@ Deno.serve(async (req) => {
       if (Array.isArray(profile.dislikes) && profile.dislikes.length) profileLines.push(`Foods they dislike (avoid): ${profile.dislikes.join(", ")}.`);
       if (Array.isArray(profile.allergies) && profile.allergies.length) profileLines.push(`ALLERGIES — STRICTLY EXCLUDE: ${profile.allergies.join(", ")}.`);
     }
-    const profileBlock = profileLines.length ? `\nUser food profile:\n${profileLines.join("\n")}` : "";
+    const cuisineBlock = cuisine ? `\nLean swaps toward ${cuisine} cuisine when natural.` : "";
+    const profileBlock = (profileLines.length ? `\nUser food profile:\n${profileLines.join("\n")}` : "") + cuisineBlock;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

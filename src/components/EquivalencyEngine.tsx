@@ -24,12 +24,14 @@ type Result = {
 };
 
 const EXAMPLES = ["200g chicken breast", "2 large eggs", "1 cup Greek yogurt", "150g salmon"];
+const CUISINES = ["Indian", "Italian", "Mexican", "Chinese", "Mediterranean", "Thai"];
 const RESTRICTIONS = ["Halal", "Kosher", "Vegetarian"] as const;
 type Restriction = typeof RESTRICTIONS[number];
 
 export const EquivalencyEngine = () => {
   const [food, setFood] = useState("");
   const [restrictions, setRestrictions] = useState<Restriction[]>([]);
+  const [cuisine, setCuisine] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [profilePrefs, setProfilePrefs] = useState<any>(null);
@@ -62,13 +64,14 @@ export const EquivalencyEngine = () => {
         body: {
           food: q,
           dietary_prefs: restrictions.map((r) => r.toLowerCase()),
+          cuisine: cuisine ?? undefined,
           profile: profilePrefs ? {
-            cuisines: profilePrefs.cuisines ?? [],
+            cuisines: cuisine ? [cuisine] : (profilePrefs.cuisines ?? []),
             spice: profilePrefs.spice ?? null,
             loves: profilePrefs.loves ?? [],
             dislikes: profilePrefs.dislikes ?? [],
             allergies: profilePrefs.allergies ?? [],
-          } : null,
+          } : (cuisine ? { cuisines: [cuisine] } : null),
         },
       });
       if (error) throw error;
@@ -110,6 +113,37 @@ export const EquivalencyEngine = () => {
             {r}
           </button>
         ))}
+      </div>
+
+      <div className="mt-3">
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">
+          Cuisine <span className="normal-case text-muted-foreground/70">(optional)</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setCuisine(null)}
+            className={`text-xs px-3 py-1.5 rounded-full transition-smooth ${
+              cuisine === null
+                ? "bg-primary text-primary-foreground shadow-soft"
+                : "bg-secondary text-secondary-foreground hover:bg-muted"
+            }`}
+          >
+            Any
+          </button>
+          {CUISINES.map((c) => (
+            <button
+              key={c}
+              onClick={() => setCuisine((prev) => (prev === c ? null : c))}
+              className={`text-xs px-3 py-1.5 rounded-full transition-smooth ${
+                cuisine === c
+                  ? "bg-primary text-primary-foreground shadow-soft"
+                  : "bg-secondary text-secondary-foreground hover:bg-muted"
+              }`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2 mt-3">
