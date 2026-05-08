@@ -1,5 +1,9 @@
 // Nutrition equivalency engine — swap a food for cheaper, nutritionally-equivalent alternatives
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { cacheGet, cachePut, getUserIdFromAuth, logAiUsage, stableHash } from "../_shared/aiUsage.ts";
+
+const FN = "equivalency-swap";
+const MODEL = "google/gemini-2.5-flash";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
