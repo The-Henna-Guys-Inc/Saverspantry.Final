@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.watchlist-sale-matcher]
 verify_jwt = false
+
+[functions.kroger-prices]
+verify_jwt = false

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, ShoppingCart, RefreshCw, Calendar, Info, Copy, Share2, Printer } from "lucide-react";
+import { Loader2, Sparkles, ShoppingCart, RefreshCw, Calendar, Info, Copy, Share2, Printer, Tag, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { SpecialtyStoreBanner } from "@/components/SpecialtyStoreBanner";
 import { detectItemCuisines, summarizeCuisines, CUISINE_LABEL } from "@/lib/cuisineHints";
@@ -18,6 +18,8 @@ type Day = { day: string; breakfast: Meal; lunch: Meal; dinner: Meal };
 type Plan = { days: Day[]; total_estimated_cost_usd: number; budget_tip: string };
 type GroceryItem = { item: string; quantity: string; category: string; estimated_cost_low_usd: number; estimated_cost_high_usd: number };
 type Grocery = { items: GroceryItem[]; total_low_usd: number; total_high_usd: number };
+type KrogerMatch = { product_name: string; brand?: string; size?: string; price_usd: number; on_sale: boolean; regular_price_usd?: number; image: string | null };
+type KrogerResult = { store: { id: string; name: string; chain: string } | null; prices: { item: string; match: KrogerMatch | null }[]; total_usd: number };
 
 const DIET_STYLES = [
   { value: "balanced", label: "Balanced" },
@@ -55,6 +57,9 @@ const Planner = () => {
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [genLoading, setGenLoading] = useState(false);
   const [groceryLoading, setGroceryLoading] = useState(false);
+  const [zip, setZip] = useState<string>("");
+  const [krogerData, setKrogerData] = useState<KrogerResult | null>(null);
+  const [krogerLoading, setKrogerLoading] = useState(false);
   const weekStart = mondayOf();
 
   const [profilePrefs, setProfilePrefs] = useState<any>(null);
@@ -76,10 +81,11 @@ const Planner = () => {
     if (!user) return;
     (async () => {
       const [{ data: prof }, { data: existing }] = await Promise.all([
-        supabase.from("profiles").select("household_size, dietary_prefs").eq("user_id", user.id).maybeSingle(),
+        supabase.from("profiles").select("household_size, dietary_prefs, zip_code").eq("user_id", user.id).maybeSingle(),
         supabase.from("meal_plans").select("plan").eq("user_id", user.id).eq("week_start_date", weekStart).maybeSingle(),
       ]);
       if (prof?.household_size) setHouseholdSize(prof.household_size);
+      if (prof?.zip_code) setZip(prof.zip_code);
       const prefs = (prof?.dietary_prefs ?? {}) as any;
       setProfilePrefs(prefs);
       if (prefs.style) setDietStyle(prefs.style);
@@ -148,11 +154,39 @@ const Planner = () => {
       if ((data as any)?.error) throw new Error((data as any).error);
       setGrocery(data as Grocery);
       setChecked({});
+      setKrogerData(null);
       toast.success("Grocery list ready");
     } catch (e: any) {
       toast.error(e.message ?? "Could not build list");
     } finally {
       setGroceryLoading(false);
+    }
+  };
+
+  const fetchKrogerPrices = async () => {
+    if (!grocery) return;
+    if (!zip || zip.trim().length < 5) {
+      toast.error("Add a ZIP code in Settings to look up live prices");
+      return;
+    }
+    setKrogerLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("kroger-prices", {
+        body: { zip: zip.trim(), items: grocery.items.map((i) => ({ item: i.item })) },
+      });
+      if (error) throw error;
+      if ((data as any)?.error && !(data as any)?.store) throw new Error((data as any).error);
+      setKrogerData(data as KrogerResult);
+      const r = data as KrogerResult;
+      if (!r.store) toast.error("No Kroger-family store found near that ZIP");
+      else {
+        const matched = r.prices.filter((p) => p.match).length;
+        toast.success(`${r.store.name}: ${matched}/${r.prices.length} items priced`);
+      }
+    } catch (e: any) {
+      toast.error(e.message ?? "Couldn't fetch live prices");
+    } finally {
+      setKrogerLoading(false);
     }
   };
 
@@ -319,14 +353,20 @@ const Planner = () => {
 
         {grouped && (() => {
           const cuisineSummary = summarizeCuisines(grocery!.items);
+          const krogerByItem: Record<string, KrogerMatch | null> = {};
+          if (krogerData) for (const p of krogerData.prices) krogerByItem[p.item.toLowerCase()] = p.match;
           return (
           <div id="grocery-print">
             <div className="flex items-baseline justify-between mb-2">
               <h2 className="text-xl font-semibold text-primary">Grocery list</h2>
               <div className="text-sm text-muted-foreground">
-                Est. <span className="font-semibold text-primary">
-                  ${grocery!.total_low_usd?.toFixed(2)}–${grocery!.total_high_usd?.toFixed(2)}
-                </span>
+                {krogerData?.store ? (
+                  <>Kroger total <span className="font-semibold text-primary">${krogerData.total_usd.toFixed(2)}</span></>
+                ) : (
+                  <>Est. <span className="font-semibold text-primary">
+                    ${grocery!.total_low_usd?.toFixed(2)}–${grocery!.total_high_usd?.toFixed(2)}
+                  </span></>
+                )}
               </div>
             </div>
             <SpecialtyStoreBanner
@@ -334,6 +374,10 @@ const Planner = () => {
               matchCount={cuisineSummary.hints.length}
             />
             <div className="flex flex-wrap gap-2 mb-4 print:hidden">
+              <Button variant="default" size="sm" onClick={fetchKrogerPrices} disabled={krogerLoading} className="rounded-xl">
+                {krogerLoading ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Tag className="h-3.5 w-3.5 mr-1.5" />}
+                {krogerData ? "Refresh Kroger prices" : "Get live Kroger prices"}
+              </Button>
               <Button variant="outline" size="sm" onClick={copyList} className="rounded-xl">
                 <Copy className="h-3.5 w-3.5 mr-1.5" />Copy
               </Button>
@@ -344,10 +388,18 @@ const Planner = () => {
                 <Printer className="h-3.5 w-3.5 mr-1.5" />Print
               </Button>
             </div>
-            <div className="flex items-start gap-2 text-xs text-muted-foreground mb-4 p-3 rounded-xl bg-secondary/60 print:hidden">
-              <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-              <span>AI estimate — actual prices vary by store, region, and sales. Live local pricing is coming soon.</span>
-            </div>
+            {krogerData?.store && (
+              <div className="flex items-center gap-2 text-xs mb-4 p-3 rounded-xl bg-primary/10 text-primary print:hidden">
+                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                <span>Live prices from <strong>{krogerData.store.name}</strong> ({krogerData.store.chain}) near {zip}</span>
+              </div>
+            )}
+            {!krogerData && (
+              <div className="flex items-start gap-2 text-xs text-muted-foreground mb-4 p-3 rounded-xl bg-secondary/60 print:hidden">
+                <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>AI estimate. Tap "Get live Kroger prices" to look up real prices at the nearest Kroger-family store{zip ? ` to ${zip}` : " (add a ZIP in Settings first)"}.</span>
+              </div>
+            )}
             <div className="grid md:grid-cols-2 gap-4">
               {Object.entries(grouped).map(([cat, items]) => (
                 <Card key={cat} className="p-5 rounded-2xl border-border/50">
@@ -378,7 +430,20 @@ const Planner = () => {
                               )}
                             </span>
                           </button>
-                          <span className="text-muted-foreground whitespace-nowrap">${it.estimated_cost_low_usd?.toFixed(2)}–${it.estimated_cost_high_usd?.toFixed(2)}</span>
+                          {(() => {
+                            const km = krogerByItem[it.item.toLowerCase()];
+                            if (km) {
+                              return (
+                                <span className="text-right whitespace-nowrap">
+                                  <span className={`font-semibold ${km.on_sale ? "text-accent" : "text-primary"}`}>${km.price_usd.toFixed(2)}</span>
+                                  {km.on_sale && km.regular_price_usd && (
+                                    <span className="ml-1 text-[10px] text-muted-foreground line-through">${km.regular_price_usd.toFixed(2)}</span>
+                                  )}
+                                </span>
+                              );
+                            }
+                            return <span className="text-muted-foreground whitespace-nowrap">${it.estimated_cost_low_usd?.toFixed(2)}–${it.estimated_cost_high_usd?.toFixed(2)}</span>;
+                          })()}
                         </li>
                       );
                     })}
