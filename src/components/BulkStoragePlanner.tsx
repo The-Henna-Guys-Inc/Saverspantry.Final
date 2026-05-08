@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,12 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Boxes, Loader2, Plus, Trash2, TrendingDown, Sparkles, Pencil, RotateCcw } from "lucide-react";
+import { Boxes, Loader2, Plus, Trash2, TrendingDown, Sparkles, Pencil, RotateCcw, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 // Per-person daily consumption in POUNDS, typical weekly retail $/lb (small pkg),
 // and typical bulk $/lb (Costco/Sam's-style 20–50lb sacks). Shelf life in months
 // (properly stored, sealed, cool/dry).
+type BulkSource = {
+  store: string;        // display name
+  pricePerLb: number;   // typical $/lb at this source
+  searchUrl: string;    // user-facing search link
+};
 type Staple = {
   key: string;
   label: string;
@@ -20,24 +25,43 @@ type Staple = {
   retailPerLb: number;
   bulkPerLb: number;
   shelfLifeMonths: number;
+  bulkSources?: BulkSource[];
 };
+
+// Helper to build a search URL on Costco / Sam's / Amazon
+const costco = (q: string) => `https://www.costco.com/CatalogSearch?keyword=${encodeURIComponent(q)}`;
+const sams = (q: string) => `https://www.samsclub.com/s/${encodeURIComponent(q)}`;
+const amazon = (q: string) => `https://www.amazon.com/s?k=${encodeURIComponent(q)}+bulk`;
 
 // Per-person daily consumption tuned to REALISTIC household use
 // (assuming a mixed diet — not any one staple as the sole calorie source).
 // Sources: USDA per-capita food availability + LDS home-storage guidelines scaled down.
+// bulkSources prices are typical observed $/lb on club-store / Amazon bulk packs.
 const STAPLES: Staple[] = [
-  { key: "rice",          label: "White rice",       searchTerm: "long grain white rice",     lbsPerPersonPerDay: 0.07, retailPerLb: 1.80, bulkPerLb: 0.85, shelfLifeMonths: 360 },
-  { key: "beans",         label: "Dried beans",      searchTerm: "dried pinto beans",         lbsPerPersonPerDay: 0.05, retailPerLb: 2.20, bulkPerLb: 1.10, shelfLifeMonths: 96  },
-  { key: "pasta",         label: "Pasta",            searchTerm: "spaghetti pasta",           lbsPerPersonPerDay: 0.07, retailPerLb: 2.00, bulkPerLb: 1.10, shelfLifeMonths: 24  },
-  { key: "flour",         label: "All-purpose flour",searchTerm: "all purpose flour",         lbsPerPersonPerDay: 0.08, retailPerLb: 1.40, bulkPerLb: 0.65, shelfLifeMonths: 12  },
-  { key: "sugar",         label: "Sugar",            searchTerm: "granulated sugar",          lbsPerPersonPerDay: 0.04, retailPerLb: 1.20, bulkPerLb: 0.70, shelfLifeMonths: 360 },
-  { key: "oats",          label: "Rolled oats",      searchTerm: "old fashioned rolled oats", lbsPerPersonPerDay: 0.05, retailPerLb: 2.40, bulkPerLb: 1.20, shelfLifeMonths: 24  },
-  { key: "oil",           label: "Cooking oil",      searchTerm: "vegetable oil",             lbsPerPersonPerDay: 0.04, retailPerLb: 3.20, bulkPerLb: 1.80, shelfLifeMonths: 12  },
-  { key: "salt",          label: "Salt",             searchTerm: "iodized salt",              lbsPerPersonPerDay: 0.01, retailPerLb: 0.90, bulkPerLb: 0.35, shelfLifeMonths: 360 },
-  { key: "tomatoes",      label: "Canned tomatoes",  searchTerm: "canned diced tomatoes",     lbsPerPersonPerDay: 0.10, retailPerLb: 1.60, bulkPerLb: 0.95, shelfLifeMonths: 24  },
-  { key: "peanut_butter", label: "Peanut butter",    searchTerm: "peanut butter",             lbsPerPersonPerDay: 0.03, retailPerLb: 4.20, bulkPerLb: 2.60, shelfLifeMonths: 18  },
-  { key: "lentils",       label: "Lentils",          searchTerm: "dried lentils",             lbsPerPersonPerDay: 0.03, retailPerLb: 2.40, bulkPerLb: 1.20, shelfLifeMonths: 60  },
-  { key: "powdered_milk", label: "Powdered milk",    searchTerm: "nonfat dry milk",           lbsPerPersonPerDay: 0.04, retailPerLb: 6.00, bulkPerLb: 3.50, shelfLifeMonths: 36  },
+  { key: "rice",          label: "White rice",       searchTerm: "long grain white rice",     lbsPerPersonPerDay: 0.07, retailPerLb: 1.80, bulkPerLb: 0.85, shelfLifeMonths: 360,
+    bulkSources: [{ store: "Costco", pricePerLb: 0.70, searchUrl: costco("rice 25 lb") }, { store: "Sam's Club", pricePerLb: 0.75, searchUrl: sams("rice 25 lb") }, { store: "Amazon", pricePerLb: 1.10, searchUrl: amazon("white rice") }] },
+  { key: "beans",         label: "Dried beans",      searchTerm: "dried pinto beans",         lbsPerPersonPerDay: 0.05, retailPerLb: 2.20, bulkPerLb: 1.10, shelfLifeMonths: 96,
+    bulkSources: [{ store: "Costco", pricePerLb: 1.05, searchUrl: costco("pinto beans 25 lb") }, { store: "Sam's Club", pricePerLb: 1.15, searchUrl: sams("pinto beans") }] },
+  { key: "pasta",         label: "Pasta",            searchTerm: "spaghetti pasta",           lbsPerPersonPerDay: 0.07, retailPerLb: 2.00, bulkPerLb: 1.10, shelfLifeMonths: 24,
+    bulkSources: [{ store: "Costco", pricePerLb: 1.00, searchUrl: costco("pasta") }, { store: "Sam's Club", pricePerLb: 1.10, searchUrl: sams("pasta") }] },
+  { key: "flour",         label: "All-purpose flour",searchTerm: "all purpose flour",         lbsPerPersonPerDay: 0.08, retailPerLb: 1.40, bulkPerLb: 0.65, shelfLifeMonths: 12,
+    bulkSources: [{ store: "Costco", pricePerLb: 0.55, searchUrl: costco("all purpose flour 25 lb") }, { store: "Sam's Club", pricePerLb: 0.60, searchUrl: sams("flour 25 lb") }] },
+  { key: "sugar",         label: "Sugar",            searchTerm: "granulated sugar",          lbsPerPersonPerDay: 0.04, retailPerLb: 1.20, bulkPerLb: 0.70, shelfLifeMonths: 360,
+    bulkSources: [{ store: "Costco", pricePerLb: 0.65, searchUrl: costco("sugar 25 lb") }, { store: "Sam's Club", pricePerLb: 0.70, searchUrl: sams("sugar 25 lb") }] },
+  { key: "oats",          label: "Rolled oats",      searchTerm: "old fashioned rolled oats", lbsPerPersonPerDay: 0.05, retailPerLb: 2.40, bulkPerLb: 1.20, shelfLifeMonths: 24,
+    bulkSources: [{ store: "Costco", pricePerLb: 1.10, searchUrl: costco("rolled oats") }, { store: "Amazon", pricePerLb: 1.50, searchUrl: amazon("rolled oats") }] },
+  { key: "oil",           label: "Cooking oil",      searchTerm: "vegetable oil",             lbsPerPersonPerDay: 0.04, retailPerLb: 3.20, bulkPerLb: 1.80, shelfLifeMonths: 12,
+    bulkSources: [{ store: "Costco", pricePerLb: 1.65, searchUrl: costco("vegetable oil") }, { store: "Sam's Club", pricePerLb: 1.80, searchUrl: sams("vegetable oil") }] },
+  { key: "salt",          label: "Salt",             searchTerm: "iodized salt",              lbsPerPersonPerDay: 0.01, retailPerLb: 0.90, bulkPerLb: 0.35, shelfLifeMonths: 360,
+    bulkSources: [{ store: "Costco", pricePerLb: 0.30, searchUrl: costco("salt") }] },
+  { key: "tomatoes",      label: "Canned tomatoes",  searchTerm: "canned diced tomatoes",     lbsPerPersonPerDay: 0.10, retailPerLb: 1.60, bulkPerLb: 0.95, shelfLifeMonths: 24,
+    bulkSources: [{ store: "Costco", pricePerLb: 0.85, searchUrl: costco("canned tomatoes") }, { store: "Sam's Club", pricePerLb: 0.95, searchUrl: sams("canned tomatoes") }] },
+  { key: "peanut_butter", label: "Peanut butter",    searchTerm: "peanut butter",             lbsPerPersonPerDay: 0.03, retailPerLb: 4.20, bulkPerLb: 2.60, shelfLifeMonths: 18,
+    bulkSources: [{ store: "Costco", pricePerLb: 2.40, searchUrl: costco("peanut butter") }, { store: "Sam's Club", pricePerLb: 2.60, searchUrl: sams("peanut butter") }] },
+  { key: "lentils",       label: "Lentils",          searchTerm: "dried lentils",             lbsPerPersonPerDay: 0.03, retailPerLb: 2.40, bulkPerLb: 1.20, shelfLifeMonths: 60,
+    bulkSources: [{ store: "Amazon", pricePerLb: 1.30, searchUrl: amazon("dried lentils") }, { store: "Costco", pricePerLb: 1.20, searchUrl: costco("lentils") }] },
+  { key: "powdered_milk", label: "Powdered milk",    searchTerm: "nonfat dry milk",           lbsPerPersonPerDay: 0.04, retailPerLb: 6.00, bulkPerLb: 3.50, shelfLifeMonths: 36,
+    bulkSources: [{ store: "Costco", pricePerLb: 3.20, searchUrl: costco("powdered milk") }, { store: "Amazon", pricePerLb: 3.80, searchUrl: amazon("nonfat dry milk") }] },
 ];
 
 type CustomItem = {
@@ -118,7 +142,6 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
     const built = effectiveStaples.map((s) => {
       const totalLbs = s.lbsPerPersonPerDay * household * days;
       const live = livePrices[s.key];
-      // If user manually overrode retailPerLb, respect it; otherwise live wins.
       const userOverrodeRetail = overrides[s.key]?.retailPerLb != null;
       const retailPerLb = userOverrodeRetail ? s.retailPerLb : (live ?? s.retailPerLb);
       const bulkPerLb = (live && !userOverrodeRetail)
@@ -128,11 +151,26 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
       const bulkCost = totalLbs * bulkPerLb;
       const savings = retailCost - bulkCost;
       const fitsShelf = s.shelfLifeMonths >= horizon;
+
+      // Find cheapest bulk source that beats current bulkPerLb by ≥5%
+      let bestDeal: { store: string; pricePerLb: number; searchUrl: string; pctVsBulk: number; pctVsRetail: number; extraSavings: number } | null = null;
+      const sources = s.bulkSources ?? [];
+      const cheapest = sources.reduce<BulkSource | null>((min, c) => (!min || c.pricePerLb < min.pricePerLb) ? c : min, null);
+      if (cheapest && cheapest.pricePerLb < bulkPerLb * 0.95) {
+        bestDeal = {
+          ...cheapest,
+          pctVsBulk: Math.round((1 - cheapest.pricePerLb / bulkPerLb) * 100),
+          pctVsRetail: Math.round((1 - cheapest.pricePerLb / retailPerLb) * 100),
+          extraSavings: (bulkPerLb - cheapest.pricePerLb) * totalLbs,
+        };
+      }
+
       return {
         ...s,
         totalLbs, retailPerLb, bulkPerLb, retailCost, bulkCost, savings, fitsShelf,
         isLive: !!live && !userOverrodeRetail,
         isCustom: false,
+        bestDeal,
       };
     });
     const customRows = customs.map((c) => {
@@ -154,6 +192,7 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
         fitsShelf: c.shelfLifeMonths >= horizon,
         isLive: false,
         isCustom: true,
+        bestDeal: null as null,
       };
     });
     return [...built, ...customRows];
@@ -370,6 +409,20 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
                     </div>
                   </div>
                 </div>
+                {r.bestDeal && (
+                  <a
+                    href={r.bestDeal.searchUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 flex items-center gap-2 rounded-xl bg-accent/10 border border-accent/30 px-3 py-2 text-xs text-accent hover:bg-accent/15 active:bg-accent/20"
+                  >
+                    <TrendingDown className="h-3.5 w-3.5 shrink-0" />
+                    <span className="flex-1">
+                      Save <span className="font-bold">{r.bestDeal.pctVsBulk}%</span> more (~${r.bestDeal.extraSavings.toFixed(0)}) at <span className="font-semibold">{r.bestDeal.store}</span> — ${r.bestDeal.pricePerLb.toFixed(2)}/lb
+                    </span>
+                    <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                  </a>
+                )}
               </div>
             ))}
             <div className="rounded-2xl bg-muted/30 border-2 border-border p-4">
@@ -409,37 +462,55 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
               </thead>
               <tbody>
                 {rows.map((r) => (
-                  <tr key={r.key} className="border-t border-border/50">
-                    <td className="p-3">
-                      <div className="font-medium text-primary flex items-center gap-2">
-                        {r.label}
-                        {r.isLive && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/15 text-accent">LIVE</span>}
-                        {!r.fitsShelf && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive">shelf life {r.shelfLifeMonths}mo</span>}
-                      </div>
-                      <div className="text-xs text-muted-foreground">${r.retailPerLb.toFixed(2)}/lb retail · ${r.bulkPerLb.toFixed(2)}/lb bulk</div>
-                    </td>
-                    <td className="p-3 text-right tabular-nums">{r.totalLbs.toFixed(1)} lb</td>
-                    <td className="p-3 text-right tabular-nums">${r.retailCost.toFixed(0)}</td>
-                    <td className="p-3 text-right tabular-nums font-semibold text-primary">${r.bulkCost.toFixed(0)}</td>
-                    <td className="p-3 text-right tabular-nums font-semibold text-accent">
-                      ${r.savings.toFixed(0)}
-                      {r.retailCost > 0 && (
-                        <div className="text-[10px] font-normal text-muted-foreground">
-                          {Math.round((r.savings / r.retailCost) * 100)}% off
+                  <Fragment key={r.key}>
+                    <tr className="border-t border-border/50">
+                      <td className="p-3">
+                        <div className="font-medium text-primary flex items-center gap-2">
+                          {r.label}
+                          {r.isLive && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/15 text-accent">LIVE</span>}
+                          {!r.fitsShelf && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive">shelf life {r.shelfLifeMonths}mo</span>}
                         </div>
-                      )}
-                    </td>
-                    <td className="p-3 text-right">
-                      <div className="inline-flex items-center gap-1">
-                        <button onClick={() => openEdit(r)} className="text-muted-foreground hover:text-primary p-2 -m-2" aria-label="Edit">
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button onClick={() => removeRow(r.key, r.isCustom)} className="text-muted-foreground hover:text-destructive p-2 -m-2" aria-label={r.isCustom ? "Remove" : "Hide"}>
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                        <div className="text-xs text-muted-foreground">${r.retailPerLb.toFixed(2)}/lb retail · ${r.bulkPerLb.toFixed(2)}/lb bulk</div>
+                      </td>
+                      <td className="p-3 text-right tabular-nums">{r.totalLbs.toFixed(1)} lb</td>
+                      <td className="p-3 text-right tabular-nums">${r.retailCost.toFixed(0)}</td>
+                      <td className="p-3 text-right tabular-nums font-semibold text-primary">${r.bulkCost.toFixed(0)}</td>
+                      <td className="p-3 text-right tabular-nums font-semibold text-accent">
+                        ${r.savings.toFixed(0)}
+                        {r.retailCost > 0 && (
+                          <div className="text-[10px] font-normal text-muted-foreground">
+                            {Math.round((r.savings / r.retailCost) * 100)}% off
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-3 text-right">
+                        <div className="inline-flex items-center gap-1">
+                          <button onClick={() => openEdit(r)} className="text-muted-foreground hover:text-primary p-2 -m-2" aria-label="Edit">
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button onClick={() => removeRow(r.key, r.isCustom)} className="text-muted-foreground hover:text-destructive p-2 -m-2" aria-label={r.isCustom ? "Remove" : "Hide"}>
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    {r.bestDeal && (
+                      <tr className="border-t border-dashed border-accent/30 bg-accent/5">
+                        <td colSpan={6} className="px-3 py-2">
+                          <a
+                            href={r.bestDeal.searchUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-xs text-accent hover:underline"
+                          >
+                            <TrendingDown className="h-3.5 w-3.5" />
+                            Save <span className="font-bold">{r.bestDeal.pctVsBulk}%</span> more (~${r.bestDeal.extraSavings.toFixed(0)}) at <span className="font-semibold">{r.bestDeal.store}</span> — ${r.bestDeal.pricePerLb.toFixed(2)}/lb
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))}
               </tbody>
               <tfoot>
