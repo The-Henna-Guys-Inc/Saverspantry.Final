@@ -402,8 +402,14 @@ const Pantry = () => {
                               {it.item}
                               {low && <AlertTriangle className="h-3.5 w-3.5 text-destructive" aria-label="Low stock" />}
                             </div>
-                            <div className="text-xs text-muted-foreground">
-                              {it.category}{it.expires_on ? <> · <span className={expSoon ? "text-destructive font-medium" : ""}>expires {it.expires_on}</span></> : ""}
+                            <div className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
+                              <span>{it.category}</span>
+                              {it.expires_on && <> · <span className={expSoon ? "text-destructive font-medium" : ""}>expires {it.expires_on}</span></>}
+                              {detectItemCuisines(it.item).slice(0, 2).map((c) => (
+                                <span key={c} className="px-1.5 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] uppercase tracking-wider">
+                                  {CUISINE_LABEL[c]}
+                                </span>
+                              ))}
                             </div>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
