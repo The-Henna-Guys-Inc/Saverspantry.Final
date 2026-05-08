@@ -12,6 +12,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { AdminSaleDialog } from "@/components/AdminSaleDialog";
 import { AdminSaleCsvUpload } from "@/components/AdminSaleCsvUpload";
+import { CuisineFilterBar } from "@/components/CuisineFilterBar";
+import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
+import { detectItemCuisines } from "@/lib/cuisineHints";
 
 type Sale = {
   id: string;
@@ -47,6 +50,7 @@ export default function Sales() {
   const [confirming, setConfirming] = useState<string | null>(null);
   const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set());
   const [isAdmin, setIsAdmin] = useState(false);
+  const { cuisines, isFiltering, setEnabled } = useCuisinePrefs();
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
@@ -87,10 +91,19 @@ export default function Sales() {
     })();
   }, [user]);
 
+  const cuisineFiltered = useMemo(() => {
+    if (!isFiltering) return sales;
+    return sales.filter((s) => {
+      const tags = detectItemCuisines(s.food_name);
+      // No cuisine tag => generic staple, always show. Otherwise must overlap.
+      return tags.length === 0 || tags.some((t) => cuisines.includes(t));
+    });
+  }, [sales, cuisines, isFiltering]);
+
   const matched = useMemo(() => {
     if (!watchedFoods.length) return [];
-    return sales.filter((s) => watchedFoods.some((w) => s.food_name.toLowerCase().includes(w) || w.includes(s.food_name.toLowerCase())));
-  }, [sales, watchedFoods]);
+    return cuisineFiltered.filter((s) => watchedFoods.some((w) => s.food_name.toLowerCase().includes(w) || w.includes(s.food_name.toLowerCase())));
+  }, [cuisineFiltered, watchedFoods]);
 
   const confirm = async (saleId: string) => {
     if (!user || confirmedIds.has(saleId)) return;
@@ -139,6 +152,13 @@ export default function Sales() {
           </div>
         </div>
 
+        <CuisineFilterBar
+          cuisines={cuisines}
+          isFiltering={isFiltering}
+          onShowAll={() => setEnabled(false)}
+          onResume={() => setEnabled(true)}
+          className="mb-4"
+        />
         <Tabs defaultValue="watching" className="w-full">
           <TabsList className="rounded-xl">
             <TabsTrigger value="watching" className="rounded-lg">
@@ -169,12 +189,14 @@ export default function Sales() {
           <TabsContent value="all" className="mt-5">
             {loading ? (
               <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
-            ) : sales.length === 0 ? (
+            ) : cuisineFiltered.length === 0 ? (
               <Card className="p-8 rounded-3xl text-center bg-gradient-warm">
-                <p className="text-sm text-muted-foreground">No active sales right now. Check back soon.</p>
+                <p className="text-sm text-muted-foreground">
+                  {isFiltering ? "No active sales match your cuisines. Try toggling \"Show everything\"." : "No active sales right now. Check back soon."}
+                </p>
               </Card>
             ) : (
-              <SaleList sales={sales} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} isAdmin={isAdmin} onRemove={removeSale} userId={user?.id ?? ""} onRefresh={loadSales} />
+              <SaleList sales={cuisineFiltered} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} isAdmin={isAdmin} onRemove={removeSale} userId={user?.id ?? ""} onRefresh={loadSales} />
             )}
           </TabsContent>
         </Tabs>

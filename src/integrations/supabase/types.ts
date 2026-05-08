@@ -221,6 +221,60 @@ export type Database = {
         }
         Relationships: []
       }
+      bulk_buy_candidates: {
+        Row: {
+          best_store_type: string | null
+          bulk_pack_size: string
+          bulk_unit_price_usd: number
+          confidence: string
+          created_at: string
+          cuisine_tags: string[]
+          est_savings_pct: number
+          food_name: string
+          id: string
+          notes: string | null
+          shelf_life_days: number
+          source: string
+          storage_tip: string | null
+          typical_unit_price_usd: number
+          updated_at: string
+        }
+        Insert: {
+          best_store_type?: string | null
+          bulk_pack_size: string
+          bulk_unit_price_usd: number
+          confidence?: string
+          created_at?: string
+          cuisine_tags?: string[]
+          est_savings_pct: number
+          food_name: string
+          id?: string
+          notes?: string | null
+          shelf_life_days: number
+          source?: string
+          storage_tip?: string | null
+          typical_unit_price_usd: number
+          updated_at?: string
+        }
+        Update: {
+          best_store_type?: string | null
+          bulk_pack_size?: string
+          bulk_unit_price_usd?: number
+          confidence?: string
+          created_at?: string
+          cuisine_tags?: string[]
+          est_savings_pct?: number
+          food_name?: string
+          id?: string
+          notes?: string | null
+          shelf_life_days?: number
+          source?: string
+          storage_tip?: string | null
+          typical_unit_price_usd?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       data_export_requests: {
         Row: {
           completed_at: string | null
@@ -509,6 +563,8 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          cuisine_filter_enabled: boolean
+          cuisine_preferences: string[]
           deletion_pending_at: string | null
           dietary_prefs: Json
           display_name: string | null
@@ -524,6 +580,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          cuisine_filter_enabled?: boolean
+          cuisine_preferences?: string[]
           deletion_pending_at?: string | null
           dietary_prefs?: Json
           display_name?: string | null
@@ -539,6 +597,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          cuisine_filter_enabled?: boolean
+          cuisine_preferences?: string[]
           deletion_pending_at?: string | null
           dietary_prefs?: Json
           display_name?: string | null

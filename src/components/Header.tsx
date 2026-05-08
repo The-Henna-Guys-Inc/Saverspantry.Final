@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Sprout, LogOut, BookmarkCheck, CalendarDays, Refrigerator, Settings as SettingsIcon, Store as StoreIcon, Tag, BarChart3, Shield, ChevronDown } from "lucide-react";
+import { Sprout, LogOut, BookmarkCheck, CalendarDays, Refrigerator, Settings as SettingsIcon, Store as StoreIcon, Tag, BarChart3, Shield, ChevronDown, PackageOpen } from "lucide-react";
 import { toast } from "sonner";
 import { SavingsCounter } from "@/components/SavingsCounter";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -61,6 +61,9 @@ export const Header = () => {
               </Button>
               <Button asChild variant="ghost" size="sm" className="rounded-xl">
                 <Link to="/sales"><Tag className="h-4 w-4 mr-1.5" />Sales</Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="rounded-xl">
+                <Link to="/bulk-buy"><PackageOpen className="h-4 w-4 mr-1.5" />Bulk-Buy</Link>
               </Button>
               <SavingsCounter />
               <Button asChild variant="ghost" size="sm" className="rounded-xl">

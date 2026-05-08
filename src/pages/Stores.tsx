@@ -10,6 +10,8 @@ import { Loader2, MapPin, Store as StoreIcon, ExternalLink, Heart, Search, Penci
 import { toast } from "sonner";
 import { AdminStoreDialog, type EditableStore } from "@/components/AdminStoreDialog";
 import { AdminStoreCsvUpload } from "@/components/AdminStoreCsvUpload";
+import { CuisineFilterBar } from "@/components/CuisineFilterBar";
+import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
 
 type Store = {
   id: string;
@@ -36,6 +38,16 @@ const CUISINES = [
   { id: "filipino", label: "Filipino" },
 ];
 
+// CuisineTag → store cuisine_specialties ids (the table uses several legacy ids)
+const CUISINE_TAG_TO_STORE_IDS: Record<string, string[]> = {
+  south_asian: ["indian", "south_asian", "pakistani", "bangladeshi"],
+  southeast_asian: ["southeast_asian", "vietnamese", "thai", "filipino", "indonesian"],
+  korean: ["korean"], japanese: ["japanese"], chinese: ["chinese"],
+  middle_eastern: ["middle_eastern"], mexican: ["mexican"],
+  latin_american: ["latin_american", "latin"], african: ["african"],
+  mediterranean: ["mediterranean"],
+};
+
 const tierDot = (t: string) =>
   t === "low" ? "bg-primary" : t === "medium" ? "bg-accent" : t === "high" ? "bg-muted-foreground" : "bg-border";
 const tierLabel = (t: string) =>
@@ -49,6 +61,18 @@ const Stores = () => {
   const [active, setActive] = useState<string[]>([]);
   const [q, setQ] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const { cuisines: prefCuisines, isFiltering: cuisineFilterOn, setEnabled: setCuisineEnabled, loading: prefsLoading } = useCuisinePrefs();
+
+  // Effective filter ids = manual chips + (if cuisine filter on) expansion of pref cuisines
+  const prefStoreIds = useMemo(
+    () => prefCuisines.flatMap((c) => CUISINE_TAG_TO_STORE_IDS[c] ?? [c]),
+    [prefCuisines],
+  );
+  const effectiveActive = useMemo(() => {
+    const ids = new Set<string>(active);
+    if (cuisineFilterOn) prefStoreIds.forEach((id) => ids.add(id));
+    return [...ids];
+  }, [active, prefStoreIds, cuisineFilterOn]);
 
   const loadStores = async () => {
     const { data: s } = await supabase
@@ -91,14 +115,14 @@ const Stores = () => {
 
   const filtered = useMemo(() => {
     return stores.filter((s) => {
-      if (active.length && !s.cuisine_specialties.some((c) => active.includes(c))) return false;
+      if (effectiveActive.length && !s.cuisine_specialties.some((c) => effectiveActive.includes(c))) return false;
       if (q.trim()) {
         const hay = `${s.name} ${s.chain_name ?? ""} ${s.city ?? ""} ${s.region ?? ""}`.toLowerCase();
         if (!hay.includes(q.toLowerCase())) return false;
       }
       return true;
     });
-  }, [stores, active, q]);
+  }, [stores, effectiveActive, q]);
 
   const mapHref = (s: Store) => {
     const query = s.address ? encodeURIComponent(`${s.name}, ${s.address}, ${s.city ?? ""}`) : encodeURIComponent(s.name);
@@ -124,9 +148,17 @@ const Stores = () => {
             </div>
           )}
         </div>
-        <p className="text-muted-foreground mb-6">
+        <p className="text-muted-foreground mb-4">
           Indian, Mexican, Asian, Middle Eastern and more — staples for these cuisines <strong className="font-semibold text-foreground">often cost 15-50% less in ethnic grocery stores</strong> than at mainstream supermarkets.
         </p>
+
+        <CuisineFilterBar
+          cuisines={prefCuisines}
+          isFiltering={cuisineFilterOn}
+          onShowAll={() => setCuisineEnabled(false)}
+          onResume={() => setCuisineEnabled(true)}
+          className="mb-4"
+        />
 
         <Card className="p-5 rounded-3xl border-border/50 shadow-soft mb-6">
           <div className="relative mb-4">

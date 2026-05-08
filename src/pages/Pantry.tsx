@@ -11,8 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Plus, Trash2, Refrigerator, Minus, AlertTriangle, X, ScanLine } from "lucide-react";
 import { toast } from "sonner";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
-import { BulkStoragePlanner } from "@/components/BulkStoragePlanner";
 import { ExpiryDateScanner } from "@/components/ExpiryDateScanner";
+import { CuisineFilterBar } from "@/components/CuisineFilterBar";
+import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
+import { detectItemCuisines, CUISINE_LABEL } from "@/lib/cuisineHints";
+import { Link } from "react-router-dom";
+import { Sparkles } from "lucide-react";
 
 type PantryItem = {
   id: string;
@@ -38,6 +42,8 @@ const Pantry = () => {
   const [locations, setLocations] = useState<PantryLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
+  const [showOther, setShowOther] = useState(false);
+  const { cuisines: prefCuisines, isFiltering, setEnabled } = useCuisinePrefs();
 
   // form state
   const [name, setName] = useState("");
@@ -227,7 +233,16 @@ const Pantry = () => {
 
   const lowItems = items.filter(isLow);
 
-  const grouped = items.reduce<Record<string, PantryItem[]>>((acc, i) => {
+  const itemMatchesPrefs = (it: PantryItem) => {
+    if (!isFiltering) return true;
+    const tags = detectItemCuisines(it.item);
+    if (tags.length === 0) return true; // generic staples always shown
+    return tags.some((t) => prefCuisines.includes(t));
+  };
+  const matchingItems = items.filter(itemMatchesPrefs);
+  const otherItems = isFiltering ? items.filter((i) => !itemMatchesPrefs(i)) : [];
+
+  const grouped = matchingItems.reduce<Record<string, PantryItem[]>>((acc, i) => {
     const c = i.location || "other";
     (acc[c] ||= []).push(i); return acc;
   }, {});
@@ -240,7 +255,15 @@ const Pantry = () => {
           <Refrigerator className="h-3.5 w-3.5" /> Pantry
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">What you already have</h1>
-        <p className="text-muted-foreground mb-8">Track staples at home — deduct as you use them and get alerts when something runs low.</p>
+        <p className="text-muted-foreground mb-4">Track staples at home — deduct as you use them and get alerts when something runs low.</p>
+
+        <CuisineFilterBar
+          cuisines={prefCuisines}
+          isFiltering={isFiltering}
+          onShowAll={() => setEnabled(false)}
+          onResume={() => setEnabled(true)}
+          className="mb-6"
+        />
 
         {lowItems.length > 0 && (
           <Card className="p-4 rounded-2xl border-destructive/40 bg-destructive/5 mb-6">
@@ -379,8 +402,14 @@ const Pantry = () => {
                               {it.item}
                               {low && <AlertTriangle className="h-3.5 w-3.5 text-destructive" aria-label="Low stock" />}
                             </div>
-                            <div className="text-xs text-muted-foreground">
-                              {it.category}{it.expires_on ? <> · <span className={expSoon ? "text-destructive font-medium" : ""}>expires {it.expires_on}</span></> : ""}
+                            <div className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
+                              <span>{it.category}</span>
+                              {it.expires_on && <> · <span className={expSoon ? "text-destructive font-medium" : ""}>expires {it.expires_on}</span></>}
+                              {detectItemCuisines(it.item).slice(0, 2).map((c) => (
+                                <span key={c} className="px-1.5 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] uppercase tracking-wider">
+                                  {CUISINE_LABEL[c]}
+                                </span>
+                              ))}
                             </div>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
@@ -427,7 +456,42 @@ const Pantry = () => {
           </div>
         )}
 
-        <BulkStoragePlanner />
+        {otherItems.length > 0 && (
+          <Card className="p-4 rounded-2xl border-border/50 mt-4">
+            <button
+              onClick={() => setShowOther((v) => !v)}
+              className="w-full text-left text-sm font-medium text-muted-foreground hover:text-primary flex items-center justify-between min-h-[44px]"
+            >
+              <span>Other items not in your cuisines ({otherItems.length})</span>
+              <span className="text-xs">{showOther ? "Hide" : "Show"}</span>
+            </button>
+            {showOther && (
+              <ul className="mt-3 space-y-1 text-sm text-foreground/80">
+                {otherItems.map((it) => (
+                  <li key={it.id} className="flex justify-between gap-2 py-1 border-b border-border/30 last:border-0">
+                    <span className="truncate">{it.item}</span>
+                    <span className="text-xs text-muted-foreground shrink-0">{it.quantity} {it.unit} · {it.location}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        )}
+
+        <Card className="p-5 rounded-3xl border-accent/30 bg-gradient-warm shadow-soft mt-6">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="h-10 w-10 rounded-2xl bg-accent/20 flex items-center justify-center shrink-0">
+              <Sparkles className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-[180px]">
+              <div className="font-semibold text-primary">Bulk-buy savings</div>
+              <div className="text-xs text-muted-foreground">Personalized picks based on your cuisines and what you actually use.</div>
+            </div>
+            <Button asChild variant="hero" size="sm" className="rounded-xl">
+              <Link to="/bulk-buy">See recommendations →</Link>
+            </Button>
+          </div>
+        </Card>
       </div>
     </main>
   );

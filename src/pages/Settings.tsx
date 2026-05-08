@@ -12,6 +12,13 @@ import { Loader2, Save, Settings as SettingsIcon, TrendingDown, Utensils } from 
 import { toast } from "sonner";
 import { AccountManagement } from "@/components/AccountManagement";
 import { SupportTickets } from "@/components/SupportTickets";
+import { CUISINE_LABEL, type CuisineTag } from "@/lib/cuisineHints";
+import { Switch } from "@/components/ui/switch";
+
+const DISCOVERY_CUISINES: CuisineTag[] = [
+  "korean", "japanese", "chinese", "south_asian", "southeast_asian",
+  "middle_eastern", "mexican", "latin_american", "african", "mediterranean",
+];
 
 const RESTRICTIONS = ["halal", "kosher", "vegetarian", "vegan", "gluten-free", "dairy-free", "nut-free"] as const;
 const DIET_STYLES = ["balanced", "high-protein", "keto", "mediterranean", "pescatarian"] as const;
@@ -34,6 +41,8 @@ const Settings = () => {
   const [loves, setLoves] = useState("");
   const [dislikes, setDislikes] = useState("");
   const [allergies, setAllergies] = useState("");
+  const [discoveryCuisines, setDiscoveryCuisines] = useState<CuisineTag[]>([]);
+  const [cuisineFilterOn, setCuisineFilterOn] = useState(true);
   const [savings, setSavings] = useState<{ total: number; count: number } | null>(null);
 
   useEffect(() => {
@@ -42,7 +51,7 @@ const Settings = () => {
       const [{ data }, { data: swaps }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("display_name, household_size, zip_code, dietary_prefs")
+          .select("display_name, household_size, zip_code, dietary_prefs, cuisine_preferences, cuisine_filter_enabled")
           .eq("user_id", user.id)
           .maybeSingle(),
         supabase
@@ -66,6 +75,8 @@ const Settings = () => {
         if (Array.isArray(prefs.loves)) setLoves(prefs.loves.join(", "));
         if (Array.isArray(prefs.dislikes)) setDislikes(prefs.dislikes.join(", "));
         if (Array.isArray(prefs.allergies)) setAllergies(prefs.allergies.join(", "));
+        setDiscoveryCuisines(((data as any).cuisine_preferences ?? []) as CuisineTag[]);
+        setCuisineFilterOn((data as any).cuisine_filter_enabled ?? true);
       }
       // Compute potential savings from equivalency engine history
       let total = 0;
@@ -110,7 +121,9 @@ const Settings = () => {
           dislikes: splitList(dislikes),
           allergies: splitList(allergies),
         },
-      })
+        cuisine_preferences: discoveryCuisines,
+        cuisine_filter_enabled: cuisineFilterOn,
+      } as any)
       .eq("user_id", user.id);
     setSaving(false);
     if (error) return toast.error(error.message);
@@ -241,6 +254,31 @@ const Settings = () => {
                     className="rounded-xl mt-1 min-h-[60px]" />
                   <p className="text-[11px] text-destructive/80 mt-1">Strictly excluded from all suggestions.</p>
                 </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-border/50">
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <Label className="text-sm font-semibold text-primary">Discovery cuisines</Label>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Filter on</span>
+                  <Switch checked={cuisineFilterOn} onCheckedChange={setCuisineFilterOn} />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                Pantry, Stores, Sales, and Bulk-Buy will prioritize these cuisines. You can toggle the filter off anywhere to see everything.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {DISCOVERY_CUISINES.map((c) => {
+                  const on = discoveryCuisines.includes(c);
+                  return (
+                    <button key={c} type="button"
+                      onClick={() => setDiscoveryCuisines((p) => p.includes(c) ? p.filter((x) => x !== c) : [...p, c])}
+                      className={`text-xs px-3 py-1.5 rounded-full transition-smooth ${
+                        on ? "bg-primary text-primary-foreground shadow-soft" : "bg-secondary text-secondary-foreground hover:bg-muted"
+                      }`}>{CUISINE_LABEL[c]}</button>
+                  );
+                })}
               </div>
             </div>
 
