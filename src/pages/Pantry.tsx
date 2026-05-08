@@ -49,7 +49,8 @@ const Pantry = () => {
   const [showOther, setShowOther] = useState(false);
   const { cuisines: prefCuisines, isFiltering, setEnabled } = useCuisinePrefs();
   const [searchParams, setSearchParams] = useSearchParams();
-  const tab = searchParams.get("tab") === "expiry" ? "expiry" : "items";
+  const tabParam = searchParams.get("tab");
+  const tab = tabParam === "expiry" ? "expiry" : tabParam === "bulk-buy" ? "bulk-buy" : "items";
   const setTab = (v: string) => setSearchParams(v === "items" ? {} : { tab: v });
 
   // form state
