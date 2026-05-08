@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.data-export]
 verify_jwt = false
+
+[functions.ops-monitor]
+verify_jwt = false
