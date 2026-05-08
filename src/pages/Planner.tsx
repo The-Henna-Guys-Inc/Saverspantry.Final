@@ -81,10 +81,11 @@ const Planner = () => {
     if (!user) return;
     (async () => {
       const [{ data: prof }, { data: existing }] = await Promise.all([
-        supabase.from("profiles").select("household_size, dietary_prefs").eq("user_id", user.id).maybeSingle(),
+        supabase.from("profiles").select("household_size, dietary_prefs, zip_code").eq("user_id", user.id).maybeSingle(),
         supabase.from("meal_plans").select("plan").eq("user_id", user.id).eq("week_start_date", weekStart).maybeSingle(),
       ]);
       if (prof?.household_size) setHouseholdSize(prof.household_size);
+      if (prof?.zip_code) setZip(prof.zip_code);
       const prefs = (prof?.dietary_prefs ?? {}) as any;
       setProfilePrefs(prefs);
       if (prefs.style) setDietStyle(prefs.style);
