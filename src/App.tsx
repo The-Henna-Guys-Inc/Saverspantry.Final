@@ -17,6 +17,7 @@ import Watchlist from "./pages/Watchlist.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import AdminAnalytics from "./pages/AdminAnalytics.tsx";
 import { InstallPrompt } from "./components/InstallPrompt";
+import { MobileTabBar } from "./components/MobileTabBar";
 
 const queryClient = new QueryClient();
 
