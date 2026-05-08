@@ -54,13 +54,7 @@ export const Header = () => {
                 <Link to="/pantry"><Refrigerator className="h-4 w-4 mr-1.5" />Pantry</Link>
               </Button>
               <Button asChild variant="ghost" size="sm" className="rounded-xl">
-                <Link to="/pantry/calendar"><CalendarDays className="h-4 w-4 mr-1.5" />Expiry</Link>
-              </Button>
-              <Button asChild variant="ghost" size="sm" className="rounded-xl">
-                <Link to="/stores"><StoreIcon className="h-4 w-4 mr-1.5" />Stores</Link>
-              </Button>
-              <Button asChild variant="ghost" size="sm" className="rounded-xl">
-                <Link to="/sales"><Tag className="h-4 w-4 mr-1.5" />Sales</Link>
+                <Link to="/deals"><Tag className="h-4 w-4 mr-1.5" />Deals</Link>
               </Button>
               <Button asChild variant="ghost" size="sm" className="rounded-xl">
                 <Link to="/bulk-buy"><PackageOpen className="h-4 w-4 mr-1.5" />Bulk-Buy</Link>
