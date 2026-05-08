@@ -48,6 +48,29 @@ const Pantry = () => {
   // new location input
   const [newLoc, setNewLoc] = useState("");
 
+  // barcode scanner
+  const [scannerOpen, setScannerOpen] = useState(false);
+
+  const handleScanned = (r: { code: string; productName?: string; brand?: string; quantity?: string; categories?: string }) => {
+    const label = r.productName ? (r.brand ? `${r.brand} ${r.productName}` : r.productName) : `Item ${r.code}`;
+    setName(label);
+    if (r.quantity) {
+      const m = r.quantity.match(/([\d.]+)\s*(g|kg|ml|l|oz|lb)?/i);
+      if (m) {
+        setQty(m[1]);
+        if (m[2]) {
+          const u = m[2].toLowerCase() === "l" ? "L" : m[2].toLowerCase();
+          if (UNITS.includes(u)) setUnit(u);
+        }
+      }
+    }
+    if (r.categories) {
+      const lower = r.categories.toLowerCase();
+      const match = CATEGORIES.find((c) => lower.includes(c));
+      if (match) setCategory(match);
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
     (async () => {
