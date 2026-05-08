@@ -51,7 +51,7 @@ const TOOL = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const { household_size = 2, dietary_prefs = [], budget_usd, cuisine_focus, diet_style, profile = null } = await req.json().catch(() => ({}));
+    const { household_size = 2, dietary_prefs = [], budget_usd, cuisine_focus, diet_style, profile = null, must_include_recipes = [] } = await req.json().catch(() => ({}));
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const profileLines: string[] = [];
     if (profile) {
