@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.kroger-prices]
 verify_jwt = false
+
+[functions.expiry-date-ocr]
+verify_jwt = false
