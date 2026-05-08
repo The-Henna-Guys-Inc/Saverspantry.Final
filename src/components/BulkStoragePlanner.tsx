@@ -537,9 +537,14 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
         <Boxes className="h-3.5 w-3.5" /> Bulk & long-term storage
       </div>
       <h2 className="text-2xl font-bold text-primary mb-1">Stock up & save</h2>
-      <p className="text-sm text-muted-foreground mb-5">
+      <p className="text-sm text-muted-foreground mb-2">
         See how much non-perishable food your household needs for {horizon} months — and what you'd save buying in bulk.
       </p>
+      {activePacks.size > 0 && (
+        <p className="text-xs text-accent font-medium mb-5">
+          Curated for {Array.from(activePacks).map((k) => CUISINE_PACKS[k]?.label).filter(Boolean).join(", ")} cuisine
+        </p>
+      )}
 
       {/* Controls */}
       <div className="grid sm:grid-cols-4 gap-3 mb-5">
