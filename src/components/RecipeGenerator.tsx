@@ -33,7 +33,7 @@ const numOrUndef = (v: string) => {
 
 export const RecipeGenerator = () => {
   const [ingredients, setIngredients] = useState("");
-  const [cuisine, setCuisine] = useState("Mediterranean");
+  const [cuisine, setCuisine] = useState<string | null>(null);
   const [restrictions, setRestrictions] = useState<Restriction[]>([]);
   const [advOpen, setAdvOpen] = useState(false);
   const [maxCals, setMaxCals] = useState("");
