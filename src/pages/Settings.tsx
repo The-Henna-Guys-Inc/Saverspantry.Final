@@ -12,6 +12,13 @@ import { Loader2, Save, Settings as SettingsIcon, TrendingDown, Utensils } from 
 import { toast } from "sonner";
 import { AccountManagement } from "@/components/AccountManagement";
 import { SupportTickets } from "@/components/SupportTickets";
+import { CUISINE_LABEL, type CuisineTag } from "@/lib/cuisineHints";
+import { Switch } from "@/components/ui/switch";
+
+const DISCOVERY_CUISINES: CuisineTag[] = [
+  "korean", "japanese", "chinese", "south_asian", "southeast_asian",
+  "middle_eastern", "mexican", "latin_american", "african", "mediterranean",
+];
 
 const RESTRICTIONS = ["halal", "kosher", "vegetarian", "vegan", "gluten-free", "dairy-free", "nut-free"] as const;
 const DIET_STYLES = ["balanced", "high-protein", "keto", "mediterranean", "pescatarian"] as const;
