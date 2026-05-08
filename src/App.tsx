@@ -51,7 +51,7 @@ const App = () => (
           <Route path="/sales" element={<Navigate to="/deals?tab=sales" replace />} />
           <Route path="/watchlist" element={<Watchlist />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/bulk-buy" element={<BulkBuy />} />
+          <Route path="/bulk-buy" element={<Navigate to="/pantry?tab=bulk-buy" replace />} />
           <Route path="/admin/analytics" element={<AdminAnalytics />} />
           <Route path="/admin/support" element={<AdminSupport />} />
           <Route path="/admin/ai-usage" element={<AdminAiUsage />} />

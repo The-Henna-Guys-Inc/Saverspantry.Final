@@ -19,6 +19,8 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Sparkles } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PantryExpiryView } from "@/components/PantryExpiryView";
+import BulkBuy from "@/pages/BulkBuy";
+import { PackageOpen } from "lucide-react";
 
 type PantryItem = {
   id: string;
@@ -47,7 +49,8 @@ const Pantry = () => {
   const [showOther, setShowOther] = useState(false);
   const { cuisines: prefCuisines, isFiltering, setEnabled } = useCuisinePrefs();
   const [searchParams, setSearchParams] = useSearchParams();
-  const tab = searchParams.get("tab") === "expiry" ? "expiry" : "items";
+  const tabParam = searchParams.get("tab");
+  const tab = tabParam === "expiry" ? "expiry" : tabParam === "bulk-buy" ? "bulk-buy" : "items";
   const setTab = (v: string) => setSearchParams(v === "items" ? {} : { tab: v });
 
   // form state
@@ -273,11 +276,16 @@ const Pantry = () => {
         <Tabs value={tab} onValueChange={setTab} className="w-full">
           <TabsList className="rounded-2xl mb-6">
             <TabsTrigger value="items" className="rounded-xl gap-1.5"><Package className="h-4 w-4" />Items</TabsTrigger>
-            <TabsTrigger value="expiry" className="rounded-xl gap-1.5"><CalendarDays className="h-4 w-4" />Expiry calendar</TabsTrigger>
+            <TabsTrigger value="expiry" className="rounded-xl gap-1.5"><CalendarDays className="h-4 w-4" />Expiry</TabsTrigger>
+            <TabsTrigger value="bulk-buy" className="rounded-xl gap-1.5"><PackageOpen className="h-4 w-4" />Bulk-Buy</TabsTrigger>
           </TabsList>
 
           <TabsContent value="expiry" className="mt-0">
             <PantryExpiryView />
+          </TabsContent>
+
+          <TabsContent value="bulk-buy" className="mt-0">
+            <BulkBuy embedded />
           </TabsContent>
 
           <TabsContent value="items" className="mt-0">
@@ -504,7 +512,7 @@ const Pantry = () => {
               <div className="text-xs text-muted-foreground">Personalized picks based on your cuisines and what you actually use.</div>
             </div>
             <Button asChild variant="hero" size="sm" className="rounded-xl">
-              <Link to="/bulk-buy">See recommendations →</Link>
+              <Link to="/pantry?tab=bulk-buy" onClick={(e) => { e.preventDefault(); setTab("bulk-buy"); }}>See recommendations →</Link>
             </Button>
           </div>
         </Card>
