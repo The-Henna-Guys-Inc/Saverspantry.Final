@@ -512,7 +512,7 @@ const Pantry = () => {
               <div className="text-xs text-muted-foreground">Personalized picks based on your cuisines and what you actually use.</div>
             </div>
             <Button asChild variant="hero" size="sm" className="rounded-xl">
-              <Link to="/bulk-buy">See recommendations →</Link>
+              <Link to="/pantry?tab=bulk-buy" onClick={(e) => { e.preventDefault(); setTab("bulk-buy"); }}>See recommendations →</Link>
             </Button>
           </div>
         </Card>
