@@ -45,6 +45,7 @@ const App = () => (
           <Route path="/watchlist" element={<Watchlist />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/admin/analytics" element={<AdminAnalytics />} />
+          <Route path="/admin/support" element={<AdminSupport />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
