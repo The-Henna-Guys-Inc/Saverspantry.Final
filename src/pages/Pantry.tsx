@@ -319,7 +319,10 @@ const Pantry = () => {
             </div>
             <div>
               <Label htmlFor="e" className="text-xs">Expires</Label>
-              <Input id="e" type="date" value={expires} onChange={(e) => setExpires(e.target.value)} className="rounded-xl mt-1" />
+              <div className="flex gap-1.5 mt-1">
+                <Input id="e" type="date" value={expires} onChange={(e) => setExpires(e.target.value)} className="rounded-xl flex-1 min-w-0" />
+                <ExpiryDateScanner onDate={setExpires} />
+              </div>
             </div>
             <div>
               <Label htmlFor="t" className="text-xs">Low at</Label>
