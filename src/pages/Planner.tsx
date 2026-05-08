@@ -58,6 +58,18 @@ const Planner = () => {
   const weekStart = mondayOf();
 
   const [profilePrefs, setProfilePrefs] = useState<any>(null);
+  const [queued, setQueued] = useState<any[]>([]);
+
+  const refreshQueue = () => {
+    try { setQueued(JSON.parse(sessionStorage.getItem("planner_queue") || "[]")); } catch { setQueued([]); }
+  };
+  useEffect(() => { refreshQueue(); }, []);
+  const clearQueue = () => { sessionStorage.removeItem("planner_queue"); setQueued([]); };
+  const removeQueued = (title: string) => {
+    const next = queued.filter((r) => r.title !== title);
+    sessionStorage.setItem("planner_queue", JSON.stringify(next));
+    setQueued(next);
+  };
 
   // Load existing plan + profile defaults
   useEffect(() => {
@@ -102,6 +114,7 @@ const Planner = () => {
             dislikes: profilePrefs.dislikes ?? [],
             allergies: profilePrefs.allergies ?? [],
           } : null,
+          must_include_recipes: queued,
         },
       });
       if (error) throw error;
@@ -112,6 +125,7 @@ const Planner = () => {
         { user_id: user!.id, week_start_date: weekStart, plan: data as any },
         { onConflict: "user_id,week_start_date" }
       );
+      if (queued.length) clearQueue();
       toast.success("Weekly plan generated");
     } catch (e: any) {
       toast.error(e.message ?? "Could not generate plan");
@@ -237,6 +251,26 @@ const Planner = () => {
               ))}
             </div>
           </div>
+          {queued.length > 0 && (
+            <div className="mt-5 p-3 rounded-xl bg-secondary/60 border border-border/50">
+              <div className="text-xs uppercase tracking-wider text-accent mb-2">
+                Recipes queued for next plan ({queued.length})
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {queued.map((r) => (
+                  <button
+                    key={r.title}
+                    type="button"
+                    onClick={() => removeQueued(r.title)}
+                    title="Remove from queue"
+                    className="text-xs px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:opacity-80 transition-smooth"
+                  >
+                    {r.title} ×
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="mt-5 flex gap-3">
             <Button variant="hero" onClick={generate} disabled={genLoading} className="rounded-xl">
               {genLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : plan ? <RefreshCw className="h-4 w-4 mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}

@@ -51,7 +51,7 @@ const TOOL = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const { household_size = 2, dietary_prefs = [], budget_usd, cuisine_focus, diet_style, profile = null } = await req.json().catch(() => ({}));
+    const { household_size = 2, dietary_prefs = [], budget_usd, cuisine_focus, diet_style, profile = null, must_include_recipes = [] } = await req.json().catch(() => ({}));
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const profileLines: string[] = [];
     if (profile) {
@@ -62,11 +62,14 @@ Deno.serve(async (req) => {
       if (Array.isArray(profile.allergies) && profile.allergies.length) profileLines.push(`ALLERGIES — STRICTLY EXCLUDE from every meal: ${profile.allergies.join(", ")}.`);
     }
     const profileBlock = profileLines.length ? `\nUser food profile:\n${profileLines.join("\n")}` : "";
+    const mustBlock = Array.isArray(must_include_recipes) && must_include_recipes.length
+      ? `\nMUST INCLUDE these saved recipes somewhere in the week (use the exact title as the meal title and treat their ingredients as the main_ingredients):\n${must_include_recipes.map((r: any, i: number) => `${i + 1}. ${r.title} — ingredients: ${(r.ingredients || []).map((x: any) => x.item || x).slice(0, 8).join(", ")}`).join("\n")}`
+      : "";
     const userMsg = `Plan 7 days of meals for a household of ${household_size}.
 Diet style: ${diet_style || "balanced"}.
 Dietary prefs: ${Array.isArray(dietary_prefs) && dietary_prefs.length ? dietary_prefs.join(", ") : "none"}.
 ${budget_usd ? `Weekly grocery budget: $${budget_usd}.` : "Keep it budget-friendly."}
-${cuisine_focus ? `Lean toward: ${cuisine_focus}.` : "Mix common cuisines."}${profileBlock}
+${cuisine_focus ? `Lean toward: ${cuisine_focus}.` : "Mix common cuisines."}${profileBlock}${mustBlock}
 Reuse ingredients across meals to reduce waste. Use realistic 2026 US grocery prices (~8-12% above 2023 baseline).`;
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

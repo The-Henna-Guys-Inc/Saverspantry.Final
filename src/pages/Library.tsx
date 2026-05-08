@@ -7,14 +7,16 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, Trash2, Sparkles, ArrowLeftRight, ChefHat, Search, ExternalLink } from "lucide-react";
+import { Loader2, Trash2, Sparkles, ArrowLeftRight, ChefHat, Search, ExternalLink, CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import { RecipeUrlImport } from "@/components/RecipeUrlImport";
 
 type Row = { id: string; created_at: string; query?: string; food?: string; result?: any; recipe?: any };
 
 const Library = () => {
   const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [lookups, setLookups] = useState<Row[]>([]);
   const [swaps, setSwaps] = useState<Row[]>([]);
   const [recipes, setRecipes] = useState<Row[]>([]);
@@ -48,6 +50,25 @@ const Library = () => {
     if (error) return toast.error("Could not delete");
     toast.success("Deleted");
     load();
+  };
+
+  const sendToPlanner = (recipe: any) => {
+    try {
+      const queue = JSON.parse(sessionStorage.getItem("planner_queue") || "[]");
+      const exists = queue.some((r: any) => r.title === recipe?.title);
+      if (exists) { toast.info("Already queued for next plan"); return; }
+      queue.push({
+        title: recipe?.title,
+        cuisine: recipe?.cuisine,
+        ingredients: recipe?.ingredients ?? [],
+      });
+      sessionStorage.setItem("planner_queue", JSON.stringify(queue));
+      toast.success("Queued — open Planner & generate", {
+        action: { label: "Open Planner", onClick: () => navigate("/planner") },
+      });
+    } catch {
+      toast.error("Could not queue recipe");
+    }
   };
 
   if (authLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
@@ -105,7 +126,13 @@ const Library = () => {
                       </a>
                     )}
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => remove("saved_recipes", r.id)}><Trash2 className="h-4 w-4" /></Button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button variant="ghost" size="sm" onClick={() => sendToPlanner(r.recipe)}
+                      title="Queue for next meal plan" className="rounded-xl">
+                      <CalendarPlus className="h-4 w-4 mr-1" />Plan
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => remove("saved_recipes", r.id)}><Trash2 className="h-4 w-4" /></Button>
+                  </div>
                 </Card>
               ))}
             </TabsContent>
