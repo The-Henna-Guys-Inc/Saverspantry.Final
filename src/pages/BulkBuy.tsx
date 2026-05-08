@@ -30,7 +30,7 @@ type Rec = {
   reasons: string[];
 };
 
-const BulkBuy = () => {
+const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
   const { user, loading: authLoading } = useAuth();
   const { cuisines, isFiltering, setEnabled } = useCuisinePrefs();
   const [loading, setLoading] = useState(true);
