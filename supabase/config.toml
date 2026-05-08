@@ -35,3 +35,12 @@ verify_jwt = false
 
 [functions.expiry-date-ocr]
 verify_jwt = false
+
+[functions.account-deletion]
+verify_jwt = false
+
+[functions.purge-deleted-accounts]
+verify_jwt = false
+
+[functions.data-export]
+verify_jwt = false

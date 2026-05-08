@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_deletion_requests: {
+        Row: {
+          cancelled_at: string | null
+          created_at: string
+          id: string
+          purged_at: string | null
+          reason: string | null
+          requested_at: string
+          scheduled_purge_at: string
+          user_id: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          created_at?: string
+          id?: string
+          purged_at?: string | null
+          reason?: string | null
+          requested_at?: string
+          scheduled_purge_at?: string
+          user_id: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          created_at?: string
+          id?: string
+          purged_at?: string | null
+          reason?: string | null
+          requested_at?: string
+          scheduled_purge_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       analytics_snapshots: {
         Row: {
           by_category: Json
@@ -50,6 +83,72 @@ export type Database = {
           updated_at?: string
           user_id?: string
           week_start?: string
+        }
+        Relationships: []
+      }
+      data_export_requests: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          download_url: string | null
+          error: string | null
+          expires_at: string | null
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          download_url?: string | null
+          error?: string | null
+          expires_at?: string | null
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          download_url?: string | null
+          error?: string | null
+          expires_at?: string | null
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      legal_documents: {
+        Row: {
+          content_md: string
+          created_at: string
+          doc_type: string
+          id: string
+          is_active: boolean
+          published_at: string
+          title: string
+          version: number
+        }
+        Insert: {
+          content_md: string
+          created_at?: string
+          doc_type: string
+          id?: string
+          is_active?: boolean
+          published_at?: string
+          title: string
+          version: number
+        }
+        Update: {
+          content_md?: string
+          created_at?: string
+          doc_type?: string
+          id?: string
+          is_active?: boolean
+          published_at?: string
+          title?: string
+          version?: number
         }
         Relationships: []
       }
@@ -233,6 +332,7 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          deletion_pending_at: string | null
           dietary_prefs: Json
           display_name: string | null
           household_size: number
@@ -247,6 +347,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deletion_pending_at?: string | null
           dietary_prefs?: Json
           display_name?: string | null
           household_size?: number
@@ -261,6 +362,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deletion_pending_at?: string | null
           dietary_prefs?: Json
           display_name?: string | null
           household_size?: number
@@ -648,6 +750,47 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "specialty_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_legal_acceptances: {
+        Row: {
+          accepted_at: string
+          doc_type: string
+          document_id: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string
+          version: number
+        }
+        Insert: {
+          accepted_at?: string
+          doc_type: string
+          document_id: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id: string
+          version: number
+        }
+        Update: {
+          accepted_at?: string
+          doc_type?: string
+          document_id?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_legal_acceptances_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "legal_documents"
             referencedColumns: ["id"]
           },
         ]
