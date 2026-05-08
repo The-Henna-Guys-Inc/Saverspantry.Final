@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Boxes, Loader2, Plus, Trash2, TrendingDown, Sparkles, Pencil, RotateCcw, ExternalLink } from "lucide-react";
+import { Boxes, Loader2, Plus, Trash2, TrendingDown, Sparkles, Pencil, RotateCcw, ExternalLink, Heart } from "lucide-react";
 import { toast } from "sonner";
 
 // Per-person daily consumption in POUNDS, typical weekly retail $/lb (small pkg),
@@ -64,6 +64,187 @@ const STAPLES: Staple[] = [
     bulkSources: [{ store: "Costco", pricePerLb: 3.20, searchUrl: costco("powdered milk") }, { store: "Amazon", pricePerLb: 3.80, searchUrl: amazon("nonfat dry milk") }] },
 ];
 
+// Cuisine-specific curated staples — items that feel "made for me" for each food culture.
+// Keyed by the cuisine values used in Settings (CUISINES array).
+const CUISINE_PACKS: Record<string, { label: string; emoji: string; staples: Staple[] }> = {
+  indian: {
+    label: "Indian pantry", emoji: "🇮🇳",
+    staples: [
+      { key: "in_basmati",   label: "Basmati rice",      searchTerm: "basmati rice",       lbsPerPersonPerDay: 0.10, retailPerLb: 2.40, bulkPerLb: 1.40, shelfLifeMonths: 240,
+        bulkSources: [{ store: "Costco", pricePerLb: 1.30, searchUrl: costco("basmati rice 20 lb") }, { store: "Amazon", pricePerLb: 1.55, searchUrl: amazon("basmati rice") }] },
+      { key: "in_toor_dal",  label: "Toor dal",          searchTerm: "toor dal",           lbsPerPersonPerDay: 0.04, retailPerLb: 3.20, bulkPerLb: 1.80, shelfLifeMonths: 36,
+        bulkSources: [{ store: "Amazon", pricePerLb: 1.80, searchUrl: amazon("toor dal") }] },
+      { key: "in_chana_dal", label: "Chana dal",         searchTerm: "chana dal",          lbsPerPersonPerDay: 0.03, retailPerLb: 2.80, bulkPerLb: 1.60, shelfLifeMonths: 36,
+        bulkSources: [{ store: "Amazon", pricePerLb: 1.60, searchUrl: amazon("chana dal") }] },
+      { key: "in_atta",      label: "Atta (whole wheat flour)", searchTerm: "atta flour",  lbsPerPersonPerDay: 0.10, retailPerLb: 1.80, bulkPerLb: 0.95, shelfLifeMonths: 9,
+        bulkSources: [{ store: "Costco", pricePerLb: 0.85, searchUrl: costco("atta 20 lb") }, { store: "Amazon", pricePerLb: 1.05, searchUrl: amazon("atta flour") }] },
+      { key: "in_ghee",      label: "Ghee",              searchTerm: "ghee",               lbsPerPersonPerDay: 0.02, retailPerLb: 12.0, bulkPerLb: 7.50, shelfLifeMonths: 12,
+        bulkSources: [{ store: "Costco", pricePerLb: 7.00, searchUrl: costco("ghee") }] },
+      { key: "in_masala",    label: "Garam masala",      searchTerm: "garam masala",       lbsPerPersonPerDay: 0.005, retailPerLb: 24.0, bulkPerLb: 12.0, shelfLifeMonths: 24 },
+    ],
+  },
+  pakistani: {
+    label: "Pakistani pantry", emoji: "🇵🇰",
+    staples: [
+      { key: "pk_basmati",   label: "Long-grain basmati",searchTerm: "basmati rice",       lbsPerPersonPerDay: 0.10, retailPerLb: 2.40, bulkPerLb: 1.40, shelfLifeMonths: 240,
+        bulkSources: [{ store: "Costco", pricePerLb: 1.30, searchUrl: costco("basmati rice 20 lb") }] },
+      { key: "pk_atta",      label: "Chakki atta",       searchTerm: "chakki atta",        lbsPerPersonPerDay: 0.12, retailPerLb: 1.80, bulkPerLb: 0.95, shelfLifeMonths: 9,
+        bulkSources: [{ store: "Amazon", pricePerLb: 1.05, searchUrl: amazon("chakki atta") }] },
+      { key: "pk_masoor",    label: "Masoor dal",        searchTerm: "masoor dal",         lbsPerPersonPerDay: 0.04, retailPerLb: 2.80, bulkPerLb: 1.50, shelfLifeMonths: 36,
+        bulkSources: [{ store: "Amazon", pricePerLb: 1.50, searchUrl: amazon("masoor dal") }] },
+      { key: "pk_chickpeas", label: "Chickpeas (kabuli)",searchTerm: "kabuli chickpeas",   lbsPerPersonPerDay: 0.04, retailPerLb: 2.40, bulkPerLb: 1.20, shelfLifeMonths: 60,
+        bulkSources: [{ store: "Costco", pricePerLb: 1.10, searchUrl: costco("chickpeas") }] },
+      { key: "pk_ghee",      label: "Desi ghee",         searchTerm: "desi ghee",          lbsPerPersonPerDay: 0.02, retailPerLb: 12.0, bulkPerLb: 7.50, shelfLifeMonths: 12 },
+      { key: "pk_tea",       label: "Loose black tea",   searchTerm: "loose leaf black tea",lbsPerPersonPerDay: 0.005,retailPerLb: 14.0, bulkPerLb: 7.00, shelfLifeMonths: 24 },
+    ],
+  },
+  "middle-eastern": {
+    label: "Middle Eastern pantry", emoji: "🥙",
+    staples: [
+      { key: "me_bulgur",    label: "Bulgur wheat",      searchTerm: "bulgur wheat",       lbsPerPersonPerDay: 0.05, retailPerLb: 2.60, bulkPerLb: 1.40, shelfLifeMonths: 24,
+        bulkSources: [{ store: "Amazon", pricePerLb: 1.50, searchUrl: amazon("bulgur wheat") }] },
+      { key: "me_chickpeas", label: "Dried chickpeas",   searchTerm: "dried chickpeas",    lbsPerPersonPerDay: 0.05, retailPerLb: 2.40, bulkPerLb: 1.20, shelfLifeMonths: 60,
+        bulkSources: [{ store: "Costco", pricePerLb: 1.10, searchUrl: costco("chickpeas") }] },
+      { key: "me_tahini",    label: "Tahini",            searchTerm: "tahini",             lbsPerPersonPerDay: 0.02, retailPerLb: 6.50, bulkPerLb: 3.80, shelfLifeMonths: 18,
+        bulkSources: [{ store: "Costco", pricePerLb: 3.50, searchUrl: costco("tahini") }] },
+      { key: "me_olive_oil", label: "Extra virgin olive oil", searchTerm: "extra virgin olive oil", lbsPerPersonPerDay: 0.04, retailPerLb: 9.00, bulkPerLb: 5.00, shelfLifeMonths: 18,
+        bulkSources: [{ store: "Costco", pricePerLb: 4.80, searchUrl: costco("olive oil 3 liter") }] },
+      { key: "me_sumac",     label: "Sumac",             searchTerm: "ground sumac",       lbsPerPersonPerDay: 0.003, retailPerLb: 22.0, bulkPerLb: 11.0, shelfLifeMonths: 24 },
+      { key: "me_zaatar",    label: "Za'atar",           searchTerm: "zaatar spice",       lbsPerPersonPerDay: 0.004, retailPerLb: 20.0, bulkPerLb: 10.0, shelfLifeMonths: 24 },
+    ],
+  },
+  mexican: {
+    label: "Mexican pantry", emoji: "🌮",
+    staples: [
+      { key: "mx_pinto",     label: "Pinto beans",       searchTerm: "dried pinto beans",  lbsPerPersonPerDay: 0.06, retailPerLb: 2.20, bulkPerLb: 1.05, shelfLifeMonths: 96,
+        bulkSources: [{ store: "Costco", pricePerLb: 1.05, searchUrl: costco("pinto beans 25 lb") }] },
+      { key: "mx_masa",      label: "Masa harina",       searchTerm: "masa harina",        lbsPerPersonPerDay: 0.06, retailPerLb: 1.40, bulkPerLb: 0.85, shelfLifeMonths: 12,
+        bulkSources: [{ store: "Amazon", pricePerLb: 1.00, searchUrl: amazon("masa harina") }] },
+      { key: "mx_rice",      label: "Long grain rice",   searchTerm: "long grain rice",    lbsPerPersonPerDay: 0.07, retailPerLb: 1.80, bulkPerLb: 0.85, shelfLifeMonths: 360 },
+      { key: "mx_chiles",    label: "Dried chiles",      searchTerm: "dried guajillo chiles",lbsPerPersonPerDay: 0.005, retailPerLb: 18.0, bulkPerLb: 9.00, shelfLifeMonths: 18 },
+      { key: "mx_oil",       label: "Cooking oil",       searchTerm: "vegetable oil",      lbsPerPersonPerDay: 0.04, retailPerLb: 3.20, bulkPerLb: 1.80, shelfLifeMonths: 12 },
+    ],
+  },
+  italian: {
+    label: "Italian pantry", emoji: "🇮🇹",
+    staples: [
+      { key: "it_pasta",     label: "Dried pasta",       searchTerm: "spaghetti pasta",    lbsPerPersonPerDay: 0.10, retailPerLb: 2.00, bulkPerLb: 1.10, shelfLifeMonths: 24,
+        bulkSources: [{ store: "Costco", pricePerLb: 1.00, searchUrl: costco("pasta") }] },
+      { key: "it_olive_oil", label: "Extra virgin olive oil", searchTerm: "extra virgin olive oil",lbsPerPersonPerDay: 0.04, retailPerLb: 9.00, bulkPerLb: 5.00, shelfLifeMonths: 18,
+        bulkSources: [{ store: "Costco", pricePerLb: 4.80, searchUrl: costco("olive oil 3 liter") }] },
+      { key: "it_tomatoes",  label: "San Marzano tomatoes",searchTerm: "san marzano tomatoes",lbsPerPersonPerDay: 0.10, retailPerLb: 2.20, bulkPerLb: 1.20, shelfLifeMonths: 24,
+        bulkSources: [{ store: "Costco", pricePerLb: 1.10, searchUrl: costco("san marzano tomatoes") }] },
+      { key: "it_arborio",   label: "Arborio rice",      searchTerm: "arborio rice",       lbsPerPersonPerDay: 0.04, retailPerLb: 3.00, bulkPerLb: 1.80, shelfLifeMonths: 24 },
+      { key: "it_polenta",   label: "Polenta",           searchTerm: "polenta cornmeal",   lbsPerPersonPerDay: 0.04, retailPerLb: 2.40, bulkPerLb: 1.30, shelfLifeMonths: 12 },
+    ],
+  },
+  chinese: {
+    label: "Chinese pantry", emoji: "🥢",
+    staples: [
+      { key: "cn_jasmine",   label: "Jasmine rice",      searchTerm: "jasmine rice",       lbsPerPersonPerDay: 0.10, retailPerLb: 2.00, bulkPerLb: 1.10, shelfLifeMonths: 240,
+        bulkSources: [{ store: "Costco", pricePerLb: 1.05, searchUrl: costco("jasmine rice 25 lb") }] },
+      { key: "cn_soy",       label: "Soy sauce",         searchTerm: "soy sauce",          lbsPerPersonPerDay: 0.02, retailPerLb: 4.00, bulkPerLb: 2.20, shelfLifeMonths: 24,
+        bulkSources: [{ store: "Costco", pricePerLb: 2.00, searchUrl: costco("soy sauce") }] },
+      { key: "cn_noodles",   label: "Wheat noodles",     searchTerm: "lo mein noodles",    lbsPerPersonPerDay: 0.05, retailPerLb: 3.00, bulkPerLb: 1.80, shelfLifeMonths: 18 },
+      { key: "cn_sesame",    label: "Toasted sesame oil",searchTerm: "toasted sesame oil", lbsPerPersonPerDay: 0.005, retailPerLb: 14.0, bulkPerLb: 8.00, shelfLifeMonths: 18 },
+      { key: "cn_oyster",    label: "Oyster sauce",      searchTerm: "oyster sauce",       lbsPerPersonPerDay: 0.01, retailPerLb: 5.50, bulkPerLb: 3.20, shelfLifeMonths: 24 },
+    ],
+  },
+  japanese: {
+    label: "Japanese pantry", emoji: "🍱",
+    staples: [
+      { key: "jp_rice",      label: "Short-grain rice",  searchTerm: "short grain sushi rice",lbsPerPersonPerDay: 0.10, retailPerLb: 2.40, bulkPerLb: 1.40, shelfLifeMonths: 240,
+        bulkSources: [{ store: "Costco", pricePerLb: 1.30, searchUrl: costco("calrose rice 25 lb") }] },
+      { key: "jp_soy",       label: "Shoyu (soy sauce)", searchTerm: "japanese soy sauce", lbsPerPersonPerDay: 0.02, retailPerLb: 4.50, bulkPerLb: 2.40, shelfLifeMonths: 24 },
+      { key: "jp_miso",      label: "Miso paste",        searchTerm: "white miso paste",   lbsPerPersonPerDay: 0.02, retailPerLb: 6.00, bulkPerLb: 3.50, shelfLifeMonths: 12 },
+      { key: "jp_nori",      label: "Nori sheets",       searchTerm: "nori seaweed sheets",lbsPerPersonPerDay: 0.003,retailPerLb: 40.0, bulkPerLb: 22.0, shelfLifeMonths: 18 },
+      { key: "jp_dashi",     label: "Dashi powder",      searchTerm: "dashi powder",       lbsPerPersonPerDay: 0.003,retailPerLb: 18.0, bulkPerLb: 10.0, shelfLifeMonths: 18 },
+    ],
+  },
+  thai: {
+    label: "Thai pantry", emoji: "🇹🇭",
+    staples: [
+      { key: "th_jasmine",   label: "Jasmine rice",      searchTerm: "jasmine rice",       lbsPerPersonPerDay: 0.10, retailPerLb: 2.00, bulkPerLb: 1.10, shelfLifeMonths: 240,
+        bulkSources: [{ store: "Costco", pricePerLb: 1.05, searchUrl: costco("jasmine rice 25 lb") }] },
+      { key: "th_fish_sauce",label: "Fish sauce",        searchTerm: "fish sauce",         lbsPerPersonPerDay: 0.015,retailPerLb: 5.00, bulkPerLb: 2.80, shelfLifeMonths: 36 },
+      { key: "th_coconut",   label: "Coconut milk",      searchTerm: "canned coconut milk",lbsPerPersonPerDay: 0.05, retailPerLb: 3.20, bulkPerLb: 1.80, shelfLifeMonths: 24,
+        bulkSources: [{ store: "Costco", pricePerLb: 1.70, searchUrl: costco("coconut milk") }] },
+      { key: "th_curry",     label: "Red curry paste",   searchTerm: "red curry paste",    lbsPerPersonPerDay: 0.005,retailPerLb: 12.0, bulkPerLb: 7.00, shelfLifeMonths: 24 },
+      { key: "th_rice_noodle",label: "Rice noodles",     searchTerm: "rice noodles",       lbsPerPersonPerDay: 0.04, retailPerLb: 3.20, bulkPerLb: 1.80, shelfLifeMonths: 24 },
+    ],
+  },
+  korean: {
+    label: "Korean pantry", emoji: "🇰🇷",
+    staples: [
+      { key: "kr_rice",      label: "Short-grain rice",  searchTerm: "short grain rice",   lbsPerPersonPerDay: 0.10, retailPerLb: 2.40, bulkPerLb: 1.40, shelfLifeMonths: 240 },
+      { key: "kr_gochujang", label: "Gochujang",         searchTerm: "gochujang paste",    lbsPerPersonPerDay: 0.015,retailPerLb: 7.00, bulkPerLb: 4.00, shelfLifeMonths: 24 },
+      { key: "kr_gochugaru", label: "Gochugaru",         searchTerm: "gochugaru korean chili",lbsPerPersonPerDay: 0.005,retailPerLb: 16.0, bulkPerLb: 8.50, shelfLifeMonths: 18 },
+      { key: "kr_soy",       label: "Korean soy sauce",  searchTerm: "korean soy sauce",   lbsPerPersonPerDay: 0.02, retailPerLb: 4.50, bulkPerLb: 2.40, shelfLifeMonths: 24 },
+      { key: "kr_sesame",    label: "Toasted sesame oil",searchTerm: "toasted sesame oil", lbsPerPersonPerDay: 0.005,retailPerLb: 14.0, bulkPerLb: 8.00, shelfLifeMonths: 18 },
+    ],
+  },
+  vietnamese: {
+    label: "Vietnamese pantry", emoji: "🇻🇳",
+    staples: [
+      { key: "vn_jasmine",   label: "Jasmine rice",      searchTerm: "jasmine rice",       lbsPerPersonPerDay: 0.10, retailPerLb: 2.00, bulkPerLb: 1.10, shelfLifeMonths: 240 },
+      { key: "vn_fish_sauce",label: "Nuoc mam (fish sauce)",searchTerm: "vietnamese fish sauce",lbsPerPersonPerDay: 0.015,retailPerLb: 5.50, bulkPerLb: 3.00, shelfLifeMonths: 36 },
+      { key: "vn_rice_paper",label: "Rice paper wrappers",searchTerm: "rice paper wrappers",lbsPerPersonPerDay: 0.01, retailPerLb: 6.00, bulkPerLb: 3.20, shelfLifeMonths: 24 },
+      { key: "vn_pho_noodle",label: "Pho rice noodles",  searchTerm: "pho rice noodles",   lbsPerPersonPerDay: 0.04, retailPerLb: 3.20, bulkPerLb: 1.80, shelfLifeMonths: 24 },
+    ],
+  },
+  mediterranean: {
+    label: "Mediterranean pantry", emoji: "🫒",
+    staples: [
+      { key: "md_olive_oil", label: "Extra virgin olive oil",searchTerm: "extra virgin olive oil",lbsPerPersonPerDay: 0.04, retailPerLb: 9.00, bulkPerLb: 5.00, shelfLifeMonths: 18,
+        bulkSources: [{ store: "Costco", pricePerLb: 4.80, searchUrl: costco("olive oil 3 liter") }] },
+      { key: "md_chickpeas", label: "Chickpeas",         searchTerm: "dried chickpeas",    lbsPerPersonPerDay: 0.04, retailPerLb: 2.40, bulkPerLb: 1.20, shelfLifeMonths: 60 },
+      { key: "md_lentils",   label: "Green lentils",     searchTerm: "green lentils",      lbsPerPersonPerDay: 0.03, retailPerLb: 2.40, bulkPerLb: 1.30, shelfLifeMonths: 60 },
+      { key: "md_couscous",  label: "Couscous",          searchTerm: "couscous",           lbsPerPersonPerDay: 0.05, retailPerLb: 2.80, bulkPerLb: 1.50, shelfLifeMonths: 24 },
+      { key: "md_olives",    label: "Olives",            searchTerm: "kalamata olives jar",lbsPerPersonPerDay: 0.02, retailPerLb: 6.00, bulkPerLb: 3.50, shelfLifeMonths: 18 },
+    ],
+  },
+  ethiopian: {
+    label: "Ethiopian pantry", emoji: "🇪🇹",
+    staples: [
+      { key: "et_teff",      label: "Teff flour",        searchTerm: "teff flour",         lbsPerPersonPerDay: 0.06, retailPerLb: 5.50, bulkPerLb: 3.00, shelfLifeMonths: 12,
+        bulkSources: [{ store: "Amazon", pricePerLb: 3.20, searchUrl: amazon("teff flour") }] },
+      { key: "et_berbere",   label: "Berbere spice",     searchTerm: "berbere spice",      lbsPerPersonPerDay: 0.005,retailPerLb: 22.0, bulkPerLb: 11.0, shelfLifeMonths: 24 },
+      { key: "et_lentils",   label: "Red lentils",       searchTerm: "red lentils",        lbsPerPersonPerDay: 0.04, retailPerLb: 2.80, bulkPerLb: 1.40, shelfLifeMonths: 60 },
+      { key: "et_niter",     label: "Niter kibbeh (spiced ghee)",searchTerm: "niter kibbeh",lbsPerPersonPerDay: 0.015,retailPerLb: 14.0, bulkPerLb: 8.50, shelfLifeMonths: 12 },
+    ],
+  },
+  caribbean: {
+    label: "Caribbean pantry", emoji: "🌴",
+    staples: [
+      { key: "cb_rice",      label: "Long grain rice",   searchTerm: "long grain rice",    lbsPerPersonPerDay: 0.08, retailPerLb: 1.80, bulkPerLb: 0.85, shelfLifeMonths: 360 },
+      { key: "cb_pigeon",    label: "Pigeon peas",       searchTerm: "dried pigeon peas",  lbsPerPersonPerDay: 0.04, retailPerLb: 3.20, bulkPerLb: 1.80, shelfLifeMonths: 60 },
+      { key: "cb_jerk",      label: "Jerk seasoning",    searchTerm: "jerk seasoning",     lbsPerPersonPerDay: 0.005,retailPerLb: 16.0, bulkPerLb: 8.50, shelfLifeMonths: 24 },
+      { key: "cb_coconut",   label: "Coconut milk",      searchTerm: "canned coconut milk",lbsPerPersonPerDay: 0.05, retailPerLb: 3.20, bulkPerLb: 1.80, shelfLifeMonths: 24 },
+      { key: "cb_plantain_flour",label: "Plantain flour",searchTerm: "plantain flour",     lbsPerPersonPerDay: 0.03, retailPerLb: 6.00, bulkPerLb: 3.50, shelfLifeMonths: 12 },
+    ],
+  },
+  french: {
+    label: "French pantry", emoji: "🥖",
+    staples: [
+      { key: "fr_bread_flour",label: "Bread flour",      searchTerm: "bread flour",        lbsPerPersonPerDay: 0.08, retailPerLb: 1.50, bulkPerLb: 0.80, shelfLifeMonths: 12 },
+      { key: "fr_butter",    label: "European butter",   searchTerm: "european butter",    lbsPerPersonPerDay: 0.03, retailPerLb: 6.50, bulkPerLb: 4.20, shelfLifeMonths: 6 },
+      { key: "fr_lentils",   label: "Puy lentils",       searchTerm: "french green lentils",lbsPerPersonPerDay: 0.03, retailPerLb: 4.50, bulkPerLb: 2.50, shelfLifeMonths: 60 },
+      { key: "fr_dijon",     label: "Dijon mustard",     searchTerm: "dijon mustard",      lbsPerPersonPerDay: 0.005,retailPerLb: 6.00, bulkPerLb: 3.50, shelfLifeMonths: 24 },
+      { key: "fr_olive_oil", label: "Olive oil",         searchTerm: "extra virgin olive oil",lbsPerPersonPerDay: 0.03, retailPerLb: 9.00, bulkPerLb: 5.00, shelfLifeMonths: 18 },
+    ],
+  },
+  american: {
+    label: "American pantry", emoji: "🇺🇸",
+    staples: [
+      { key: "us_pb",        label: "Peanut butter",     searchTerm: "peanut butter",      lbsPerPersonPerDay: 0.03, retailPerLb: 4.20, bulkPerLb: 2.60, shelfLifeMonths: 18 },
+      { key: "us_oats",      label: "Rolled oats",       searchTerm: "rolled oats",        lbsPerPersonPerDay: 0.05, retailPerLb: 2.40, bulkPerLb: 1.20, shelfLifeMonths: 24 },
+      { key: "us_pancake",   label: "Pancake mix",       searchTerm: "pancake mix",        lbsPerPersonPerDay: 0.04, retailPerLb: 2.20, bulkPerLb: 1.20, shelfLifeMonths: 12 },
+      { key: "us_bbq",       label: "BBQ sauce",         searchTerm: "bbq sauce",          lbsPerPersonPerDay: 0.02, retailPerLb: 3.50, bulkPerLb: 1.90, shelfLifeMonths: 24 },
+      { key: "us_maple",     label: "Maple syrup",       searchTerm: "pure maple syrup",   lbsPerPersonPerDay: 0.01, retailPerLb: 14.0, bulkPerLb: 8.00, shelfLifeMonths: 24 },
+    ],
+  },
+};
+
 type CustomItem = {
   id: string;
   label: string;
@@ -106,6 +287,8 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
   const [livePrices, setLivePrices] = useState<LiveBulkPrice>({});
   const [storeName, setStoreName] = useState<string | null>(null);
   const [pricesLoading, setPricesLoading] = useState(false);
+  const [activePacks, setActivePacks] = useState<Set<string>>(new Set());
+  const [displayName, setDisplayName] = useState<string>("");
 
   // edit dialog
   const [editing, setEditing] = useState<Editable | null>(null);
@@ -122,21 +305,36 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
       if (!user) return;
       const { data } = await supabase
         .from("profiles")
-        .select("household_size, zip_code")
+        .select("household_size, zip_code, dietary_prefs, display_name")
         .eq("user_id", user.id)
         .maybeSingle();
       if (data?.household_size) setHousehold(data.household_size);
       if (data?.zip_code && !initialZip) setZip(data.zip_code);
+      if (data?.display_name) setDisplayName(data.display_name);
+      const prefs = (data?.dietary_prefs ?? {}) as { cuisines?: string[] };
+      const fromProfile = (prefs.cuisines ?? []).filter((c) => CUISINE_PACKS[c]);
+      if (fromProfile.length) setActivePacks(new Set(fromProfile));
     })();
   }, [initialZip]);
 
   const days = horizon * 30;
-  // Apply overrides to curated, then drop hidden ones
+
+  // Combined staple list = base STAPLES + active cuisine packs (deduped by key)
+  const combinedStaples = useMemo(() => {
+    const seen = new Set<string>();
+    const out: Staple[] = [];
+    const push = (s: Staple) => { if (!seen.has(s.key)) { seen.add(s.key); out.push(s); } };
+    activePacks.forEach((pk) => CUISINE_PACKS[pk]?.staples.forEach(push));
+    STAPLES.forEach(push);
+    return out;
+  }, [activePacks]);
+
+  // Apply overrides, drop hidden
   const effectiveStaples = useMemo(
-    () => STAPLES.filter((s) => !hidden.has(s.key)).map((s) => ({ ...s, ...overrides[s.key] })),
-    [hidden, overrides]
+    () => combinedStaples.filter((s) => !hidden.has(s.key)).map((s) => ({ ...s, ...overrides[s.key] })),
+    [combinedStaples, hidden, overrides]
   );
-  const hiddenStaples = STAPLES.filter((s) => hidden.has(s.key));
+  const hiddenStaples = combinedStaples.filter((s) => hidden.has(s.key));
 
   const rows = useMemo(() => {
     const built = effectiveStaples.map((s) => {
@@ -344,6 +542,42 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
       {storeName && (
         <div className="text-xs text-muted-foreground mb-4">Live prices from <span className="font-medium text-primary">{storeName}</span></div>
       )}
+
+      {/* Cuisine packs — personalized curated staples */}
+      <div className="mb-5 rounded-2xl border border-accent/30 bg-accent/5 p-4">
+        <div className="flex items-center gap-2 text-xs font-semibold text-accent mb-1">
+          <Heart className="h-3.5 w-3.5" /> Curated for {displayName ? displayName.split(" ")[0] : "you"}
+        </div>
+        <p className="text-xs text-muted-foreground mb-3">
+          Tap a cuisine to add its signature staples to your stock-up plan. {activePacks.size === 0 && (
+            <>Set favorites in <span className="font-medium text-primary">Settings → Favorite cuisines</span> to auto-load these.</>
+          )}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {Object.entries(CUISINE_PACKS).map(([key, pack]) => {
+            const on = activePacks.has(key);
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setActivePacks((p) => {
+                  const n = new Set(p);
+                  if (n.has(key)) n.delete(key); else n.add(key);
+                  return n;
+                })}
+                className={`text-xs px-3 py-1.5 rounded-full border transition-smooth inline-flex items-center gap-1.5 ${
+                  on
+                    ? "bg-primary text-primary-foreground border-primary shadow-soft"
+                    : "bg-background text-muted-foreground border-border hover:border-primary/40 hover:text-primary"
+                }`}
+              >
+                <span>{pack.emoji}</span>
+                <span>{pack.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Restore hidden curated items */}
       {hiddenStaples.length > 0 && (
