@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Save, Settings as SettingsIcon, TrendingDown, Utensils } from "lucide-react";
 import { toast } from "sonner";
+import { AccountManagement } from "@/components/AccountManagement";
 
 const RESTRICTIONS = ["halal", "kosher", "vegetarian", "vegan", "gluten-free", "dairy-free", "nut-free"] as const;
 const DIET_STYLES = ["balanced", "high-protein", "keto", "mediterranean", "pescatarian"] as const;
@@ -250,6 +251,8 @@ const Settings = () => {
             </div>
           </Card>
         )}
+
+        <AccountManagement />
       </div>
     </main>
   );

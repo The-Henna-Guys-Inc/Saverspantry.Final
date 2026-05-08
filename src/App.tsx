@@ -16,7 +16,9 @@ import Sales from "./pages/Sales.tsx";
 import Watchlist from "./pages/Watchlist.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import AdminAnalytics from "./pages/AdminAnalytics.tsx";
+import Legal from "./pages/Legal.tsx";
 import { InstallPrompt } from "./components/InstallPrompt";
+import { LegalAcceptanceGate } from "./components/LegalAcceptanceGate";
 
 const queryClient = new QueryClient();
 
@@ -27,8 +29,10 @@ const App = () => (
       <Sonner />
       <InstallPrompt />
       <BrowserRouter>
+        <LegalAcceptanceGate />
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/legal/:type" element={<Legal />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/library" element={<Library />} />
           <Route path="/planner" element={<Planner />} />
