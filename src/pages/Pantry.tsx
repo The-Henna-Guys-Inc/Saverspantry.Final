@@ -12,6 +12,7 @@ import { Loader2, Plus, Trash2, Refrigerator, Minus, AlertTriangle, X, ScanLine 
 import { toast } from "sonner";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { BulkStoragePlanner } from "@/components/BulkStoragePlanner";
+import { ExpiryDateScanner } from "@/components/ExpiryDateScanner";
 
 type PantryItem = {
   id: string;
