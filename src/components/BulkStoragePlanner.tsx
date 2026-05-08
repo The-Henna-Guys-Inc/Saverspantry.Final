@@ -316,7 +316,7 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
   const [storeName, setStoreName] = useState<string | null>(null);
   const [pricesLoading, setPricesLoading] = useState(false);
   const [activePacks, setActivePacks] = useState<Set<string>>(new Set());
-  const [displayName, setDisplayName] = useState<string>("");
+  
 
   // edit dialog
   const [editing, setEditing] = useState<Editable | null>(null);
