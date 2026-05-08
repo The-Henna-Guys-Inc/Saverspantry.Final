@@ -255,7 +255,15 @@ const Pantry = () => {
           <Refrigerator className="h-3.5 w-3.5" /> Pantry
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">What you already have</h1>
-        <p className="text-muted-foreground mb-8">Track staples at home — deduct as you use them and get alerts when something runs low.</p>
+        <p className="text-muted-foreground mb-4">Track staples at home — deduct as you use them and get alerts when something runs low.</p>
+
+        <CuisineFilterBar
+          cuisines={prefCuisines}
+          isFiltering={isFiltering}
+          onShowAll={() => setEnabled(false)}
+          onResume={() => setEnabled(true)}
+          className="mb-6"
+        />
 
         {lowItems.length > 0 && (
           <Card className="p-4 rounded-2xl border-destructive/40 bg-destructive/5 mb-6">
