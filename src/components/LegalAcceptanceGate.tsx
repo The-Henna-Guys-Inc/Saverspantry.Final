@@ -44,7 +44,9 @@ export const LegalAcceptanceGate = () => {
         user_id: user.id, document_id: d.id, doc_type: d.doc_type,
         version: d.version, user_agent: ua,
       }));
-      const { error } = await supabase.from("user_legal_acceptances").insert(rows);
+      const { error } = await supabase
+        .from("user_legal_acceptances")
+        .upsert(rows, { onConflict: "user_id,document_id", ignoreDuplicates: true });
       if (error) throw error;
       setPending([]);
       toast.success("Thanks — you're all set.");
