@@ -338,7 +338,7 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
         .maybeSingle();
       if (data?.household_size) setHousehold(data.household_size);
       if (data?.zip_code && !initialZip) setZip(data.zip_code);
-      if (data?.display_name) setDisplayName(data.display_name);
+      
       const prefs = (data?.dietary_prefs ?? {}) as { cuisines?: string[] };
       const fromProfile = (prefs.cuisines ?? []).filter((c) => CUISINE_PACKS[c]);
       if (fromProfile.length) setActivePacks(new Set(fromProfile));
