@@ -95,7 +95,8 @@ Deno.serve(async (req) => {
       if (Array.isArray(profile.dislikes) && profile.dislikes.length) profileLines.push(`Foods they dislike (avoid): ${profile.dislikes.join(", ")}.`);
       if (Array.isArray(profile.allergies) && profile.allergies.length) profileLines.push(`ALLERGIES — STRICTLY EXCLUDE: ${profile.allergies.join(", ")}.`);
     }
-    const profileBlock = profileLines.length ? `\nUser food profile:\n${profileLines.join("\n")}` : "";
+    const cuisineBlock = cuisine ? `\nLean swaps toward ${cuisine} cuisine when natural.` : "";
+    const profileBlock = (profileLines.length ? `\nUser food profile:\n${profileLines.join("\n")}` : "") + cuisineBlock;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
