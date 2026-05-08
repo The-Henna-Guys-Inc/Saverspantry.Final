@@ -1,0 +1,353 @@
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Boxes, Loader2, Plus, Trash2, TrendingDown, Sparkles } from "lucide-react";
+import { toast } from "sonner";
+
+// Per-person daily consumption in POUNDS, typical weekly retail $/lb (small pkg),
+// and typical bulk $/lb (Costco/Sam's-style 20–50lb sacks). Shelf life in months
+// (properly stored, sealed, cool/dry).
+type Staple = {
+  key: string;
+  label: string;
+  searchTerm: string; // for Kroger lookup
+  lbsPerPersonPerDay: number;
+  retailPerLb: number;
+  bulkPerLb: number;
+  shelfLifeMonths: number;
+};
+
+const STAPLES: Staple[] = [
+  { key: "rice",          label: "White rice",       searchTerm: "long grain white rice", lbsPerPersonPerDay: 0.50, retailPerLb: 1.80, bulkPerLb: 0.85, shelfLifeMonths: 360 },
+  { key: "beans",         label: "Dried beans",      searchTerm: "dried pinto beans",     lbsPerPersonPerDay: 0.20, retailPerLb: 2.20, bulkPerLb: 1.10, shelfLifeMonths: 96  },
+  { key: "pasta",         label: "Pasta",            searchTerm: "spaghetti pasta",       lbsPerPersonPerDay: 0.25, retailPerLb: 2.00, bulkPerLb: 1.10, shelfLifeMonths: 24  },
+  { key: "flour",         label: "All-purpose flour",searchTerm: "all purpose flour",     lbsPerPersonPerDay: 0.20, retailPerLb: 1.40, bulkPerLb: 0.65, shelfLifeMonths: 12  },
+  { key: "sugar",         label: "Sugar",            searchTerm: "granulated sugar",      lbsPerPersonPerDay: 0.10, retailPerLb: 1.20, bulkPerLb: 0.70, shelfLifeMonths: 360 },
+  { key: "oats",          label: "Rolled oats",      searchTerm: "old fashioned rolled oats", lbsPerPersonPerDay: 0.15, retailPerLb: 2.40, bulkPerLb: 1.20, shelfLifeMonths: 24 },
+  { key: "oil",           label: "Cooking oil",      searchTerm: "vegetable oil",         lbsPerPersonPerDay: 0.06, retailPerLb: 3.20, bulkPerLb: 1.80, shelfLifeMonths: 12  },
+  { key: "salt",          label: "Salt",             searchTerm: "iodized salt",          lbsPerPersonPerDay: 0.02, retailPerLb: 0.90, bulkPerLb: 0.35, shelfLifeMonths: 360 },
+  { key: "tomatoes",      label: "Canned tomatoes",  searchTerm: "canned diced tomatoes", lbsPerPersonPerDay: 0.20, retailPerLb: 1.60, bulkPerLb: 0.95, shelfLifeMonths: 24  },
+  { key: "peanut_butter", label: "Peanut butter",    searchTerm: "peanut butter",         lbsPerPersonPerDay: 0.05, retailPerLb: 4.20, bulkPerLb: 2.60, shelfLifeMonths: 18  },
+  { key: "lentils",       label: "Lentils",          searchTerm: "dried lentils",         lbsPerPersonPerDay: 0.10, retailPerLb: 2.40, bulkPerLb: 1.20, shelfLifeMonths: 60  },
+  { key: "powdered_milk", label: "Powdered milk",    searchTerm: "nonfat dry milk",       lbsPerPersonPerDay: 0.06, retailPerLb: 6.00, bulkPerLb: 3.50, shelfLifeMonths: 36  },
+];
+
+type CustomItem = {
+  id: string;
+  label: string;
+  lbsPerPersonPerDay: number;
+  retailPerLb: number;
+  bulkPerLb: number;
+  shelfLifeMonths: number;
+};
+
+type Selection = Record<string, boolean>;
+type LiveBulkPrice = Record<string, number | undefined>; // overrides bulkPerLb (still $/lb estimated)
+
+const HORIZONS = [3, 6, 12] as const;
+type Horizon = typeof HORIZONS[number];
+
+interface Props {
+  zip?: string | null;
+}
+
+export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
+  const [household, setHousehold] = useState<number>(2);
+  const [horizon, setHorizon] = useState<Horizon>(6);
+  const [zip, setZip] = useState<string>(initialZip ?? "");
+  const [selected, setSelected] = useState<Selection>(
+    Object.fromEntries(STAPLES.map((s) => [s.key, true])) as Selection
+  );
+  const [customs, setCustoms] = useState<CustomItem[]>([]);
+  const [livePrices, setLivePrices] = useState<LiveBulkPrice>({});
+  const [storeName, setStoreName] = useState<string | null>(null);
+  const [pricesLoading, setPricesLoading] = useState(false);
+
+  // custom form
+  const [cName, setCName] = useState("");
+  const [cLbs, setCLbs] = useState("0.10");
+  const [cRetail, setCRetail] = useState("3.00");
+  const [cBulk, setCBulk] = useState("1.50");
+  const [cShelf, setCShelf] = useState("12");
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("household_size, zip_code")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (data?.household_size) setHousehold(data.household_size);
+      if (data?.zip_code && !initialZip) setZip(data.zip_code);
+    })();
+  }, [initialZip]);
+
+  const days = horizon * 30;
+  const activeStaples = STAPLES.filter((s) => selected[s.key]);
+
+  const rows = useMemo(() => {
+    const built = activeStaples.map((s) => {
+      const totalLbs = s.lbsPerPersonPerDay * household * days;
+      const live = livePrices[s.key];
+      // Live Kroger price is retail-package price/lb. Use it to refine retail$/lb,
+      // and assume bulk stays ~55% of retail when no real bulk source exists.
+      const retailPerLb = live ?? s.retailPerLb;
+      const bulkPerLb = live ? Math.max(retailPerLb * 0.55, s.bulkPerLb * 0.9) : s.bulkPerLb;
+      const retailCost = totalLbs * retailPerLb;
+      const bulkCost = totalLbs * bulkPerLb;
+      const savings = retailCost - bulkCost;
+      const fitsShelf = s.shelfLifeMonths >= horizon;
+      return { ...s, totalLbs, retailPerLb, bulkPerLb, retailCost, bulkCost, savings, fitsShelf, isLive: !!live };
+    });
+    const customRows = customs.map((c) => {
+      const totalLbs = c.lbsPerPersonPerDay * household * days;
+      const retailCost = totalLbs * c.retailPerLb;
+      const bulkCost = totalLbs * c.bulkPerLb;
+      return {
+        key: c.id,
+        label: c.label,
+        searchTerm: c.label,
+        lbsPerPersonPerDay: c.lbsPerPersonPerDay,
+        shelfLifeMonths: c.shelfLifeMonths,
+        totalLbs,
+        retailPerLb: c.retailPerLb,
+        bulkPerLb: c.bulkPerLb,
+        retailCost,
+        bulkCost,
+        savings: retailCost - bulkCost,
+        fitsShelf: c.shelfLifeMonths >= horizon,
+        isLive: false,
+        custom: true,
+      };
+    });
+    return [...built, ...customRows];
+  }, [activeStaples, customs, household, days, horizon, livePrices]);
+
+  const totals = useMemo(() => {
+    const retail = rows.reduce((s, r) => s + r.retailCost, 0);
+    const bulk = rows.reduce((s, r) => s + r.bulkCost, 0);
+    return { retail, bulk, savings: retail - bulk, weeklyEquivalent: retail / (horizon * 4.345) };
+  }, [rows, horizon]);
+
+  const toggle = (k: string) => setSelected((p) => ({ ...p, [k]: !p[k] }));
+
+  const addCustom = () => {
+    const lbs = parseFloat(cLbs), r = parseFloat(cRetail), b = parseFloat(cBulk), sh = parseInt(cShelf);
+    if (!cName.trim() || !(lbs > 0) || !(r > 0) || !(b > 0) || !(sh > 0)) {
+      toast.error("Fill in all custom item fields with positive numbers.");
+      return;
+    }
+    if (b >= r) {
+      toast.error("Bulk price per lb should be lower than retail.");
+      return;
+    }
+    setCustoms((p) => [...p, {
+      id: `c-${Date.now()}`,
+      label: cName.trim(),
+      lbsPerPersonPerDay: lbs,
+      retailPerLb: r,
+      bulkPerLb: b,
+      shelfLifeMonths: sh,
+    }]);
+    setCName("");
+  };
+
+  const removeCustom = (id: string) => setCustoms((p) => p.filter((c) => c.id !== id));
+
+  const fetchLive = async () => {
+    if (!zip || zip.length < 5) {
+      toast.error("Enter a 5-digit ZIP to look up live prices.");
+      return;
+    }
+    setPricesLoading(true);
+    try {
+      const items = activeStaples.map((s) => ({ item: s.searchTerm, key: s.key }));
+      const { data, error } = await supabase.functions.invoke("kroger-prices", {
+        body: { zip, items: items.map((i) => ({ item: i.item })) },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setStoreName(data?.store ? `${data.store.chain ?? ""} ${data.store.name ?? ""}`.trim() : null);
+      const next: LiveBulkPrice = {};
+      (data?.prices ?? []).forEach((p: any, idx: number) => {
+        const key = items[idx]?.key;
+        const m = p?.match;
+        if (!key || !m?.price_usd) return;
+        // crude: try to read size like "5 lb", "32 oz" → $/lb
+        const size: string = (m.size ?? "").toLowerCase();
+        let lbs: number | null = null;
+        const lbMatch = size.match(/([\d.]+)\s*lb/);
+        const ozMatch = size.match(/([\d.]+)\s*oz/);
+        if (lbMatch) lbs = parseFloat(lbMatch[1]);
+        else if (ozMatch) lbs = parseFloat(ozMatch[1]) / 16;
+        if (lbs && lbs > 0) next[key] = m.price_usd / lbs;
+      });
+      setLivePrices(next);
+      const matched = Object.keys(next).length;
+      toast.success(matched > 0 ? `Refined ${matched} item${matched === 1 ? "" : "s"} with live prices` : "No size info found in matches — using built-in estimates");
+    } catch (e: any) {
+      toast.error(e.message ?? "Could not fetch live prices");
+    } finally {
+      setPricesLoading(false);
+    }
+  };
+
+  return (
+    <Card className="p-6 rounded-3xl border-border/50 shadow-soft mb-8">
+      <div className="flex items-center gap-2 text-accent text-xs font-semibold uppercase tracking-widest mb-2">
+        <Boxes className="h-3.5 w-3.5" /> Bulk & long-term storage
+      </div>
+      <h2 className="text-2xl font-bold text-primary mb-1">Stock up & save</h2>
+      <p className="text-sm text-muted-foreground mb-5">
+        See how much non-perishable food your household needs for {horizon} months — and what you'd save buying in bulk.
+      </p>
+
+      {/* Controls */}
+      <div className="grid sm:grid-cols-4 gap-3 mb-5">
+        <div>
+          <Label className="text-xs">Household size</Label>
+          <Input type="number" min={1} max={20} value={household} onChange={(e) => setHousehold(Math.max(1, parseInt(e.target.value) || 1))} className="rounded-xl mt-1" />
+        </div>
+        <div>
+          <Label className="text-xs">Horizon</Label>
+          <Select value={String(horizon)} onValueChange={(v) => setHorizon(parseInt(v) as Horizon)}>
+            <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {HORIZONS.map((h) => <SelectItem key={h} value={String(h)}>{h} months</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs">ZIP (for live prices)</Label>
+          <Input value={zip} onChange={(e) => setZip(e.target.value)} placeholder="e.g. 90210" className="rounded-xl mt-1" />
+        </div>
+        <div className="flex items-end">
+          <Button variant="outline" onClick={fetchLive} disabled={pricesLoading} className="rounded-xl w-full">
+            {pricesLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+            Refine with live prices
+          </Button>
+        </div>
+      </div>
+      {storeName && (
+        <div className="text-xs text-muted-foreground mb-4">Live prices from <span className="font-medium text-primary">{storeName}</span></div>
+      )}
+
+      {/* Staple toggles */}
+      <div className="flex flex-wrap gap-2 mb-5">
+        {STAPLES.map((s) => (
+          <button
+            key={s.key}
+            onClick={() => toggle(s.key)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+              selected[s.key]
+                ? "bg-primary/10 text-primary border-primary/30"
+                : "bg-muted text-muted-foreground border-border hover:bg-muted/70"
+            }`}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Table */}
+      {rows.length === 0 ? (
+        <div className="text-sm text-muted-foreground text-center py-6">Pick at least one staple above to see the plan.</div>
+      ) : (
+        <div className="overflow-x-auto rounded-2xl border border-border/50">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="text-left p-3">Item</th>
+                <th className="text-right p-3">Need</th>
+                <th className="text-right p-3">Weekly retail</th>
+                <th className="text-right p-3">Bulk total</th>
+                <th className="text-right p-3">You save</th>
+                <th className="p-3" />
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.key} className="border-t border-border/50">
+                  <td className="p-3">
+                    <div className="font-medium text-primary flex items-center gap-2">
+                      {r.label}
+                      {r.isLive && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/15 text-accent">LIVE</span>}
+                      {!r.fitsShelf && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive">shelf life {r.shelfLifeMonths}mo</span>}
+                    </div>
+                    <div className="text-xs text-muted-foreground">${r.retailPerLb.toFixed(2)}/lb retail · ${r.bulkPerLb.toFixed(2)}/lb bulk</div>
+                  </td>
+                  <td className="p-3 text-right tabular-nums">{r.totalLbs.toFixed(1)} lb</td>
+                  <td className="p-3 text-right tabular-nums">${r.retailCost.toFixed(0)}</td>
+                  <td className="p-3 text-right tabular-nums font-semibold text-primary">${r.bulkCost.toFixed(0)}</td>
+                  <td className="p-3 text-right tabular-nums font-semibold text-accent">${r.savings.toFixed(0)}</td>
+                  <td className="p-3 text-right">
+                    {(r as any).custom && (
+                      <button onClick={() => removeCustom(r.key)} className="text-muted-foreground hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-border bg-muted/30">
+                <td className="p-3 font-semibold text-primary">Total · {household} {household === 1 ? "person" : "people"} · {horizon} months</td>
+                <td className="p-3" />
+                <td className="p-3 text-right tabular-nums">${totals.retail.toFixed(0)}</td>
+                <td className="p-3 text-right tabular-nums font-bold text-primary">${totals.bulk.toFixed(0)}</td>
+                <td className="p-3 text-right tabular-nums font-bold text-accent">
+                  <span className="inline-flex items-center gap-1"><TrendingDown className="h-3.5 w-3.5" />${totals.savings.toFixed(0)}</span>
+                </td>
+                <td />
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
+
+      {rows.length > 0 && (
+        <p className="text-xs text-muted-foreground mt-3">
+          Equivalent of about <span className="font-semibold text-primary">${totals.weeklyEquivalent.toFixed(0)}/week</span> spent at retail. Stocking up could save you{" "}
+          <span className="font-semibold text-accent">${(totals.savings / horizon).toFixed(0)}/month</span> on these staples.
+        </p>
+      )}
+
+      {/* Custom item form */}
+      <div className="mt-6 pt-5 border-t border-border/50">
+        <div className="text-xs uppercase tracking-wider text-accent mb-3">Add your own staple</div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-3">
+          <div className="lg:col-span-2">
+            <Label className="text-xs">Name</Label>
+            <Input value={cName} onChange={(e) => setCName(e.target.value)} placeholder="e.g. Quinoa" className="rounded-xl mt-1" />
+          </div>
+          <div>
+            <Label className="text-xs">Lb/person/day</Label>
+            <Input type="number" step="0.01" value={cLbs} onChange={(e) => setCLbs(e.target.value)} className="rounded-xl mt-1" />
+          </div>
+          <div>
+            <Label className="text-xs">Retail $/lb</Label>
+            <Input type="number" step="0.01" value={cRetail} onChange={(e) => setCRetail(e.target.value)} className="rounded-xl mt-1" />
+          </div>
+          <div>
+            <Label className="text-xs">Bulk $/lb</Label>
+            <Input type="number" step="0.01" value={cBulk} onChange={(e) => setCBulk(e.target.value)} className="rounded-xl mt-1" />
+          </div>
+          <div>
+            <Label className="text-xs">Shelf (months)</Label>
+            <Input type="number" value={cShelf} onChange={(e) => setCShelf(e.target.value)} className="rounded-xl mt-1" />
+          </div>
+        </div>
+        <Button variant="outline" onClick={addCustom} className="rounded-xl mt-3">
+          <Plus className="h-4 w-4 mr-2" /> Add custom item
+        </Button>
+      </div>
+    </Card>
+  );
+};

@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Plus, Trash2, Refrigerator, Minus, AlertTriangle, X, ScanLine } from "lucide-react";
 import { toast } from "sonner";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
+import { BulkStoragePlanner } from "@/components/BulkStoragePlanner";
 
 type PantryItem = {
   id: string;
@@ -343,6 +344,7 @@ const Pantry = () => {
 
         <BarcodeScanner open={scannerOpen} onOpenChange={setScannerOpen} onDetected={handleScanned} />
 
+        <BulkStoragePlanner />
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : items.length === 0 ? (
