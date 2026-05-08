@@ -17,6 +17,7 @@ import Watchlist from "./pages/Watchlist.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import AdminAnalytics from "./pages/AdminAnalytics.tsx";
 import { InstallPrompt } from "./components/InstallPrompt";
+import { MobileTabBar } from "./components/MobileTabBar";
 
 const queryClient = new QueryClient();
 
@@ -27,7 +28,8 @@ const App = () => (
       <Sonner />
       <InstallPrompt />
       <BrowserRouter>
-        <Routes>
+        <div className="pb-16 md:pb-0">
+          <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/library" element={<Library />} />
@@ -43,6 +45,8 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <MobileTabBar />
+        </div>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
