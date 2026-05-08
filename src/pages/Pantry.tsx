@@ -233,7 +233,16 @@ const Pantry = () => {
 
   const lowItems = items.filter(isLow);
 
-  const grouped = items.reduce<Record<string, PantryItem[]>>((acc, i) => {
+  const itemMatchesPrefs = (it: PantryItem) => {
+    if (!isFiltering) return true;
+    const tags = detectItemCuisines(it.item);
+    if (tags.length === 0) return true; // generic staples always shown
+    return tags.some((t) => prefCuisines.includes(t));
+  };
+  const matchingItems = items.filter(itemMatchesPrefs);
+  const otherItems = isFiltering ? items.filter((i) => !itemMatchesPrefs(i)) : [];
+
+  const grouped = matchingItems.reduce<Record<string, PantryItem[]>>((acc, i) => {
     const c = i.location || "other";
     (acc[c] ||= []).push(i); return acc;
   }, {});
