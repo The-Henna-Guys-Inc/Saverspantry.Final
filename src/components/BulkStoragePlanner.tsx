@@ -462,37 +462,55 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
               </thead>
               <tbody>
                 {rows.map((r) => (
-                  <tr key={r.key} className="border-t border-border/50">
-                    <td className="p-3">
-                      <div className="font-medium text-primary flex items-center gap-2">
-                        {r.label}
-                        {r.isLive && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/15 text-accent">LIVE</span>}
-                        {!r.fitsShelf && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive">shelf life {r.shelfLifeMonths}mo</span>}
-                      </div>
-                      <div className="text-xs text-muted-foreground">${r.retailPerLb.toFixed(2)}/lb retail · ${r.bulkPerLb.toFixed(2)}/lb bulk</div>
-                    </td>
-                    <td className="p-3 text-right tabular-nums">{r.totalLbs.toFixed(1)} lb</td>
-                    <td className="p-3 text-right tabular-nums">${r.retailCost.toFixed(0)}</td>
-                    <td className="p-3 text-right tabular-nums font-semibold text-primary">${r.bulkCost.toFixed(0)}</td>
-                    <td className="p-3 text-right tabular-nums font-semibold text-accent">
-                      ${r.savings.toFixed(0)}
-                      {r.retailCost > 0 && (
-                        <div className="text-[10px] font-normal text-muted-foreground">
-                          {Math.round((r.savings / r.retailCost) * 100)}% off
+                  <>
+                    <tr key={r.key} className="border-t border-border/50">
+                      <td className="p-3">
+                        <div className="font-medium text-primary flex items-center gap-2">
+                          {r.label}
+                          {r.isLive && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/15 text-accent">LIVE</span>}
+                          {!r.fitsShelf && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive">shelf life {r.shelfLifeMonths}mo</span>}
                         </div>
-                      )}
-                    </td>
-                    <td className="p-3 text-right">
-                      <div className="inline-flex items-center gap-1">
-                        <button onClick={() => openEdit(r)} className="text-muted-foreground hover:text-primary p-2 -m-2" aria-label="Edit">
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button onClick={() => removeRow(r.key, r.isCustom)} className="text-muted-foreground hover:text-destructive p-2 -m-2" aria-label={r.isCustom ? "Remove" : "Hide"}>
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                        <div className="text-xs text-muted-foreground">${r.retailPerLb.toFixed(2)}/lb retail · ${r.bulkPerLb.toFixed(2)}/lb bulk</div>
+                      </td>
+                      <td className="p-3 text-right tabular-nums">{r.totalLbs.toFixed(1)} lb</td>
+                      <td className="p-3 text-right tabular-nums">${r.retailCost.toFixed(0)}</td>
+                      <td className="p-3 text-right tabular-nums font-semibold text-primary">${r.bulkCost.toFixed(0)}</td>
+                      <td className="p-3 text-right tabular-nums font-semibold text-accent">
+                        ${r.savings.toFixed(0)}
+                        {r.retailCost > 0 && (
+                          <div className="text-[10px] font-normal text-muted-foreground">
+                            {Math.round((r.savings / r.retailCost) * 100)}% off
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-3 text-right">
+                        <div className="inline-flex items-center gap-1">
+                          <button onClick={() => openEdit(r)} className="text-muted-foreground hover:text-primary p-2 -m-2" aria-label="Edit">
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button onClick={() => removeRow(r.key, r.isCustom)} className="text-muted-foreground hover:text-destructive p-2 -m-2" aria-label={r.isCustom ? "Remove" : "Hide"}>
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    {r.bestDeal && (
+                      <tr className="border-t border-dashed border-accent/30 bg-accent/5">
+                        <td colSpan={6} className="px-3 py-2">
+                          <a
+                            href={r.bestDeal.searchUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-xs text-accent hover:underline"
+                          >
+                            <TrendingDown className="h-3.5 w-3.5" />
+                            Save <span className="font-bold">{r.bestDeal.pctVsBulk}%</span> more (~${r.bestDeal.extraSavings.toFixed(0)}) at <span className="font-semibold">{r.bestDeal.store}</span> — ${r.bestDeal.pricePerLb.toFixed(2)}/lb
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        </td>
+                      </tr>
+                    )}
+                  </>
                 ))}
               </tbody>
               <tfoot>
