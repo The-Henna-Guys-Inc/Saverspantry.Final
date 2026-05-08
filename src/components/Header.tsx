@@ -56,9 +56,6 @@ export const Header = () => {
               <Button asChild variant="ghost" size="sm" className="rounded-xl">
                 <Link to="/deals"><Tag className="h-4 w-4 mr-1.5" />Deals</Link>
               </Button>
-              <Button asChild variant="ghost" size="sm" className="rounded-xl">
-                <Link to="/bulk-buy"><PackageOpen className="h-4 w-4 mr-1.5" />Bulk-Buy</Link>
-              </Button>
               <SavingsCounter />
               <Button asChild variant="ghost" size="sm" className="rounded-xl">
                 <Link to="/dashboard"><BarChart3 className="h-4 w-4 mr-1.5" />Dashboard</Link>
