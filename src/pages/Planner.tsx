@@ -430,7 +430,20 @@ const Planner = () => {
                               )}
                             </span>
                           </button>
-                          <span className="text-muted-foreground whitespace-nowrap">${it.estimated_cost_low_usd?.toFixed(2)}–${it.estimated_cost_high_usd?.toFixed(2)}</span>
+                          {(() => {
+                            const km = krogerByItem[it.item.toLowerCase()];
+                            if (km) {
+                              return (
+                                <span className="text-right whitespace-nowrap">
+                                  <span className={`font-semibold ${km.on_sale ? "text-accent" : "text-primary"}`}>${km.price_usd.toFixed(2)}</span>
+                                  {km.on_sale && km.regular_price_usd && (
+                                    <span className="ml-1 text-[10px] text-muted-foreground line-through">${km.regular_price_usd.toFixed(2)}</span>
+                                  )}
+                                </span>
+                              );
+                            }
+                            return <span className="text-muted-foreground whitespace-nowrap">${it.estimated_cost_low_usd?.toFixed(2)}–${it.estimated_cost_high_usd?.toFixed(2)}</span>;
+                          })()}
                         </li>
                       );
                     })}
