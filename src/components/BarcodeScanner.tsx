@@ -8,7 +8,7 @@ import { toast } from "sonner";
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onDetected: (result: { code: string; productName?: string; brand?: string; quantity?: string; categories?: string }) => void;
+  onDetected: (result: { code: string; productName?: string; brand?: string; quantity?: string; categories?: string; imageUrl?: string }) => void;
 };
 
 export const BarcodeScanner = ({ open, onOpenChange, onDetected }: Props) => {
@@ -64,6 +64,7 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected }: Props) => {
                 brand: p.brands || undefined,
                 quantity: p.quantity || undefined,
                 categories: p.categories || undefined,
+                imageUrl: p.image_front_url || p.image_url || p.image_small_url || undefined,
               });
               toast.success(`Found: ${p.product_name || code}`);
             } else {

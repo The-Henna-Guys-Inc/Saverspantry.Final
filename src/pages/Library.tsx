@@ -7,8 +7,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, Trash2, Sparkles, ArrowLeftRight, ChefHat, Search } from "lucide-react";
+import { Loader2, Trash2, Sparkles, ArrowLeftRight, ChefHat, Search, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { RecipeUrlImport } from "@/components/RecipeUrlImport";
 
 type Row = { id: string; created_at: string; query?: string; food?: string; result?: any; recipe?: any };
 
@@ -65,7 +66,11 @@ const Library = () => {
       <Header />
       <div className="container max-w-4xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold text-primary mb-2">Your library</h1>
-        <p className="text-muted-foreground mb-8">Saved lookups, swaps, and recipes.</p>
+        <p className="text-muted-foreground mb-6">Saved lookups, swaps, and recipes — or import a recipe from any URL.</p>
+
+        <div className="mb-8">
+          <RecipeUrlImport onImported={load} />
+        </div>
 
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
@@ -87,12 +92,18 @@ const Library = () => {
             <TabsContent value="recipes" className="space-y-3 m-0">
               {fRecipes.length === 0 ? <Empty icon={ChefHat} label="recipes" cta="/#recipe" /> : fRecipes.map(r => (
                 <Card key={r.id} className="p-5 rounded-2xl border-border/50 flex items-start justify-between gap-3">
-                  <div>
+                  <div className="min-w-0">
                     <div className="text-xs uppercase tracking-wider text-accent">{r.recipe?.cuisine}</div>
                     <h3 className="font-semibold text-primary">{r.recipe?.title}</h3>
                     <div className="text-xs text-muted-foreground mt-1">
                       {r.recipe?.time_minutes}m · {r.recipe?.servings} servings · ${r.recipe?.estimated_total_cost_usd?.toFixed(2)}
                     </div>
+                    {(r as any).source_url && (
+                      <a href={(r as any).source_url} target="_blank" rel="noopener noreferrer"
+                         className="inline-flex items-center gap-1 text-xs text-accent hover:underline mt-1">
+                        <ExternalLink className="h-3 w-3" /> Original source
+                      </a>
+                    )}
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => remove("saved_recipes", r.id)}><Trash2 className="h-4 w-4" /></Button>
                 </Card>

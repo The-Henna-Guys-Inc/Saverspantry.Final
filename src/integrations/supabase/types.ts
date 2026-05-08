@@ -168,6 +168,7 @@ export type Database = {
           expires_on: string | null
           household_id: string | null
           id: string
+          image_url: string | null
           item: string
           location: string
           low_stock_threshold: number | null
@@ -182,6 +183,7 @@ export type Database = {
           expires_on?: string | null
           household_id?: string | null
           id?: string
+          image_url?: string | null
           item: string
           location?: string
           low_stock_threshold?: number | null
@@ -196,6 +198,7 @@ export type Database = {
           expires_on?: string | null
           household_id?: string | null
           id?: string
+          image_url?: string | null
           item?: string
           location?: string
           low_stock_threshold?: number | null

@@ -21,6 +21,7 @@ type PantryItem = {
   location: string;
   expires_on: string | null;
   low_stock_threshold: number | null;
+  image_url: string | null;
 };
 
 type PantryLocation = { id: string; name: string };
@@ -44,6 +45,7 @@ const Pantry = () => {
   const [location, setLocation] = useState("pantry");
   const [expires, setExpires] = useState("");
   const [threshold, setThreshold] = useState("");
+  const [imageUrl, setImageUrl] = useState<string>("");
 
   // new location input
   const [newLoc, setNewLoc] = useState("");
@@ -51,9 +53,10 @@ const Pantry = () => {
   // barcode scanner
   const [scannerOpen, setScannerOpen] = useState(false);
 
-  const handleScanned = (r: { code: string; productName?: string; brand?: string; quantity?: string; categories?: string }) => {
+  const handleScanned = (r: { code: string; productName?: string; brand?: string; quantity?: string; categories?: string; imageUrl?: string }) => {
     const label = r.productName ? (r.brand ? `${r.brand} ${r.productName}` : r.productName) : `Item ${r.code}`;
     setName(label);
+    if (r.imageUrl) setImageUrl(r.imageUrl);
     if (r.quantity) {
       const m = r.quantity.match(/([\d.]+)\s*(g|kg|ml|l|oz|lb)?/i);
       if (m) {
@@ -75,7 +78,7 @@ const Pantry = () => {
     if (!user) return;
     (async () => {
       const [itemsRes, locsRes] = await Promise.all([
-        supabase.from("pantry_items").select("id, item, quantity, unit, category, location, expires_on, low_stock_threshold").order("created_at", { ascending: false }),
+        supabase.from("pantry_items").select("id, item, quantity, unit, category, location, expires_on, low_stock_threshold, image_url").order("created_at", { ascending: false }),
         supabase.from("pantry_locations").select("id, name").order("name"),
       ]);
       if (itemsRes.error) toast.error(itemsRes.error.message);
@@ -135,13 +138,14 @@ const Pantry = () => {
         location,
         expires_on: expires || null,
         low_stock_threshold: threshold === "" ? null : Number(threshold),
+        image_url: imageUrl || null,
       })
-      .select("id, item, quantity, unit, category, location, expires_on, low_stock_threshold")
+      .select("id, item, quantity, unit, category, location, expires_on, low_stock_threshold, image_url")
       .single();
     setAdding(false);
     if (error) return toast.error(error.message);
     setItems((p) => [data as PantryItem, ...p]);
-    setName(""); setQty("1"); setExpires(""); setThreshold("");
+    setName(""); setQty("1"); setExpires(""); setThreshold(""); setImageUrl("");
     toast.success("Added to pantry");
   };
 
@@ -320,7 +324,7 @@ const Pantry = () => {
               <Input id="t" type="number" min={0} step="0.1" value={threshold} onChange={(e) => setThreshold(e.target.value)} placeholder="opt." className="rounded-xl mt-1" />
             </div>
           </div>
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             <Button variant="hero" onClick={add} disabled={adding} className="rounded-xl">
               {adding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
               Add to pantry
@@ -328,6 +332,12 @@ const Pantry = () => {
             <Button variant="outline" onClick={() => setScannerOpen(true)} className="rounded-xl">
               <ScanLine className="h-4 w-4 mr-2" /> Scan barcode
             </Button>
+            {imageUrl && (
+              <div className="flex items-center gap-2 ml-auto">
+                <img src={imageUrl} alt="Scanned product preview" className="h-10 w-10 rounded-lg object-cover border border-border" />
+                <button onClick={() => setImageUrl("")} className="text-xs text-muted-foreground hover:text-destructive">Remove image</button>
+              </div>
+            )}
           </div>
         </Card>
 
@@ -352,6 +362,13 @@ const Pantry = () => {
                     return (
                       <li key={it.id} className="flex flex-col gap-2 text-sm border-b border-border/40 pb-3 last:border-0 last:pb-0">
                         <div className="flex items-center justify-between gap-3">
+                          {it.image_url ? (
+                            <img src={it.image_url} alt={it.item} className="h-10 w-10 rounded-lg object-cover border border-border shrink-0" loading="lazy" />
+                          ) : (
+                            <div className="h-10 w-10 rounded-lg bg-muted border border-border shrink-0 flex items-center justify-center text-muted-foreground text-[10px] uppercase">
+                              {it.category?.[0] ?? "·"}
+                            </div>
+                          )}
                           <div className="min-w-0 flex-1">
                             <div className="font-medium text-primary truncate flex items-center gap-1.5">
                               {it.item}
