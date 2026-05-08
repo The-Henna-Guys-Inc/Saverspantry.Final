@@ -320,13 +320,18 @@ const Pantry = () => {
               <Input id="t" type="number" min={0} step="0.1" value={threshold} onChange={(e) => setThreshold(e.target.value)} placeholder="opt." className="rounded-xl mt-1" />
             </div>
           </div>
-          <div className="mt-4">
+          <div className="mt-4 flex flex-wrap gap-2">
             <Button variant="hero" onClick={add} disabled={adding} className="rounded-xl">
               {adding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
               Add to pantry
             </Button>
+            <Button variant="outline" onClick={() => setScannerOpen(true)} className="rounded-xl">
+              <ScanLine className="h-4 w-4 mr-2" /> Scan barcode
+            </Button>
           </div>
         </Card>
+
+        <BarcodeScanner open={scannerOpen} onOpenChange={setScannerOpen} onDetected={handleScanned} />
 
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
