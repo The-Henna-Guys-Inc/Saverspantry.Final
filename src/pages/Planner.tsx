@@ -57,6 +57,9 @@ const Planner = () => {
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [genLoading, setGenLoading] = useState(false);
   const [groceryLoading, setGroceryLoading] = useState(false);
+  const [zip, setZip] = useState<string>("");
+  const [krogerData, setKrogerData] = useState<KrogerResult | null>(null);
+  const [krogerLoading, setKrogerLoading] = useState(false);
   const weekStart = mondayOf();
 
   const [profilePrefs, setProfilePrefs] = useState<any>(null);
