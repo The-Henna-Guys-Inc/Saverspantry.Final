@@ -235,7 +235,7 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
     }
     setPricesLoading(true);
     try {
-      const items = activeStaples.map((s) => ({ item: s.searchTerm, key: s.key }));
+      const items = effectiveStaples.map((s) => ({ item: s.searchTerm, key: s.key }));
       const { data, error } = await supabase.functions.invoke("kroger-prices", {
         body: { zip, items: items.map((i) => ({ item: i.item })) },
       });
