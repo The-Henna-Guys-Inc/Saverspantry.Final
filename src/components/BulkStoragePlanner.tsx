@@ -462,8 +462,8 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
               </thead>
               <tbody>
                 {rows.map((r) => (
-                  <>
-                    <tr key={r.key} className="border-t border-border/50">
+                  <Fragment key={r.key}>
+                    <tr className="border-t border-border/50">
                       <td className="p-3">
                         <div className="font-medium text-primary flex items-center gap-2">
                           {r.label}
