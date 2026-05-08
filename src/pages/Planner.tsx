@@ -353,14 +353,20 @@ const Planner = () => {
 
         {grouped && (() => {
           const cuisineSummary = summarizeCuisines(grocery!.items);
+          const krogerByItem: Record<string, KrogerMatch | null> = {};
+          if (krogerData) for (const p of krogerData.prices) krogerByItem[p.item.toLowerCase()] = p.match;
           return (
           <div id="grocery-print">
             <div className="flex items-baseline justify-between mb-2">
               <h2 className="text-xl font-semibold text-primary">Grocery list</h2>
               <div className="text-sm text-muted-foreground">
-                Est. <span className="font-semibold text-primary">
-                  ${grocery!.total_low_usd?.toFixed(2)}–${grocery!.total_high_usd?.toFixed(2)}
-                </span>
+                {krogerData?.store ? (
+                  <>Kroger total <span className="font-semibold text-primary">${krogerData.total_usd.toFixed(2)}</span></>
+                ) : (
+                  <>Est. <span className="font-semibold text-primary">
+                    ${grocery!.total_low_usd?.toFixed(2)}–${grocery!.total_high_usd?.toFixed(2)}
+                  </span></>
+                )}
               </div>
             </div>
             <SpecialtyStoreBanner
@@ -368,6 +374,10 @@ const Planner = () => {
               matchCount={cuisineSummary.hints.length}
             />
             <div className="flex flex-wrap gap-2 mb-4 print:hidden">
+              <Button variant="default" size="sm" onClick={fetchKrogerPrices} disabled={krogerLoading} className="rounded-xl">
+                {krogerLoading ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Tag className="h-3.5 w-3.5 mr-1.5" />}
+                {krogerData ? "Refresh Kroger prices" : "Get live Kroger prices"}
+              </Button>
               <Button variant="outline" size="sm" onClick={copyList} className="rounded-xl">
                 <Copy className="h-3.5 w-3.5 mr-1.5" />Copy
               </Button>
@@ -378,10 +388,18 @@ const Planner = () => {
                 <Printer className="h-3.5 w-3.5 mr-1.5" />Print
               </Button>
             </div>
-            <div className="flex items-start gap-2 text-xs text-muted-foreground mb-4 p-3 rounded-xl bg-secondary/60 print:hidden">
-              <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-              <span>AI estimate — actual prices vary by store, region, and sales. Live local pricing is coming soon.</span>
-            </div>
+            {krogerData?.store && (
+              <div className="flex items-center gap-2 text-xs mb-4 p-3 rounded-xl bg-primary/10 text-primary print:hidden">
+                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                <span>Live prices from <strong>{krogerData.store.name}</strong> ({krogerData.store.chain}) near {zip}</span>
+              </div>
+            )}
+            {!krogerData && (
+              <div className="flex items-start gap-2 text-xs text-muted-foreground mb-4 p-3 rounded-xl bg-secondary/60 print:hidden">
+                <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>AI estimate. Tap "Get live Kroger prices" to look up real prices at the nearest Kroger-family store{zip ? ` to ${zip}` : " (add a ZIP in Settings first)"}.</span>
+              </div>
+            )}
             <div className="grid md:grid-cols-2 gap-4">
               {Object.entries(grouped).map(([cat, items]) => (
                 <Card key={cat} className="p-5 rounded-2xl border-border/50">
