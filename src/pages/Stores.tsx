@@ -38,6 +38,16 @@ const CUISINES = [
   { id: "filipino", label: "Filipino" },
 ];
 
+// CuisineTag → store cuisine_specialties ids (the table uses several legacy ids)
+const CUISINE_TAG_TO_STORE_IDS: Record<string, string[]> = {
+  south_asian: ["indian", "south_asian", "pakistani", "bangladeshi"],
+  southeast_asian: ["southeast_asian", "vietnamese", "thai", "filipino", "indonesian"],
+  korean: ["korean"], japanese: ["japanese"], chinese: ["chinese"],
+  middle_eastern: ["middle_eastern"], mexican: ["mexican"],
+  latin_american: ["latin_american", "latin"], african: ["african"],
+  mediterranean: ["mediterranean"],
+};
+
 const tierDot = (t: string) =>
   t === "low" ? "bg-primary" : t === "medium" ? "bg-accent" : t === "high" ? "bg-muted-foreground" : "bg-border";
 const tierLabel = (t: string) =>
