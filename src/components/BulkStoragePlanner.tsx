@@ -142,7 +142,6 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
     const built = effectiveStaples.map((s) => {
       const totalLbs = s.lbsPerPersonPerDay * household * days;
       const live = livePrices[s.key];
-      // If user manually overrode retailPerLb, respect it; otherwise live wins.
       const userOverrodeRetail = overrides[s.key]?.retailPerLb != null;
       const retailPerLb = userOverrodeRetail ? s.retailPerLb : (live ?? s.retailPerLb);
       const bulkPerLb = (live && !userOverrodeRetail)
@@ -152,11 +151,26 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
       const bulkCost = totalLbs * bulkPerLb;
       const savings = retailCost - bulkCost;
       const fitsShelf = s.shelfLifeMonths >= horizon;
+
+      // Find cheapest bulk source that beats current bulkPerLb by ≥5%
+      let bestDeal: { store: string; pricePerLb: number; searchUrl: string; pctVsBulk: number; pctVsRetail: number; extraSavings: number } | null = null;
+      const sources = s.bulkSources ?? [];
+      const cheapest = sources.reduce<BulkSource | null>((min, c) => (!min || c.pricePerLb < min.pricePerLb) ? c : min, null);
+      if (cheapest && cheapest.pricePerLb < bulkPerLb * 0.95) {
+        bestDeal = {
+          ...cheapest,
+          pctVsBulk: Math.round((1 - cheapest.pricePerLb / bulkPerLb) * 100),
+          pctVsRetail: Math.round((1 - cheapest.pricePerLb / retailPerLb) * 100),
+          extraSavings: (bulkPerLb - cheapest.pricePerLb) * totalLbs,
+        };
+      }
+
       return {
         ...s,
         totalLbs, retailPerLb, bulkPerLb, retailCost, bulkCost, savings, fitsShelf,
         isLive: !!live && !userOverrodeRetail,
         isCustom: false,
+        bestDeal,
       };
     });
     const customRows = customs.map((c) => {
@@ -178,6 +192,7 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
         fitsShelf: c.shelfLifeMonths >= horizon,
         isLive: false,
         isCustom: true,
+        bestDeal: null as null,
       };
     });
     return [...built, ...customRows];
