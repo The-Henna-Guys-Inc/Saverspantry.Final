@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
     const { food, dietary_prefs = [], profile = null, cuisine = null } = await req.json();
     if (!food) return new Response(JSON.stringify({ error: "Missing 'food'" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const cacheKey = await stableHash({ food: String(food).toLowerCase().trim(), dietary_prefs, profile });
+    const cacheKey = await stableHash({ food: String(food).toLowerCase().trim(), dietary_prefs, profile, cuisine });
     const cached = await cacheGet(FN, cacheKey);
     if (cached) {
       logAiUsage({ userId, functionName: FN, model: MODEL, cached: true, latencyMs: Date.now() - startedAt });
