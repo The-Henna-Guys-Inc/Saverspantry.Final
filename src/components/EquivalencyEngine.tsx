@@ -115,8 +115,38 @@ export const EquivalencyEngine = () => {
         ))}
       </div>
 
+      <div className="mt-3">
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">
+          Cuisine <span className="normal-case text-muted-foreground/70">(optional)</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setCuisine(null)}
+            className={`text-xs px-3 py-1.5 rounded-full transition-smooth ${
+              cuisine === null
+                ? "bg-primary text-primary-foreground shadow-soft"
+                : "bg-secondary text-secondary-foreground hover:bg-muted"
+            }`}
+          >
+            Any
+          </button>
+          {CUISINES.map((c) => (
+            <button
+              key={c}
+              onClick={() => setCuisine((prev) => (prev === c ? null : c))}
+              className={`text-xs px-3 py-1.5 rounded-full transition-smooth ${
+                cuisine === c
+                  ? "bg-primary text-primary-foreground shadow-soft"
+                  : "bg-secondary text-secondary-foreground hover:bg-muted"
+              }`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="flex flex-wrap gap-2 mt-3">
-        {EXAMPLES.map((s) => (
           <button key={s} onClick={() => { setFood(s); find(s); }}
             className="text-xs px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground hover:bg-muted transition-smooth">
             {s}
