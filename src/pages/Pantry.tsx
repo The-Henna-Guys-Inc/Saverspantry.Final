@@ -508,6 +508,8 @@ const Pantry = () => {
             </Button>
           </div>
         </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </main>
   );
