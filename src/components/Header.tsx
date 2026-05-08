@@ -68,9 +68,22 @@ export const Header = () => {
               </Button>
               <NotificationBell />
               {isAdmin && (
-                <Button asChild variant="ghost" size="sm" className="rounded-xl">
-                  <Link to="/admin/analytics"><Shield className="h-4 w-4 mr-1.5" />Admin</Link>
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="rounded-xl">
+                      <Shield className="h-4 w-4 mr-1.5" />Admin<ChevronDown className="h-3 w-3 ml-1" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild><Link to="/admin/analytics">Analytics</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/admin/users">Users</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/admin/support">Support</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/admin/ai-usage">AI usage</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/admin/alerts">Alerts</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/admin/audit">Audit log</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/admin/sessions">Sessions</Link></DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
               <Button asChild variant="ghost" size="sm" className="rounded-xl">
                 <Link to="/library"><BookmarkCheck className="h-4 w-4 mr-1.5" />Library</Link>
