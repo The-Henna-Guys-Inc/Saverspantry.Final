@@ -154,6 +154,7 @@ const Planner = () => {
       if ((data as any)?.error) throw new Error((data as any).error);
       setGrocery(data as Grocery);
       setChecked({});
+      setKrogerData(null);
       toast.success("Grocery list ready");
     } catch (e: any) {
       toast.error(e.message ?? "Could not build list");
