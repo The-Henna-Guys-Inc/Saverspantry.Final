@@ -126,7 +126,13 @@ const Library = () => {
                       </a>
                     )}
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => remove("saved_recipes", r.id)}><Trash2 className="h-4 w-4" /></Button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button variant="ghost" size="sm" onClick={() => sendToPlanner(r.recipe)}
+                      title="Queue for next meal plan" className="rounded-xl">
+                      <CalendarPlus className="h-4 w-4 mr-1" />Plan
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => remove("saved_recipes", r.id)}><Trash2 className="h-4 w-4" /></Button>
+                  </div>
                 </Card>
               ))}
             </TabsContent>
