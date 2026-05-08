@@ -147,6 +147,7 @@ export const EquivalencyEngine = () => {
       </div>
 
       <div className="flex flex-wrap gap-2 mt-3">
+        {EXAMPLES.map((s) => (
           <button key={s} onClick={() => { setFood(s); find(s); }}
             className="text-xs px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground hover:bg-muted transition-smooth">
             {s}
