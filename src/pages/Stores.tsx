@@ -132,10 +132,11 @@ const Stores = ({ embedded = false }: { embedded?: boolean }) => {
   if (authLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   if (!user) return <Navigate to="/auth" replace />;
 
+  const Wrapper: any = embedded ? "div" : "main";
   return (
-    <main className="min-h-screen bg-background">
-      <Header />
-      <div className="container max-w-5xl mx-auto px-6 py-12">
+    <Wrapper className={embedded ? "" : "min-h-screen bg-background"}>
+      {!embedded && <Header />}
+      <div className={embedded ? "" : "container max-w-5xl mx-auto px-6 py-12"}>
         <div className="flex items-center gap-2 text-accent text-xs font-semibold uppercase tracking-widest mb-2">
           <StoreIcon className="h-3.5 w-3.5" /> Stores
         </div>
