@@ -257,6 +257,31 @@ const Settings = () => {
               </div>
             </div>
 
+            <div className="pt-4 border-t border-border/50">
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <Label className="text-sm font-semibold text-primary">Discovery cuisines</Label>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Filter on</span>
+                  <Switch checked={cuisineFilterOn} onCheckedChange={setCuisineFilterOn} />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                Pantry, Stores, Sales, and Bulk-Buy will prioritize these cuisines. You can toggle the filter off anywhere to see everything.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {DISCOVERY_CUISINES.map((c) => {
+                  const on = discoveryCuisines.includes(c);
+                  return (
+                    <button key={c} type="button"
+                      onClick={() => setDiscoveryCuisines((p) => p.includes(c) ? p.filter((x) => x !== c) : [...p, c])}
+                      className={`text-xs px-3 py-1.5 rounded-full transition-smooth ${
+                        on ? "bg-primary text-primary-foreground shadow-soft" : "bg-secondary text-secondary-foreground hover:bg-muted"
+                      }`}>{CUISINE_LABEL[c]}</button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="pt-2">
               <Button variant="hero" onClick={save} disabled={saving} className="rounded-xl">
                 {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
