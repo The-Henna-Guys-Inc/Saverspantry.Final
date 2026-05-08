@@ -45,11 +45,6 @@ const AdminUsers = () => {
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase.functions.invoke("admin-users-list", {
-      body: null,
-      method: "GET" as any,
-    });
-    // SDK doesn't pass query params; use fetch fallback
     const sess = (await supabase.auth.getSession()).data.session;
     const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-users-list?page=${page}&perPage=50&search=${encodeURIComponent(search)}`;
     const res = await fetch(url, { headers: { Authorization: `Bearer ${sess?.access_token}` } });
