@@ -58,6 +58,18 @@ const Planner = () => {
   const weekStart = mondayOf();
 
   const [profilePrefs, setProfilePrefs] = useState<any>(null);
+  const [queued, setQueued] = useState<any[]>([]);
+
+  const refreshQueue = () => {
+    try { setQueued(JSON.parse(sessionStorage.getItem("planner_queue") || "[]")); } catch { setQueued([]); }
+  };
+  useEffect(() => { refreshQueue(); }, []);
+  const clearQueue = () => { sessionStorage.removeItem("planner_queue"); setQueued([]); };
+  const removeQueued = (title: string) => {
+    const next = queued.filter((r) => r.title !== title);
+    sessionStorage.setItem("planner_queue", JSON.stringify(next));
+    setQueued(next);
+  };
 
   // Load existing plan + profile defaults
   useEffect(() => {
