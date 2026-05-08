@@ -18,6 +18,8 @@ type Day = { day: string; breakfast: Meal; lunch: Meal; dinner: Meal };
 type Plan = { days: Day[]; total_estimated_cost_usd: number; budget_tip: string };
 type GroceryItem = { item: string; quantity: string; category: string; estimated_cost_low_usd: number; estimated_cost_high_usd: number };
 type Grocery = { items: GroceryItem[]; total_low_usd: number; total_high_usd: number };
+type KrogerMatch = { product_name: string; brand?: string; size?: string; price_usd: number; on_sale: boolean; regular_price_usd?: number; image: string | null };
+type KrogerResult = { store: { id: string; name: string; chain: string } | null; prices: { item: string; match: KrogerMatch | null }[]; total_usd: number };
 
 const DIET_STYLES = [
   { value: "balanced", label: "Balanced" },
