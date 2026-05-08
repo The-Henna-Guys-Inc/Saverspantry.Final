@@ -12,6 +12,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { AdminSaleDialog } from "@/components/AdminSaleDialog";
 import { AdminSaleCsvUpload } from "@/components/AdminSaleCsvUpload";
+import { CuisineFilterBar } from "@/components/CuisineFilterBar";
+import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
+import { detectItemCuisines } from "@/lib/cuisineHints";
 
 type Sale = {
   id: string;
