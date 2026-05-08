@@ -306,22 +306,23 @@ export const BulkStoragePlanner = ({ zip: initialZip }: Props) => {
         <div className="text-xs text-muted-foreground mb-4">Live prices from <span className="font-medium text-primary">{storeName}</span></div>
       )}
 
-      {/* Staple toggles */}
-      <div className="flex flex-wrap gap-2 mb-5">
-        {STAPLES.map((s) => (
-          <button
-            key={s.key}
-            onClick={() => toggle(s.key)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
-              selected[s.key]
-                ? "bg-primary/10 text-primary border-primary/30"
-                : "bg-muted text-muted-foreground border-border hover:bg-muted/70"
-            }`}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
+      {/* Restore hidden curated items */}
+      {hiddenStaples.length > 0 && (
+        <div className="mb-5">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Hidden — tap to restore</div>
+          <div className="flex flex-wrap gap-2">
+            {hiddenStaples.map((s) => (
+              <button
+                key={s.key}
+                onClick={() => restoreStaple(s.key)}
+                className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-muted text-muted-foreground hover:bg-muted/70 inline-flex items-center gap-1"
+              >
+                <RotateCcw className="h-3 w-3" /> {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Results — cards on mobile, table on sm+ */}
       {rows.length === 0 ? (
