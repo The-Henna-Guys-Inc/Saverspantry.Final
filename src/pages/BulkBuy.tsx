@@ -79,15 +79,17 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
   if (authLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   if (!user) return <Navigate to="/auth" replace />;
 
-  return (
-    <main className="min-h-screen bg-background">
-      <Header />
-      <div className="container max-w-5xl mx-auto px-6 py-12">
-        <div className="flex items-center gap-2 text-accent text-xs font-semibold uppercase tracking-widest mb-2">
-          <PackageOpen className="h-3.5 w-3.5" /> Bulk-Buy
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">Buy big, save more</h1>
-        <p className="text-muted-foreground mb-4">
+  const body = (
+    <>
+      {!embedded && (
+        <>
+          <div className="flex items-center gap-2 text-accent text-xs font-semibold uppercase tracking-widest mb-2">
+            <PackageOpen className="h-3.5 w-3.5" /> Bulk-Buy
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">Buy big, save more</h1>
+        </>
+      )}
+      <p className="text-muted-foreground mb-4">
           Personalized to the cuisines you cook and the staples you actually use. Sourced from specialty grocers where bulk usually wins.
         </p>
 
