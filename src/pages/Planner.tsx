@@ -114,6 +114,7 @@ const Planner = () => {
             dislikes: profilePrefs.dislikes ?? [],
             allergies: profilePrefs.allergies ?? [],
           } : null,
+          must_include_recipes: queued,
         },
       });
       if (error) throw error;
@@ -124,6 +125,7 @@ const Planner = () => {
         { user_id: user!.id, week_start_date: weekStart, plan: data as any },
         { onConflict: "user_id,week_start_date" }
       );
+      if (queued.length) clearQueue();
       toast.success("Weekly plan generated");
     } catch (e: any) {
       toast.error(e.message ?? "Could not generate plan");
