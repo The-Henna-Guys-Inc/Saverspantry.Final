@@ -1,5 +1,9 @@
 // AI Recipe generator from ingredients + cuisine
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { getUserIdFromAuth, logAiUsage } from "../_shared/aiUsage.ts";
+
+const FN = "recipe-generate";
+const MODEL = "google/gemini-2.5-flash";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
