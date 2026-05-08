@@ -31,6 +31,7 @@ type Restriction = typeof RESTRICTIONS[number];
 export const EquivalencyEngine = () => {
   const [food, setFood] = useState("");
   const [restrictions, setRestrictions] = useState<Restriction[]>([]);
+  const [cuisine, setCuisine] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [profilePrefs, setProfilePrefs] = useState<any>(null);
