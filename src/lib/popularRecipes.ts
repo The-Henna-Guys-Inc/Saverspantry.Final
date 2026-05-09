@@ -12,7 +12,10 @@ export const POPULAR_RECIPES: Record<string, PopularRecipe[]> = {
     "Cheeseburger", "BBQ Ribs", "Mac and Cheese", "Buffalo Wings", "Clam Chowder",
     "Cornbread", "Meatloaf", "Pulled Pork Sandwich", "Cobb Salad", "Apple Pie",
   ].map((n) => ({ name: n, img: img(n) })),
-  Indian: [
+  Pakistani: [
+    "Chicken Karahi", "Beef Nihari", "Chicken Biryani", "Haleem", "Chapli Kebab",
+    "Aloo Keema", "Daal Chawal", "Seekh Kebab", "Paya", "Chicken Pulao",
+  ].map((n) => ({ name: n, img: img(n) })),
     "Butter Chicken", "Chana Masala", "Palak Paneer", "Biryani", "Dal Tadka",
     "Aloo Gobi", "Tandoori Chicken", "Samosa", "Rogan Josh", "Masala Dosa",
   ].map((n) => ({ name: n, img: img(n) })),
