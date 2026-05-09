@@ -107,6 +107,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_feedback: {
+        Row: {
+          comment: string | null
+          context: Json
+          created_at: string
+          feature: string
+          id: string
+          rating: string
+          source_id: string | null
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          context?: Json
+          created_at?: string
+          feature: string
+          id?: string
+          rating: string
+          source_id?: string | null
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          context?: Json
+          created_at?: string
+          feature?: string
+          id?: string
+          rating?: string
+          source_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_response_cache: {
         Row: {
           cache_key: string
