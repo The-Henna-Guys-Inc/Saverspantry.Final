@@ -8,6 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { toast } from "sonner";
 import { Loader2, ChefHat, Clock, Users, DollarSign, ChevronDown, SlidersHorizontal, CheckCircle2, AlertCircle } from "lucide-react";
 import { SaveButton } from "./SaveButton";
+import { AiFeedback } from "./AiFeedback";
 import { POPULAR_RECIPES } from "@/lib/popularRecipes";
 import { useDishImage } from "@/hooks/useDishImage";
 
@@ -259,6 +260,12 @@ export const RecipeGenerator = () => {
               <h3 className="text-2xl sm:text-3xl font-bold text-primary mt-1">{recipe.title}</h3>
             </div>
             <SaveButton table="saved_recipes" payload={{ recipe, source: "ai_generated" }} />
+          </div>
+          <div className="mt-3 flex justify-end">
+            <AiFeedback
+              feature="recipe"
+              context={{ title: recipe.title, cuisine: recipe.cuisine, restrictions, filters: appliedFilters }}
+            />
           </div>
 
           <div className="flex flex-wrap gap-4 mt-4 text-sm text-muted-foreground">

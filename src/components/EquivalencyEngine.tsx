@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Loader2, ArrowLeftRight, TrendingDown, DollarSign, Flame } from "lucide-react";
 import { SaveButton } from "./SaveButton";
 import { WatchlistButton } from "./WatchlistButton";
+import { AiFeedback } from "./AiFeedback";
 import { COST_SWAPS, CALORIE_SWAPS } from "@/lib/popularSwaps";
 
 type Swap = {
@@ -228,6 +229,12 @@ export const EquivalencyEngine = () => {
                 <WatchlistButton foodName={result.original.name} />
                 <SaveButton table="saved_swaps" payload={{ food: result.original.name, result }} />
               </div>
+            </div>
+            <div className="mt-3 flex justify-end">
+              <AiFeedback
+                feature="swap"
+                context={{ food: result.original.name, cuisine, restrictions, swap_count: result.swaps.length }}
+              />
             </div>
           </Card>
 
