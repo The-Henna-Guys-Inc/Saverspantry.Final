@@ -10,6 +10,7 @@ import { CuisineFilterBar } from "@/components/CuisineFilterBar";
 import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
 import { CUISINE_LABEL, type CuisineTag } from "@/lib/cuisineHints";
 import { toast } from "sonner";
+import { AiFeedback } from "@/components/AiFeedback";
 
 type Rec = {
   id: string;
