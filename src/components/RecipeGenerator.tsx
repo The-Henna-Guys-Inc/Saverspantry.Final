@@ -9,6 +9,37 @@ import { toast } from "sonner";
 import { Loader2, ChefHat, Clock, Users, DollarSign, ChevronDown, SlidersHorizontal, CheckCircle2, AlertCircle } from "lucide-react";
 import { SaveButton } from "./SaveButton";
 import { POPULAR_RECIPES } from "@/lib/popularRecipes";
+import { useDishImage } from "@/hooks/useDishImage";
+
+const RecipeCard = ({ name, onPick }: { name: string; onPick: () => void }) => {
+  const img = useDishImage(name);
+  const fallback = `https://placehold.co/400x300/eee/999?text=${encodeURIComponent(name)}`;
+  return (
+    <button
+      onClick={onPick}
+      className="group text-left rounded-2xl overflow-hidden bg-card border border-border/50 shadow-soft hover:shadow-glow transition-smooth min-h-[44px]"
+    >
+      <div className="aspect-[4/3] bg-muted overflow-hidden">
+        {img === undefined ? (
+          <div className="w-full h-full animate-pulse bg-muted" />
+        ) : (
+          <img
+            src={img ?? fallback}
+            alt={name}
+            loading="lazy"
+            className="w-full h-full object-cover group-hover:scale-105 transition-smooth"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src = fallback;
+            }}
+          />
+        )}
+      </div>
+      <div className="p-2.5">
+        <div className="text-sm font-semibold text-foreground leading-tight">{name}</div>
+      </div>
+    </button>
+  );
+};
 
 type Recipe = {
   title: string;
