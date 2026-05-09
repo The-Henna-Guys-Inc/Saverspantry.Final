@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, ArrowLeftRight, TrendingDown } from "lucide-react";
+import { Loader2, ArrowLeftRight, TrendingDown, DollarSign, Flame } from "lucide-react";
 import { SaveButton } from "./SaveButton";
 import { WatchlistButton } from "./WatchlistButton";
+import { COST_SWAPS, CALORIE_SWAPS } from "@/lib/popularSwaps";
 
 type Swap = {
   title: string;
@@ -24,7 +25,7 @@ type Result = {
 };
 
 const EXAMPLES = ["200g chicken breast", "2 large eggs", "1 cup Greek yogurt", "150g salmon"];
-const CUISINES = ["Indian", "Italian", "Mexican", "Chinese", "Mediterranean", "Thai"];
+const CUISINES = ["American", "Pakistani", "Indian", "Italian", "Mexican", "Chinese", "Mediterranean", "Thai"];
 const RESTRICTIONS = ["Halal", "Kosher", "Vegetarian"] as const;
 type Restriction = typeof RESTRICTIONS[number];
 
@@ -154,6 +155,62 @@ export const EquivalencyEngine = () => {
           </button>
         ))}
       </div>
+
+      {cuisine && (COST_SWAPS[cuisine] || CALORIE_SWAPS[cuisine]) && (
+        <div className="mt-8 space-y-6">
+          {COST_SWAPS[cuisine] && (
+            <section>
+              <div className="flex items-center gap-2 mb-3 px-1">
+                <DollarSign className="h-4 w-4 text-primary" />
+                <h2 className="text-base font-bold text-primary">Top 10 cost-saving swaps · {cuisine}</h2>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3 px-1">High-cost ingredients → cheaper picks with similar nutrition. Tap to run a full swap.</p>
+              <div className="grid sm:grid-cols-2 gap-2.5">
+                {COST_SWAPS[cuisine].map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => { setFood(s.from); find(s.from); }}
+                    className="text-left p-3 rounded-2xl bg-card border border-border/50 hover:shadow-glow transition-smooth min-h-[44px]"
+                  >
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="font-semibold text-foreground">{s.from}</span>
+                      <ArrowLeftRight className="h-3.5 w-3.5 text-accent shrink-0" />
+                      <span className="text-primary font-semibold">{s.to}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">{s.note}</div>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {CALORIE_SWAPS[cuisine] && (
+            <section>
+              <div className="flex items-center gap-2 mb-3 px-1">
+                <Flame className="h-4 w-4 text-accent" />
+                <h2 className="text-base font-bold text-primary">Top 10 lighter swaps · {cuisine}</h2>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3 px-1">High-calorie ingredients → lighter alternatives with similar nutrition. Estimates are approximate.</p>
+              <div className="grid sm:grid-cols-2 gap-2.5">
+                {CALORIE_SWAPS[cuisine].map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => { setFood(s.from); find(s.from); }}
+                    className="text-left p-3 rounded-2xl bg-card border border-border/50 hover:shadow-glow transition-smooth min-h-[44px]"
+                  >
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="font-semibold text-foreground">{s.from}</span>
+                      <ArrowLeftRight className="h-3.5 w-3.5 text-accent shrink-0" />
+                      <span className="text-primary font-semibold">{s.to}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">{s.note}</div>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      )}
 
       {result && (
         <div className="mt-6 space-y-4 animate-fade-up">

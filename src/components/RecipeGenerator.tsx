@@ -23,7 +23,7 @@ type Recipe = {
   constraint_conflict?: string;
 };
 
-const CUISINES = ["American", "Indian", "Italian", "Mexican", "Chinese", "Mediterranean", "Thai"];
+const CUISINES = ["American", "Pakistani", "Indian", "Italian", "Mexican", "Chinese", "Mediterranean", "Thai"];
 const RESTRICTIONS = ["Halal", "Kosher", "Vegetarian"] as const;
 type Restriction = typeof RESTRICTIONS[number];
 
