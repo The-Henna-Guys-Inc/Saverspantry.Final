@@ -207,30 +207,14 @@ export const RecipeGenerator = () => {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
             {POPULAR_RECIPES[cuisine].map((r) => (
-              <button
+              <RecipeCard
                 key={r.name}
-                onClick={() => {
+                name={r.name}
+                onPick={() => {
                   setIngredients(r.name);
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
-                className="group text-left rounded-2xl overflow-hidden bg-card border border-border/50 shadow-soft hover:shadow-glow transition-smooth min-h-[44px]"
-              >
-                <div className="aspect-[4/3] bg-muted overflow-hidden">
-                  <img
-                    src={r.img}
-                    alt={r.name}
-                    loading="lazy"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-smooth"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src =
-                        `https://placehold.co/400x300/eee/999?text=${encodeURIComponent(r.name)}`;
-                    }}
-                  />
-                </div>
-                <div className="p-2.5">
-                  <div className="text-sm font-semibold text-foreground leading-tight">{r.name}</div>
-                </div>
-              </button>
+              />
             ))}
           </div>
         </section>
