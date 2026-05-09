@@ -10,6 +10,7 @@ import { CuisineFilterBar } from "@/components/CuisineFilterBar";
 import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
 import { CUISINE_LABEL, type CuisineTag } from "@/lib/cuisineHints";
 import { toast } from "sonner";
+import { AiFeedback } from "@/components/AiFeedback";
 
 type Rec = {
   id: string;
@@ -114,6 +115,14 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
               </div>
             </div>
           </div>
+          {recs.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-border/40 flex justify-end">
+              <AiFeedback
+                feature="bulk_buy"
+                context={{ count: recs.length, total_savings: total, cuisines, isFiltering }}
+              />
+            </div>
+          )}
         </Card>
 
         {loading ? (

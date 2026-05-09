@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Sparkles, ShoppingCart, RefreshCw, Calendar, Info, Copy, Share2, Printer, Tag, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { SpecialtyStoreBanner } from "@/components/SpecialtyStoreBanner";
+import { AiFeedback } from "@/components/AiFeedback";
 import { detectItemCuisines, summarizeCuisines, CUISINE_LABEL } from "@/lib/cuisineHints";
 
 type Meal = { title: string; main_ingredients: string[]; estimated_cost_usd: number; time_minutes: number };
@@ -321,10 +322,16 @@ const Planner = () => {
 
         {plan && (
           <>
-            <div className="flex items-baseline justify-between mb-4">
+            <div className="flex items-baseline justify-between mb-4 gap-3 flex-wrap">
               <h2 className="text-xl font-semibold text-primary">Your week</h2>
-              <div className="text-sm text-muted-foreground">
-                Est. total <span className="font-semibold text-primary">${plan.total_estimated_cost_usd?.toFixed(2)}</span>
+              <div className="flex items-center gap-4 flex-wrap">
+                <AiFeedback
+                  feature="meal_plan"
+                  context={{ household_size: householdSize, diet_style: dietStyle, cuisine, restrictions, days: plan.days?.length }}
+                />
+                <div className="text-sm text-muted-foreground">
+                  Est. total <span className="font-semibold text-primary">${plan.total_estimated_cost_usd?.toFixed(2)}</span>
+                </div>
               </div>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
@@ -357,16 +364,23 @@ const Planner = () => {
           if (krogerData) for (const p of krogerData.prices) krogerByItem[p.item.toLowerCase()] = p.match;
           return (
           <div id="grocery-print">
-            <div className="flex items-baseline justify-between mb-2">
+            <div className="flex items-baseline justify-between mb-2 gap-3 flex-wrap">
               <h2 className="text-xl font-semibold text-primary">Grocery list</h2>
-              <div className="text-sm text-muted-foreground">
-                {krogerData?.store ? (
-                  <>Kroger total <span className="font-semibold text-primary">${krogerData.total_usd.toFixed(2)}</span></>
-                ) : (
-                  <>Est. <span className="font-semibold text-primary">
-                    ${grocery!.total_low_usd?.toFixed(2)}–${grocery!.total_high_usd?.toFixed(2)}
-                  </span></>
-                )}
+              <div className="flex items-center gap-4 flex-wrap">
+                <AiFeedback
+                  feature="grocery_list"
+                  context={{ item_count: grocery!.items.length, household_size: householdSize }}
+                  className="print:hidden"
+                />
+                <div className="text-sm text-muted-foreground">
+                  {krogerData?.store ? (
+                    <>Kroger total <span className="font-semibold text-primary">${krogerData.total_usd.toFixed(2)}</span></>
+                  ) : (
+                    <>Est. <span className="font-semibold text-primary">
+                      ${grocery!.total_low_usd?.toFixed(2)}–${grocery!.total_high_usd?.toFixed(2)}
+                    </span></>
+                  )}
+                </div>
               </div>
             </div>
             <SpecialtyStoreBanner
