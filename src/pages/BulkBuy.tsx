@@ -115,6 +115,14 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
               </div>
             </div>
           </div>
+          {recs.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-border/40 flex justify-end">
+              <AiFeedback
+                feature="bulk_buy"
+                context={{ count: recs.length, total_savings: total, cuisines, isFiltering }}
+              />
+            </div>
+          )}
         </Card>
 
         {loading ? (
