@@ -8,6 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { toast } from "sonner";
 import { Loader2, ChefHat, Clock, Users, DollarSign, ChevronDown, SlidersHorizontal, CheckCircle2, AlertCircle } from "lucide-react";
 import { SaveButton } from "./SaveButton";
+import { POPULAR_RECIPES } from "@/lib/popularRecipes";
 
 type Recipe = {
   title: string;
@@ -22,7 +23,7 @@ type Recipe = {
   constraint_conflict?: string;
 };
 
-const CUISINES = ["Indian", "Italian", "Mexican", "Chinese", "Mediterranean", "Thai"];
+const CUISINES = ["American", "Indian", "Italian", "Mexican", "Chinese", "Mediterranean", "Thai"];
 const RESTRICTIONS = ["Halal", "Kosher", "Vegetarian"] as const;
 type Restriction = typeof RESTRICTIONS[number];
 
@@ -197,6 +198,43 @@ export const RecipeGenerator = () => {
           <span className="ml-2">Generate recipe</span>
         </Button>
       </Card>
+
+      {cuisine && POPULAR_RECIPES[cuisine] && (
+        <section className="mt-8">
+          <div className="flex items-baseline justify-between mb-3 px-1">
+            <h2 className="text-lg font-bold text-primary">Top 10 {cuisine} dishes</h2>
+            <span className="text-xs text-muted-foreground">Tap to fill ingredients</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+            {POPULAR_RECIPES[cuisine].map((r) => (
+              <button
+                key={r.name}
+                onClick={() => {
+                  setIngredients(r.name);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="group text-left rounded-2xl overflow-hidden bg-card border border-border/50 shadow-soft hover:shadow-glow transition-smooth min-h-[44px]"
+              >
+                <div className="aspect-[4/3] bg-muted overflow-hidden">
+                  <img
+                    src={r.img}
+                    alt={r.name}
+                    loading="lazy"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-smooth"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src =
+                        `https://placehold.co/400x300/eee/999?text=${encodeURIComponent(r.name)}`;
+                    }}
+                  />
+                </div>
+                <div className="p-2.5">
+                  <div className="text-sm font-semibold text-foreground leading-tight">{r.name}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       {recipe && (
         <Card className="mt-6 p-6 sm:p-8 rounded-3xl shadow-glow border-border/50 animate-fade-up">
