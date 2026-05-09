@@ -8,6 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { toast } from "sonner";
 import { Loader2, ChefHat, Clock, Users, DollarSign, ChevronDown, SlidersHorizontal, CheckCircle2, AlertCircle } from "lucide-react";
 import { SaveButton } from "./SaveButton";
+import { POPULAR_RECIPES } from "@/lib/popularRecipes";
 
 type Recipe = {
   title: string;
