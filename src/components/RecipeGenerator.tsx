@@ -33,7 +33,7 @@ const GeneratedRecipeImage = ({ title, cuisine }: { title: string; cuisine?: str
 };
 
 const RecipeCard = ({ name, onPick }: { name: string; onPick: () => void }) => {
-  const img = useDishImage(name);
+  const img = useVerifiedDishImage(name);
   const fallback = `https://placehold.co/400x300/eee/999?text=${encodeURIComponent(name)}`;
   return (
     <button
