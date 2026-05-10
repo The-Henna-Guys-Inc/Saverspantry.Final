@@ -2,14 +2,16 @@ import { Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/Header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, ChefHat, Repeat, Utensils } from "lucide-react";
+import { Loader2, ChefHat, Repeat, Utensils, Apple } from "lucide-react";
 import { RecipeGenerator } from "@/components/RecipeGenerator";
 import { EquivalencyEngine } from "@/components/EquivalencyEngine";
+import { NutritionLookup } from "@/components/NutritionLookup";
 
 const Cook = () => {
   const { user, loading } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const tab = searchParams.get("tab") === "swaps" ? "swaps" : "recipes";
+  const rawTab = searchParams.get("tab");
+  const tab = rawTab === "swaps" || rawTab === "nutrition" ? rawTab : "recipes";
   const setTab = (v: string) => setSearchParams(v === "recipes" ? {} : { tab: v });
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
