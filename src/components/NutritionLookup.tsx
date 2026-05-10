@@ -17,6 +17,7 @@ type Nutrition = {
   fat_g: number;
   key_micros: { name: string; amount: number; unit: string; dv_percent?: number }[];
   notes: string;
+  source?: string;
 };
 
 const SUGGESTIONS = [
