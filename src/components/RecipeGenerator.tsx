@@ -11,6 +11,26 @@ import { SaveButton } from "./SaveButton";
 import { AiFeedback } from "./AiFeedback";
 import { POPULAR_RECIPES } from "@/lib/popularRecipes";
 import { useDishImage } from "@/hooks/useDishImage";
+import { useVerifiedDishImage } from "@/hooks/useVerifiedDishImage";
+
+const GeneratedRecipeImage = ({ title, cuisine }: { title: string; cuisine?: string }) => {
+  const img = useVerifiedDishImage(title, cuisine);
+  if (img === undefined) {
+    return <div className="w-full aspect-[16/9] rounded-2xl bg-muted animate-pulse mb-5" />;
+  }
+  if (!img) return null;
+  return (
+    <div className="w-full aspect-[16/9] rounded-2xl overflow-hidden bg-muted mb-5 border border-border/40">
+      <img
+        src={img}
+        alt={title}
+        loading="lazy"
+        className="w-full h-full object-cover"
+        onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = "none"; }}
+      />
+    </div>
+  );
+};
 
 const RecipeCard = ({ name, onPick }: { name: string; onPick: () => void }) => {
   const img = useDishImage(name);
