@@ -24,15 +24,32 @@ const Cook = () => {
         <div className="flex items-center gap-2 text-accent text-xs font-semibold uppercase tracking-widest mb-2">
           <Utensils className="h-3.5 w-3.5" /> Cook
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">Recipes, swaps & nutrition</h1>
-        <p className="text-muted-foreground mb-6">Generate recipes, swap pricey ingredients for cheaper equivalents, or look up USDA-grade nutrition for any food.</p>
-
         <Tabs value={tab} onValueChange={setTab} className="w-full">
-          <TabsList className="rounded-2xl mb-6 flex-wrap h-auto">
-            <TabsTrigger value="recipes" className="rounded-xl gap-1.5"><ChefHat className="h-4 w-4" />Recipes</TabsTrigger>
-            <TabsTrigger value="swaps" className="rounded-xl gap-1.5"><Repeat className="h-4 w-4" />Swaps</TabsTrigger>
-            <TabsTrigger value="nutrition" className="rounded-xl gap-1.5"><Apple className="h-4 w-4" />Nutrition</TabsTrigger>
+          <TabsList className="bg-transparent p-0 mb-3 gap-2 sm:gap-3 flex-wrap h-auto justify-start">
+            <TabsTrigger
+              value="recipes"
+              className="rounded-2xl gap-2 px-5 py-3 text-base sm:text-lg font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
+            >
+              <ChefHat className="h-5 w-5" />Recipes
+            </TabsTrigger>
+            <TabsTrigger
+              value="swaps"
+              className="rounded-2xl gap-2 px-5 py-3 text-base sm:text-lg font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
+            >
+              <Repeat className="h-5 w-5" />Swaps
+            </TabsTrigger>
+            <TabsTrigger
+              value="nutrition"
+              className="rounded-2xl gap-2 px-5 py-3 text-base sm:text-lg font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
+            >
+              <Apple className="h-5 w-5" />Nutrition
+            </TabsTrigger>
           </TabsList>
+          <p className="text-muted-foreground mb-6">
+            {tab === "recipes" && "Generate recipes from what you already have in your pantry."}
+            {tab === "swaps" && "Swap pricey ingredients for cheaper, equivalent ones."}
+            {tab === "nutrition" && "Look up USDA-grade nutrition for any food or portion."}
+          </p>
           <TabsContent value="recipes" className="mt-0"><RecipeGenerator /></TabsContent>
           <TabsContent value="swaps" className="mt-0"><EquivalencyEngine /></TabsContent>
           <TabsContent value="nutrition" className="mt-0"><NutritionLookup /></TabsContent>
