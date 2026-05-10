@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 // asks Gemini for the canonical Wikipedia page, then fetches the lead image.
 // Cached in localStorage with a 30-day TTL.
 
-const PREFIX = "verifiedDishImg:v1:";
+const PREFIX = "verifiedDishImg:v2:";
 const mem = new Map<string, string | null>();
 const inflight = new Map<string, Promise<string | null>>();
 
