@@ -34,7 +34,8 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    const path = `${slug(cuisine ?? "any")}/${slug(dish)}.png`;
+    // v2 = plated-dish prompt (bust old cached ingredient images)
+    const path = `v2/${slug(cuisine ?? "any")}/${slug(dish)}.png`;
     const publicUrl = admin.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
 
     // If already cached, return immediately.
