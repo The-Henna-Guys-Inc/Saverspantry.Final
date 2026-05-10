@@ -274,6 +274,7 @@ export const RecipeGenerator = () => {
 
       {recipe && (
         <Card className="mt-6 p-6 sm:p-8 rounded-3xl shadow-glow border-border/50 animate-fade-up">
+          <GeneratedRecipeImage title={recipe.title} cuisine={recipe.cuisine} />
           <div className="flex items-start justify-between gap-3">
             <div>
               <div className="text-xs uppercase tracking-widest text-accent font-semibold">{recipe.cuisine}</div>
