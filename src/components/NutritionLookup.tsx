@@ -101,6 +101,11 @@ export const NutritionLookup = () => {
             <div>
               <h3 className="text-xl font-semibold text-primary">{result.food}</h3>
               <p className="text-sm text-muted-foreground">Per ~{Math.round(result.serving_grams)}g serving</p>
+              {result.source && (
+                <span className="inline-block mt-1.5 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                  Source: {result.source}
+                </span>
+              )}
             </div>
             <SaveButton table="saved_lookups" payload={{ query, result }} />
           </div>
