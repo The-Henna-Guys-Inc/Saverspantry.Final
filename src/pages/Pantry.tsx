@@ -452,32 +452,37 @@ const Pantry = () => {
                     const low = isLow(it);
                     return (
                       <li key={it.id} className="flex flex-col gap-2 text-sm border-b border-border/40 pb-3 last:border-0 last:pb-0">
-                        <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-start gap-2.5">
                           {it.image_url ? (
-                            <img src={it.image_url} alt={it.item} className="h-10 w-10 rounded-lg object-cover border border-border shrink-0" loading="lazy" />
+                            <img src={it.image_url} alt={it.item} className="h-11 w-11 rounded-lg object-cover border border-border shrink-0" loading="lazy" />
                           ) : (
-                            <div className="h-10 w-10 rounded-lg bg-muted border border-border shrink-0 flex items-center justify-center text-muted-foreground text-[10px] uppercase">
+                            <div className="h-11 w-11 rounded-lg bg-muted border border-border shrink-0 flex items-center justify-center text-muted-foreground text-[10px] uppercase">
                               {it.category?.[0] ?? "·"}
                             </div>
                           )}
                           <div className="min-w-0 flex-1">
-                            <div className="font-medium text-primary truncate flex items-center gap-1.5">
-                              {it.item}
-                              {low && <AlertTriangle className="h-3.5 w-3.5 text-destructive" aria-label="Low stock" />}
+                            <div className="font-medium text-primary break-words leading-snug flex items-start gap-1.5">
+                              <span className="min-w-0 break-words">{it.item}</span>
+                              {low && <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0 mt-0.5" aria-label="Low stock" />}
                             </div>
-                            <div className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
+                            <div className="text-[11px] text-muted-foreground flex items-center gap-1 flex-wrap mt-0.5">
                               <span>{it.category}</span>
-                              {it.expires_on && <> · <span className={expSoon ? "text-destructive font-medium" : ""}>expires {it.expires_on}</span></>}
+                              {it.expires_on && <> · <span className={expSoon ? "text-destructive font-medium" : ""}>exp {it.expires_on}</span></>}
                               {detectItemCuisines(it.item).slice(0, 2).map((c) => (
-                                <span key={c} className="px-1.5 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] uppercase tracking-wider">
+                                <span key={c} className="px-1.5 py-0.5 rounded-full bg-accent/10 text-accent text-[9px] uppercase tracking-wider">
                                   {CUISINE_LABEL[c]}
                                 </span>
                               ))}
                             </div>
                           </div>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" onClick={() => adjust(it, -1)} disabled={out} title="Use one">
-                              <Minus className="h-3.5 w-3.5" />
+                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg shrink-0 -mr-1" onClick={() => remove(it.id)} title="Remove">
+                            <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+                          </Button>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-wrap pl-[52px]">
+                          <div className="inline-flex items-center rounded-lg border border-border overflow-hidden">
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none" onClick={() => adjust(it, -1)} disabled={out} title="Use one">
+                              <Minus className="h-3 w-3" />
                             </Button>
                             <Input
                               type="number"
@@ -485,31 +490,28 @@ const Pantry = () => {
                               step="0.1"
                               value={it.quantity}
                               onChange={(e) => setQuantity(it, e.target.value)}
-                              className="h-8 w-16 rounded-lg text-center px-1"
+                              className="h-7 w-12 rounded-none border-0 border-x border-border text-center px-1 text-xs"
                             />
-                            <span className="text-xs text-muted-foreground w-8">{it.unit}</span>
-                            <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" onClick={() => adjust(it, 1)} title="Add one">
-                              <Plus className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => remove(it.id)}>
-                              <Trash2 className="h-4 w-4 text-muted-foreground" />
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none" onClick={() => adjust(it, 1)} title="Add one">
+                              <Plus className="h-3 w-3" />
                             </Button>
                           </div>
+                          <span className="text-[11px] text-muted-foreground">{it.unit}</span>
+                          <span className="text-[11px] text-muted-foreground ml-auto flex items-center gap-1">
+                            <Label htmlFor={`th-${it.id}`} className="text-[11px]">Alert ≤</Label>
+                            <Input
+                              id={`th-${it.id}`}
+                              type="number"
+                              min={0}
+                              step="0.1"
+                              value={it.low_stock_threshold ?? ""}
+                              onChange={(e) => setItemThreshold(it, e.target.value)}
+                              placeholder="off"
+                              className="h-6 w-12 rounded-md text-center px-1 text-xs"
+                            />
+                          </span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Label htmlFor={`th-${it.id}`} className="text-xs">Alert when ≤</Label>
-                          <Input
-                            id={`th-${it.id}`}
-                            type="number"
-                            min={0}
-                            step="0.1"
-                            value={it.low_stock_threshold ?? ""}
-                            onChange={(e) => setItemThreshold(it, e.target.value)}
-                            placeholder="off"
-                            className="h-7 w-20 rounded-lg text-center px-1"
-                          />
-                          <span>{it.unit}</span>
-                        </div>
+                      </li>
                       </li>
                     );
                   })}
