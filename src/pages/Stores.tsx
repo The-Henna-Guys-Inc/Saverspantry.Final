@@ -247,6 +247,12 @@ const Stores = ({ embedded = false }: { embedded?: boolean }) => {
                   </div>
                 )}
 
+                {s.curation_source === "google_places" && (
+                  <div className="mt-2 text-[10px] text-muted-foreground/80 italic">
+                    Listing data from Google
+                  </div>
+                )}
+
                 <div className="mt-4 flex items-center gap-2 flex-wrap">
                   <Button asChild variant="outline" size="sm" className="rounded-xl">
                     <a href={mapHref(s)} target="_blank" rel="noopener noreferrer">
