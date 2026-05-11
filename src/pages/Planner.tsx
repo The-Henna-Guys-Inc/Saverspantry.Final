@@ -243,14 +243,42 @@ const Planner = () => {
         <div className="flex items-center gap-2 text-accent text-xs font-semibold uppercase tracking-widest mb-2">
           <Calendar className="h-3.5 w-3.5" /> Week of {weekStart}
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">Weekly meal planner</h1>
-        <p className="text-muted-foreground mb-8">Generate a 7-day plan and turn it into a grocery list.</p>
+        <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">Plan</h1>
+        <p className="text-muted-foreground mb-6">Build your week, generate fresh recipes, and revisit what you've saved.</p>
+
+        <Tabs value={planTab} onValueChange={setPlanTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-transparent p-0 mb-6 gap-1.5 sm:gap-2 h-auto">
+            <TabsTrigger value="planner" className="w-full min-w-0 rounded-xl gap-1 sm:gap-2 px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth">
+              <Calendar className="h-4 w-4" />Meal planner
+            </TabsTrigger>
+            <TabsTrigger value="recipes" className="w-full min-w-0 rounded-xl gap-1 sm:gap-2 px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth">
+              <ChefHat className="h-4 w-4" />Recipes
+            </TabsTrigger>
+            <TabsTrigger value="library" className="w-full min-w-0 rounded-xl gap-1 sm:gap-2 px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth">
+              <BookmarkCheck className="h-4 w-4" />Library
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="recipes" className="mt-0">
+            <RecipeGenerator />
+          </TabsContent>
+
+          <TabsContent value="library" className="mt-0">
+            <Card className="p-6 rounded-3xl border-border/50 text-center">
+              <BookmarkCheck className="h-8 w-8 text-primary mx-auto mb-3" />
+              <h3 className="text-xl font-semibold text-primary mb-1">Your saved recipes & swaps</h3>
+              <p className="text-sm text-muted-foreground mb-4">Open the full library to browse, search and re-use everything you've saved.</p>
+              <Button asChild variant="hero" className="rounded-xl">
+                <Link to="/library">Open library <ArrowRight className="h-4 w-4 ml-1.5" /></Link>
+              </Button>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="planner" className="mt-0">
+        <div className="text-xs uppercase tracking-wider text-accent mb-2">Week of {weekStart}</div>
 
         <Card className="p-6 rounded-3xl border-border/50 shadow-soft mb-8">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <Label htmlFor="hh" className="text-xs">Household size</Label>
-              <Input id="hh" type="number" min={1} max={12} value={householdSize}
                 onChange={e => setHouseholdSize(Math.max(1, Number(e.target.value) || 1))}
                 className="rounded-xl mt-1" />
             </div>
