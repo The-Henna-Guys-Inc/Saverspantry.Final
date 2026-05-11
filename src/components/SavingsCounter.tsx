@@ -25,7 +25,7 @@ export const SavingsCounter = () => {
 
   return (
     <div
-      className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/5 border border-primary/15"
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/5 border border-primary/15"
       title="Estimated savings unlocked for ThriftPantry users"
     >
       <TrendingUp className="h-3.5 w-3.5 text-primary" />
