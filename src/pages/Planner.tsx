@@ -509,6 +509,8 @@ const Planner = () => {
           </div>
           );
         })()}
+          </TabsContent>
+        </Tabs>
       </div>
     </main>
   );
