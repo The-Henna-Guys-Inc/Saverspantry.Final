@@ -232,18 +232,23 @@ export const EquivalencyEngine = () => {
       {result && (
         <div className="mt-6 space-y-4 animate-fade-up">
           <Card className="p-5 rounded-3xl bg-gradient-warm border-border/50">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="text-xs uppercase tracking-wider text-muted-foreground">Original</div>
-                <h3 className="text-lg font-semibold text-primary mt-1">{result.original.name}</h3>
-                <div className="text-sm text-muted-foreground mt-1">
-                  {Math.round(result.original.calories_kcal)} kcal · {result.original.protein_g.toFixed(0)}g protein ·
-                  <span className="font-semibold text-foreground ml-1">${result.original.estimated_cost_usd.toFixed(2)}</span>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground">Original</div>
+                  <h3 className="text-lg font-semibold text-primary mt-1 break-words">{result.original.name}</h3>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <WatchlistButton foodName={result.original.name} />
+                  <SaveButton table="saved_swaps" payload={{ food: result.original.name, result }} />
                 </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <WatchlistButton foodName={result.original.name} />
-                <SaveButton table="saved_swaps" payload={{ food: result.original.name, result }} />
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+                <span>{Math.round(result.original.calories_kcal)} kcal</span>
+                <span aria-hidden>·</span>
+                <span>{result.original.protein_g.toFixed(0)}g protein</span>
+                <span aria-hidden>·</span>
+                <span className="font-semibold text-foreground">${result.original.estimated_cost_usd.toFixed(2)}</span>
               </div>
             </div>
             <div className="mt-3 flex justify-end">
