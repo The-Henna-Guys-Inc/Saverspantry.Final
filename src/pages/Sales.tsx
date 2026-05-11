@@ -15,6 +15,9 @@ import { AdminSaleCsvUpload } from "@/components/AdminSaleCsvUpload";
 import { CuisineFilterBar } from "@/components/CuisineFilterBar";
 import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
 import { detectItemCuisines } from "@/lib/cuisineHints";
+import { PagerBar } from "@/components/PagerBar";
+
+const PAGE_SIZE = 10;
 
 type Sale = {
   id: string;
@@ -50,6 +53,8 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
   const [confirming, setConfirming] = useState<string | null>(null);
   const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set());
   const [isAdmin, setIsAdmin] = useState(false);
+  const [matchedPage, setMatchedPage] = useState(1);
+  const [allPage, setAllPage] = useState(1);
   const { cuisines, isFiltering, setEnabled } = useCuisinePrefs();
 
   useEffect(() => {
@@ -104,6 +109,18 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
     if (!watchedFoods.length) return [];
     return cuisineFiltered.filter((s) => watchedFoods.some((w) => s.food_name.toLowerCase().includes(w) || w.includes(s.food_name.toLowerCase())));
   }, [cuisineFiltered, watchedFoods]);
+
+  const matchedPaged = useMemo(
+    () => matched.slice((matchedPage - 1) * PAGE_SIZE, matchedPage * PAGE_SIZE),
+    [matched, matchedPage],
+  );
+  const allPaged = useMemo(
+    () => cuisineFiltered.slice((allPage - 1) * PAGE_SIZE, allPage * PAGE_SIZE),
+    [cuisineFiltered, allPage],
+  );
+
+  useEffect(() => { setMatchedPage(1); }, [matched.length]);
+  useEffect(() => { setAllPage(1); }, [cuisineFiltered.length]);
 
   const confirm = async (saleId: string) => {
     if (!user || confirmedIds.has(saleId)) return;
@@ -183,7 +200,10 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
                 </Button>
               </Card>
             ) : (
-              <SaleList sales={matched} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} isAdmin={isAdmin} onRemove={removeSale} userId={user?.id ?? ""} onRefresh={loadSales} />
+              <>
+                <SaleList sales={matchedPaged} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} isAdmin={isAdmin} onRemove={removeSale} userId={user?.id ?? ""} onRefresh={loadSales} />
+                <PagerBar page={matchedPage} pageSize={PAGE_SIZE} total={matched.length} onPageChange={setMatchedPage} />
+              </>
             )}
           </TabsContent>
 
@@ -197,7 +217,10 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
                 </p>
               </Card>
             ) : (
-              <SaleList sales={cuisineFiltered} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} isAdmin={isAdmin} onRemove={removeSale} userId={user?.id ?? ""} onRefresh={loadSales} />
+              <>
+                <SaleList sales={allPaged} onConfirm={confirm} onFlag={flag} confirming={confirming} confirmedIds={confirmedIds} isAdmin={isAdmin} onRemove={removeSale} userId={user?.id ?? ""} onRefresh={loadSales} />
+                <PagerBar page={allPage} pageSize={PAGE_SIZE} total={cuisineFiltered.length} onPageChange={setAllPage} />
+              </>
             )}
           </TabsContent>
         </Tabs>
