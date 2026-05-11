@@ -135,9 +135,26 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Could not determine location. Try a ZIP code or city." }), { status: 400, headers: corsHeaders });
     }
 
-    const radius = metersFromMiles(radius_miles ?? 10);
-    const targetCuisines = (cuisines && cuisines.length ? cuisines : Object.keys(CUISINE_QUERIES))
+    const radiusMilesNum = radius_miles ?? 10;
+    const radius = metersFromMiles(radiusMilesNum);
+    const allCuisines = (cuisines && cuisines.length ? cuisines : Object.keys(CUISINE_QUERIES))
       .filter((c) => CUISINE_QUERIES[c]);
+
+    // Geo cell: round lat/lng to 0.1° (~7 miles). Same cell + cuisine + radius reuses prior search.
+    const geoCell = `${lat.toFixed(1)},${lng.toFixed(1)}`;
+    const CACHE_TTL_DAYS = 30;
+    const cacheCutoff = new Date(Date.now() - CACHE_TTL_DAYS * 86400_000).toISOString();
+
+    const { data: cachedRows } = await supabase
+      .from("places_search_cache")
+      .select("cuisine")
+      .eq("geo_cell", geoCell)
+      .eq("radius_miles", radiusMilesNum)
+      .gte("searched_at", cacheCutoff)
+      .in("cuisine", allCuisines);
+    const cachedSet = new Set((cachedRows ?? []).map((r: any) => r.cuisine));
+    const targetCuisines = allCuisines.filter((c) => !cachedSet.has(c));
+    const skippedCached = allCuisines.length - targetCuisines.length;
 
     const seen = new Map<string, any>(); // place_id → row
     const failures: Array<{ cuisine: string; message: string }> = [];
