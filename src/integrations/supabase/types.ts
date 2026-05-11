@@ -593,6 +593,39 @@ export type Database = {
         }
         Relationships: []
       }
+      places_search_cache: {
+        Row: {
+          cuisine: string
+          geo_cell: string
+          id: string
+          lat: number
+          lng: number
+          radius_miles: number
+          result_count: number
+          searched_at: string
+        }
+        Insert: {
+          cuisine: string
+          geo_cell: string
+          id?: string
+          lat: number
+          lng: number
+          radius_miles: number
+          result_count?: number
+          searched_at?: string
+        }
+        Update: {
+          cuisine?: string
+          geo_cell?: string
+          id?: string
+          lat?: number
+          lng?: number
+          radius_miles?: number
+          result_count?: number
+          searched_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

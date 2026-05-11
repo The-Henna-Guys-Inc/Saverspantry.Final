@@ -135,16 +135,36 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Could not determine location. Try a ZIP code or city." }), { status: 400, headers: corsHeaders });
     }
 
-    const radius = metersFromMiles(radius_miles ?? 10);
-    const targetCuisines = (cuisines && cuisines.length ? cuisines : Object.keys(CUISINE_QUERIES))
+    const radiusMilesNum = radius_miles ?? 10;
+    const radius = metersFromMiles(radiusMilesNum);
+    const allCuisines = (cuisines && cuisines.length ? cuisines : Object.keys(CUISINE_QUERIES))
       .filter((c) => CUISINE_QUERIES[c]);
+
+    // Geo cell: round lat/lng to 0.1° (~7 miles). Same cell + cuisine + radius reuses prior search.
+    const geoCell = `${lat.toFixed(1)},${lng.toFixed(1)}`;
+    const CACHE_TTL_DAYS = 30;
+    const cacheCutoff = new Date(Date.now() - CACHE_TTL_DAYS * 86400_000).toISOString();
+
+    const { data: cachedRows } = await supabase
+      .from("places_search_cache")
+      .select("cuisine")
+      .eq("geo_cell", geoCell)
+      .eq("radius_miles", radiusMilesNum)
+      .gte("searched_at", cacheCutoff)
+      .in("cuisine", allCuisines);
+    const cachedSet = new Set((cachedRows ?? []).map((r: any) => r.cuisine));
+    const targetCuisines = allCuisines.filter((c) => !cachedSet.has(c));
+    const skippedCached = allCuisines.length - targetCuisines.length;
 
     const seen = new Map<string, any>(); // place_id → row
     const failures: Array<{ cuisine: string; message: string }> = [];
+    const cuisineCounts: Record<string, number> = {};
     for (const cuisine of targetCuisines) {
       try {
         const result = await placesSearch(apiKey, CUISINE_QUERIES[cuisine], lat, lng, radius);
-        for (const p of result.places ?? []) {
+        const places = result.places ?? [];
+        cuisineCounts[cuisine] = places.length;
+        for (const p of places) {
           const placeId = p.id;
           if (!placeId) continue;
           const name = p.displayName?.text ?? "Unknown";
@@ -177,16 +197,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (seen.size === 0 && failures.length === targetCuisines.length && failures.length > 0) {
+    if (seen.size === 0 && targetCuisines.length > 0 && failures.length === targetCuisines.length) {
       return new Response(
-        JSON.stringify({
-          error: failures[0].message,
-          details: failures,
-        }),
-        {
-          status: 502,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        JSON.stringify({ error: failures[0].message, details: failures }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -211,8 +225,31 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Record successful searches in cache so we skip them next time
+    const cacheRows = Object.entries(cuisineCounts).map(([cuisine, count]) => ({
+      cuisine,
+      geo_cell: geoCell,
+      radius_miles: radiusMilesNum,
+      lat,
+      lng,
+      result_count: count,
+      searched_at: new Date().toISOString(),
+    }));
+    if (cacheRows.length) {
+      await supabase
+        .from("places_search_cache")
+        .upsert(cacheRows, { onConflict: "cuisine,geo_cell,radius_miles" });
+    }
+
     return new Response(
-      JSON.stringify({ inserted, updated, total: seen.size, failures }),
+      JSON.stringify({
+        inserted,
+        updated,
+        total: seen.size,
+        searched: targetCuisines.length,
+        cached_skipped: skippedCached,
+        failures,
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
