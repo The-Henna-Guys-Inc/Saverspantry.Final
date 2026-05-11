@@ -12,6 +12,10 @@ import { AiFeedback } from "./AiFeedback";
 import { POPULAR_RECIPES } from "@/lib/popularRecipes";
 import { useDishImage } from "@/hooks/useDishImage";
 import { useVerifiedDishImage } from "@/hooks/useVerifiedDishImage";
+import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
+import { pickDefaultCuisineOption } from "@/lib/cuisineHints";
+import { CuisinePrefHint } from "./CuisinePrefHint";
+import { useEffect } from "react";
 
 const GeneratedRecipeImage = ({ title, cuisine }: { title: string; cuisine?: string }) => {
   const img = useVerifiedDishImage(title, cuisine);
