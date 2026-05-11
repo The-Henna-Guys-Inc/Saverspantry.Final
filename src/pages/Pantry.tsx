@@ -32,6 +32,7 @@ type PantryItem = {
   expires_on: string | null;
   low_stock_threshold: number | null;
   image_url: string | null;
+  barcode: string | null;
 };
 
 type PantryLocation = { id: string; name: string };
