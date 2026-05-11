@@ -40,10 +40,32 @@ function playBeep(ctx: AudioContext | null) {
 export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }: Props) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [deviceId, setDeviceId] = useState<string | undefined>();
   const [status, setStatus] = useState<"idle" | "starting" | "scanning" | "looking-up" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+
+  // Prime an AudioContext as soon as the dialog opens (user just tapped "Scan").
+  useEffect(() => {
+    if (!open) return;
+    try {
+      const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (!Ctx) return;
+      if (!audioCtxRef.current) audioCtxRef.current = new Ctx();
+      const ctx = audioCtxRef.current!;
+      if (ctx.state === "suspended") ctx.resume().catch(() => {});
+      // Play a near-silent tick to fully unlock audio on iOS.
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      g.gain.value = 0.0001;
+      o.connect(g).connect(ctx.destination);
+      o.start();
+      o.stop(ctx.currentTime + 0.01);
+    } catch {
+      /* ignore */
+    }
+  }, [open]);
 
   // List cameras when dialog opens
   useEffect(() => {
