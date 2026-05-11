@@ -1,12 +1,73 @@
+import { useState } from "react";
 import heroImg from "@/assets/hero-foods.jpg";
-import { NutritionLookup } from "@/components/NutritionLookup";
-import { EquivalencyEngine } from "@/components/EquivalencyEngine";
-import { RecipeGenerator } from "@/components/RecipeGenerator";
 import { Header } from "@/components/Header";
 import { Card } from "@/components/ui/card";
-import { ArrowLeftRight, Sparkles, ChefHat, Beef } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeftRight, Sparkles, ChefHat, Beef, Lock, Apple, Repeat } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+
+type FeatureKey = "nutrition" | "swaps" | "recipes";
+
+const FEATURES: Record<FeatureKey, {
+  label: string;
+  icon: typeof Apple;
+  eyebrow: string;
+  title: string;
+  body: string;
+  bullets: string[];
+  cta: string;
+  href: string;
+}> = {
+  nutrition: {
+    label: "Nutrition",
+    icon: Apple,
+    eyebrow: "Nutrition Lookup",
+    title: "Ask anything. Get instant nutrition.",
+    body: "Type any food and portion in plain English. Get USDA-grade macros, key micronutrients, and a money-saving tip in seconds — with AI as a smart fallback when the database doesn't have it.",
+    bullets: [
+      "Natural language input — \"1 cup cooked quinoa\"",
+      "Calories, protein, carbs, fiber, fat + standout micros",
+      "Source-tagged so you know where the numbers came from",
+    ],
+    cta: "Open Nutrition Lookup",
+    href: "/cook?tab=nutrition",
+  },
+  swaps: {
+    label: "Swaps",
+    icon: Repeat,
+    eyebrow: "Equivalency Engine",
+    title: "Same nutrition. Less money.",
+    body: "Enter a food. Get cheaper swaps that match the protein and calories — so you spend less without giving up what your body needs.",
+    bullets: [
+      "Three nutritionally-equivalent alternatives per swap",
+      "Protein and calorie matched, cost-aware",
+      "Great for stretching grocery budgets and pantry staples",
+    ],
+    cta: "Open Equivalency Engine",
+    href: "/cook?tab=swaps",
+  },
+  recipes: {
+    label: "Recipes",
+    icon: ChefHat,
+    eyebrow: "Recipe Generator",
+    title: "Cook with what you have.",
+    body: "List your ingredients, pick a cuisine, and get a recipe with steps, nutrition, and an estimated cost — built around what's already in your kitchen.",
+    bullets: [
+      "Uses items you already own to cut waste",
+      "Cuisine-aware: Indian, Mexican, Italian, and more",
+      "Steps + per-serving nutrition + cost estimate",
+    ],
+    cta: "Open Recipe Generator",
+    href: "/cook?tab=recipes",
+  },
+};
 
 const Index = () => {
+  const [tab, setTab] = useState<FeatureKey>("nutrition");
+  const active = FEATURES[tab];
+  const ActiveIcon = active.icon;
+
   return (
     <main className="min-h-screen bg-background">
       <Header />
@@ -46,83 +107,77 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Nutrition lookup */}
-      <section id="lookup" className="container max-w-6xl mx-auto px-6 py-10 sm:py-16">
-        <div className="text-center mb-10">
-          <span className="text-xs font-semibold uppercase tracking-widest text-accent">Nutrition Lookup</span>
+      {/* Feature tabs (informational only) */}
+      <section id="features" className="container max-w-5xl mx-auto px-6 py-10 sm:py-16">
+        <div className="text-center mb-6">
+          <span className="text-xs font-semibold uppercase tracking-widest text-accent">What's inside</span>
           <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-            Ask anything. Get instant nutrition.
+            Three tools. One smarter kitchen.
           </h2>
           <p className="mt-3 text-muted-foreground max-w-lg mx-auto">
-            Natural language in. Macros, micros, and a money-saving tip out.
+            Tap a tab to see what each tool does. Open any tool to start using it.
           </p>
         </div>
-        <NutritionLookup />
-      </section>
 
-      {/* Equivalency engine */}
-      <section id="swap" className="bg-gradient-warm py-10 sm:py-16">
-        <div className="container max-w-6xl mx-auto px-6">
-          <div className="text-center mb-10">
-            <span className="text-xs font-semibold uppercase tracking-widest text-accent">Equivalency Engine</span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-              Same nutrition. Less money.
-            </h2>
-            <p className="mt-3 text-muted-foreground max-w-lg mx-auto">
-              Enter a food. Get three swaps that match the protein and calories — usually for less.
-            </p>
-          </div>
-          <EquivalencyEngine />
-        </div>
-      </section>
+        <Tabs value={tab} onValueChange={(v) => setTab(v as FeatureKey)} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-transparent p-0 mb-4 gap-1.5 sm:gap-2 h-auto">
+            {(Object.keys(FEATURES) as FeatureKey[]).map((k) => {
+              const f = FEATURES[k];
+              const Icon = f.icon;
+              return (
+                <TabsTrigger
+                  key={k}
+                  value={k}
+                  className="w-full min-w-0 rounded-xl gap-1 sm:gap-2 px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
+                >
+                  <Icon className="h-4 w-4" />{f.label}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
 
-      {/* Recipe generator */}
-      <section id="recipe" className="container max-w-6xl mx-auto px-6 py-10 sm:py-16">
-        <div className="text-center mb-10">
-          <span className="text-xs font-semibold uppercase tracking-widest text-accent">Recipe Generator</span>
-          <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-            Cook with what you have.
-          </h2>
-          <p className="mt-3 text-muted-foreground max-w-lg mx-auto">
-            List your ingredients, pick a cuisine, and get a recipe with steps, nutrition, and cost.
-          </p>
-        </div>
-        <RecipeGenerator />
-      </section>
-
-      {/* Pillars */}
-      <section id="services" className="bg-gradient-warm py-10 sm:py-16">
-        <div className="container max-w-6xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <span className="text-xs font-semibold uppercase tracking-widest text-accent">How it works</span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">Three tools. One smarter kitchen.</h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { icon: Sparkles, title: "USDA Nutrition Lookup", body: "Type any food and portion. Get USDA-grade macros and key micronutrients in seconds — with AI as a smart fallback.", href: "#lookup" },
-              { icon: ArrowLeftRight, title: "Equivalency Engine", body: "Swap 200g chicken for 1 cup lentils + 100g paneer — same protein, less money.", href: "#swap" },
-              { icon: ChefHat, title: "Recipe Generator", body: "List what you have, pick a cuisine, and get a recipe with steps, nutrition, and cost.", href: "#recipe" },
-            ].map((p) => (
-              <a key={p.title} href={p.href}
-                className="group p-6 rounded-3xl border border-border/60 shadow-soft hover:shadow-glow transition-smooth bg-card block">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-leaf flex items-center justify-center mb-4 group-hover:scale-105 transition-smooth">
-                  <p.icon className="h-5 w-5 text-primary-foreground" />
-                </div>
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="text-lg font-semibold text-primary">{p.title}</h3>
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent/20 text-accent-foreground">Live</span>
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed">{p.body}</p>
-              </a>
-            ))}
-          </div>
-        </div>
+          {(Object.keys(FEATURES) as FeatureKey[]).map((k) => {
+            const f = FEATURES[k];
+            const Icon = f.icon;
+            return (
+              <TabsContent key={k} value={k} className="mt-0">
+                <Card className="p-6 sm:p-10 rounded-3xl shadow-soft border-border/60 bg-card animate-fade-up">
+                  <div className="flex items-start gap-4 mb-5">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-leaf flex items-center justify-center shrink-0">
+                      <Icon className="h-5 w-5 text-primary-foreground" />
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-semibold uppercase tracking-widest text-accent">{f.eyebrow}</span>
+                      <h3 className="mt-1 text-2xl sm:text-3xl font-bold text-primary leading-tight">{f.title}</h3>
+                    </div>
+                  </div>
+                  <p className="text-muted-foreground leading-relaxed mb-5">{f.body}</p>
+                  <ul className="space-y-2 mb-6">
+                    {f.bullets.map((b) => (
+                      <li key={b} className="flex items-start gap-2 text-sm text-foreground/80">
+                        <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-accent shrink-0" />
+                        <span>{b}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button asChild variant="hero" size="lg" className="rounded-2xl">
+                      <Link to={f.href}>{f.cta}</Link>
+                    </Button>
+                    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Lock className="h-3 w-3" /> Sign in required
+                    </span>
+                  </div>
+                </Card>
+              </TabsContent>
+            );
+          })}
+        </Tabs>
       </section>
 
       {/* CTA */}
       <section className="container max-w-4xl mx-auto px-6 py-10 sm:py-16">
-        <a href="/planner" className="block">
+        <Link to="/planner" className="block">
           <Card className="p-10 sm:p-14 rounded-[2rem] bg-gradient-leaf border-0 shadow-glow text-center hover:shadow-soft transition-smooth">
             <Beef className="h-10 w-10 text-primary-foreground mx-auto mb-4" />
             <h2 className="text-3xl sm:text-4xl font-bold text-primary-foreground">
@@ -132,7 +187,7 @@ const Index = () => {
               Generate a 7-day meal plan and a smart grocery list in seconds.
             </p>
           </Card>
-        </a>
+        </Link>
       </section>
 
       <footer className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground">
