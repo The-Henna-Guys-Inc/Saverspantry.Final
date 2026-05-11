@@ -3,17 +3,18 @@ import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  Home,
   CalendarDays,
+  Repeat,
   Refrigerator,
-  Utensils,
   Tag,
-  BarChart3,
   MoreHorizontal,
   BookmarkCheck,
   Settings as SettingsIcon,
   Shield,
   LogOut,
   Sprout,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -23,11 +24,11 @@ import { SavingsCounter } from "@/components/SavingsCounter";
 import { toast } from "sonner";
 
 const tabs = [
-  { to: "/planner", label: "Planner", Icon: CalendarDays },
+  { to: "/", label: "Home", Icon: Home, end: true },
+  { to: "/planner", label: "Plan", Icon: CalendarDays },
+  { to: "/swap", label: "Swap", Icon: Repeat },
   { to: "/pantry", label: "Pantry", Icon: Refrigerator },
-  { to: "/cook", label: "Cook", Icon: Utensils },
   { to: "/deals", label: "Deals", Icon: Tag },
-  { to: "/dashboard", label: "Stats", Icon: BarChart3 },
 ];
 
 export const MobileTabBar = () => {
