@@ -512,7 +512,6 @@ const Pantry = () => {
                           </span>
                         </div>
                       </li>
-                      </li>
                     );
                   })}
                 </ul>
