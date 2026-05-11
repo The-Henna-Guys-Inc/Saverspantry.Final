@@ -25,6 +25,7 @@ type Store = {
   region: string | null;
   latitude: number | null;
   longitude: number | null;
+  curation_source: string | null;
 };
 
 const CUISINES = [
@@ -77,7 +78,7 @@ const Stores = ({ embedded = false }: { embedded?: boolean }) => {
   const loadStores = async () => {
     const { data: s } = await supabase
       .from("specialty_stores")
-      .select("id, name, chain_name, cuisine_specialties, price_tier, description, address, city, region, latitude, longitude")
+      .select("id, name, chain_name, cuisine_specialties, price_tier, description, address, city, region, latitude, longitude, curation_source")
       .order("name");
     setStores((s as Store[]) ?? []);
   };
@@ -243,6 +244,12 @@ const Stores = ({ embedded = false }: { embedded?: boolean }) => {
                   <div className="flex items-start gap-1.5 mt-2 text-xs text-muted-foreground">
                     <MapPin className="h-3 w-3 mt-0.5 shrink-0" />
                     <span>{[s.address, s.city, s.region].filter(Boolean).join(", ")}</span>
+                  </div>
+                )}
+
+                {s.curation_source === "google_places" && (
+                  <div className="mt-2 text-[10px] text-muted-foreground/80 italic">
+                    Listing data from Google
                   </div>
                 )}
 
