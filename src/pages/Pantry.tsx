@@ -73,6 +73,7 @@ const Pantry = () => {
   const handleScanned = (r: { code: string; productName?: string; brand?: string; quantity?: string; categories?: string; imageUrl?: string }) => {
     const label = r.productName ? (r.brand ? `${r.brand} ${r.productName}` : r.productName) : `Item ${r.code}`;
     setName(label);
+    setShowManual(true);
     if (r.imageUrl) setImageUrl(r.imageUrl);
     if (r.quantity) {
       const m = r.quantity.match(/([\d.]+)\s*(g|kg|ml|l|oz|lb)?/i);
