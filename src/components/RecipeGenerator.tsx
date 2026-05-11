@@ -79,7 +79,8 @@ type Recipe = {
   constraint_conflict?: string;
 };
 
-const BASE_CUISINES = ["American", "Pakistani", "Indian", "Italian", "Mexican", "Chinese", "Mediterranean", "Thai"];
+const BASE_CUISINES = ["Greek", "Italian", "Mexican", "Portuguese", "Spanish", "Japanese", "Turkish", "Chinese", "French", "Indian", "Polish", "American", "Pakistani", "Serbian", "Indonesian"];
+const TOP_CUISINES_COUNT = 5;
 const RESTRICTIONS = ["Halal", "Kosher", "Vegetarian"] as const;
 type Restriction = typeof RESTRICTIONS[number];
 
@@ -92,6 +93,7 @@ export const RecipeGenerator = () => {
   const [ingredients, setIngredients] = useState("");
   const [cuisine, setCuisine] = useState<string | null>(null);
   const [cuisineTouched, setCuisineTouched] = useState(false);
+  const [showAllCuisines, setShowAllCuisines] = useState(false);
   const { cuisines: prefCuisines, favoriteCuisines, loading: prefsLoading } = useCuisinePrefs();
   const cuisineOptions = buildCuisineOptions(BASE_CUISINES, favoriteCuisines);
   // Auto-default cuisine to user's first matching saved pref (until they touch it)
@@ -188,7 +190,7 @@ export const RecipeGenerator = () => {
           >
             Any
           </button>
-          {cuisineOptions.map((c) => (
+          {(showAllCuisines ? cuisineOptions : cuisineOptions.slice(0, TOP_CUISINES_COUNT)).map((c) => (
             <button
               key={c}
               onClick={() => pickCuisine(cuisine === c ? null : c)}
@@ -201,6 +203,14 @@ export const RecipeGenerator = () => {
               {c}
             </button>
           ))}
+          {cuisineOptions.length > TOP_CUISINES_COUNT && (
+            <button
+              onClick={() => setShowAllCuisines((v) => !v)}
+              className="text-sm px-4 py-2 rounded-full bg-secondary/60 text-muted-foreground hover:bg-muted transition-smooth min-h-[44px]"
+            >
+              {showAllCuisines ? "Show less" : `View more (${cuisineOptions.length - TOP_CUISINES_COUNT})`}
+            </button>
+          )}
         </div>
         {!prefsLoading && prefCuisines.length === 0 && favoriteCuisines.length === 0 && (
           <CuisinePrefHint className="mt-2" />
