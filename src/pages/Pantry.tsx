@@ -63,17 +63,40 @@ const Pantry = () => {
   const [expires, setExpires] = useState("");
   const [threshold, setThreshold] = useState("");
   const [imageUrl, setImageUrl] = useState<string>("");
+  const [barcode, setBarcode] = useState<string>("");
 
   // new location input
   const [newLoc, setNewLoc] = useState("");
 
   // barcode scanner
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [scanMode, setScanMode] = useState<"add" | "remove">("add");
   const [showManual, setShowManual] = useState(false);
 
-  const handleScanned = (r: { code: string; productName?: string; brand?: string; quantity?: string; categories?: string; imageUrl?: string }) => {
+  const handleScanned = async (r: { code: string; productName?: string; brand?: string; quantity?: string; categories?: string; imageUrl?: string }) => {
+    if (scanMode === "remove") {
+      // Find matching pantry item by barcode first, then fall back to name match
+      let match = items.find((x) => x.barcode && x.barcode === r.code) ?? null;
+      if (!match && r.productName) {
+        const needle = r.productName.toLowerCase();
+        match = items.find((x) => x.item.toLowerCase().includes(needle) || needle.includes(x.item.toLowerCase())) ?? null;
+      }
+      if (!match) {
+        toast.error("That item isn't in your pantry yet.", {
+          description: r.productName ? `Couldn't find "${r.productName}".` : `Code ${r.code} not matched.`,
+        });
+        return;
+      }
+      await adjust(match, -1);
+      toast.success(`Removed 1 ${match.unit} of ${match.item}`, {
+        description: `${Math.max(0, match.quantity - 1)} ${match.unit} left.`,
+      });
+      return;
+    }
+
     const label = r.productName ? (r.brand ? `${r.brand} ${r.productName}` : r.productName) : `Item ${r.code}`;
     setName(label);
+    setBarcode(r.code);
     setShowManual(true);
     if (r.imageUrl) setImageUrl(r.imageUrl);
     if (r.quantity) {
