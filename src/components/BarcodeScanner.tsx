@@ -12,37 +12,26 @@ type Props = {
   mode?: "add" | "remove";
 };
 
-// Short confirmation beep using WebAudio — no asset needed.
-function playBeep(success = true) {
+// Short confirmation beep using WebAudio. Requires a primed AudioContext (from a user gesture).
+function playBeep(ctx: AudioContext | null) {
+  if (!ctx) return;
   try {
-    const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
-    if (!Ctx) return;
-    const ctx = new Ctx();
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.type = "sine";
-    o.frequency.value = success ? 1320 : 440;
-    g.gain.value = 0.0001;
-    o.connect(g).connect(ctx.destination);
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
     const now = ctx.currentTime;
-    g.gain.exponentialRampToValueAtTime(0.25, now + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
-    o.start(now);
-    o.stop(now + 0.2);
-    if (success) {
-      // second higher chirp
-      const o2 = ctx.createOscillator();
-      const g2 = ctx.createGain();
-      o2.type = "sine";
-      o2.frequency.value = 1760;
-      g2.gain.value = 0.0001;
-      o2.connect(g2).connect(ctx.destination);
-      g2.gain.exponentialRampToValueAtTime(0.25, now + 0.13);
-      g2.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
-      o2.start(now + 0.12);
-      o2.stop(now + 0.3);
-    }
-    setTimeout(() => ctx.close().catch(() => {}), 400);
+    const make = (freq: number, start: number, dur: number) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.value = freq;
+      g.gain.value = 0.0001;
+      o.connect(g).connect(ctx.destination);
+      g.gain.exponentialRampToValueAtTime(0.35, now + start + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + start + dur);
+      o.start(now + start);
+      o.stop(now + start + dur + 0.02);
+    };
+    make(1320, 0, 0.18);
+    make(1760, 0.12, 0.18);
   } catch {
     /* ignore */
   }
@@ -51,10 +40,32 @@ function playBeep(success = true) {
 export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }: Props) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [deviceId, setDeviceId] = useState<string | undefined>();
   const [status, setStatus] = useState<"idle" | "starting" | "scanning" | "looking-up" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+
+  // Prime an AudioContext as soon as the dialog opens (user just tapped "Scan").
+  useEffect(() => {
+    if (!open) return;
+    try {
+      const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (!Ctx) return;
+      if (!audioCtxRef.current) audioCtxRef.current = new Ctx();
+      const ctx = audioCtxRef.current!;
+      if (ctx.state === "suspended") ctx.resume().catch(() => {});
+      // Play a near-silent tick to fully unlock audio on iOS.
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      g.gain.value = 0.0001;
+      o.connect(g).connect(ctx.destination);
+      o.start();
+      o.stop(ctx.currentTime + 0.01);
+    } catch {
+      /* ignore */
+    }
+  }, [open]);
 
   // List cameras when dialog opens
   useEffect(() => {
@@ -89,7 +100,7 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
         if (result) {
           const code = result.getText();
           controls.stop();
-          playBeep(true);
+          playBeep(audioCtxRef.current);
           setStatus("looking-up");
           try {
             const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json`);
