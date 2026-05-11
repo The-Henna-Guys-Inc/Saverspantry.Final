@@ -181,13 +181,14 @@ const Pantry = () => {
         expires_on: expires || null,
         low_stock_threshold: threshold === "" ? null : Number(threshold),
         image_url: imageUrl || null,
+        barcode: barcode || null,
       })
-      .select("id, item, quantity, unit, category, location, expires_on, low_stock_threshold, image_url")
+      .select("id, item, quantity, unit, category, location, expires_on, low_stock_threshold, image_url, barcode")
       .single();
     setAdding(false);
     if (error) return toast.error(error.message);
     setItems((p) => [data as PantryItem, ...p]);
-    setName(""); setQty("1"); setExpires(""); setThreshold(""); setImageUrl("");
+    setName(""); setQty("1"); setExpires(""); setThreshold(""); setImageUrl(""); setBarcode("");
     toast.success("Added to pantry");
   };
 
