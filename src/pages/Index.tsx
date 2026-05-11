@@ -100,7 +100,7 @@ const Index = () => {
 
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { icon: Sparkles, title: "AI Nutrition Lookup", body: "Type any food and portion. Get accurate macros and key micronutrients in seconds.", href: "#lookup" },
+              { icon: Sparkles, title: "USDA Nutrition Lookup", body: "Type any food and portion. Get USDA-grade macros and key micronutrients in seconds — with AI as a smart fallback.", href: "#lookup" },
               { icon: ArrowLeftRight, title: "Equivalency Engine", body: "Swap 200g chicken for 1 cup lentils + 100g paneer — same protein, less money.", href: "#swap" },
               { icon: ChefHat, title: "Recipe Generator", body: "List what you have, pick a cuisine, and get a recipe with steps, nutrition, and cost.", href: "#recipe" },
             ].map((p) => (
