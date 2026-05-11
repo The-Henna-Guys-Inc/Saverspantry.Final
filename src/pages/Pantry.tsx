@@ -350,65 +350,87 @@ const Pantry = () => {
           </div>
         </Card>
 
-        <Card className="p-6 rounded-3xl border-border/50 shadow-soft mb-8">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-8 gap-3">
-            <div className="lg:col-span-2">
-              <Label htmlFor="n" className="text-xs">Item</Label>
-              <Input id="n" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Brown rice" className="rounded-xl mt-1" />
-            </div>
-            <div>
-              <Label htmlFor="q" className="text-xs">Qty</Label>
-              <Input id="q" type="number" min={0} step="0.1" value={qty} onChange={(e) => setQty(e.target.value)} className="rounded-xl mt-1" />
-            </div>
-            <div>
-              <Label className="text-xs">Unit</Label>
-              <Select value={unit} onValueChange={setUnit}>
-                <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>{UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Category</Label>
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Location</Label>
-              <Select value={location} onValueChange={setLocation}>
-                <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>{allLocations.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="e" className="text-xs">Expires</Label>
-              <div className="flex gap-1.5 mt-1">
-                <Input id="e" type="date" value={expires} onChange={(e) => setExpires(e.target.value)} className="rounded-xl flex-1 min-w-0" />
-                <ExpiryDateScanner onDate={setExpires} />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="t" className="text-xs">Low at</Label>
-              <Input id="t" type="number" min={0} step="0.1" value={threshold} onChange={(e) => setThreshold(e.target.value)} placeholder="opt." className="rounded-xl mt-1" />
-            </div>
-          </div>
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <Button variant="hero" onClick={add} disabled={adding} className="rounded-xl">
-              {adding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
-              Add to pantry
+        <Card className="p-5 sm:p-6 rounded-3xl border-border/50 shadow-soft mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <Button
+              variant="hero"
+              size="lg"
+              onClick={() => setScannerOpen(true)}
+              className="rounded-xl flex-1 h-14 text-base"
+            >
+              <ScanLine className="h-5 w-5 mr-2" /> Scan an item
             </Button>
-            <Button variant="outline" onClick={() => setScannerOpen(true)} className="rounded-xl">
-              <ScanLine className="h-4 w-4 mr-2" /> Scan barcode
+            <Button
+              variant="outline"
+              onClick={() => setShowManual((v) => !v)}
+              className="rounded-xl h-14 sm:h-auto sm:py-3"
+            >
+              <Plus className="h-4 w-4 mr-2" /> {showManual ? "Hide manual entry" : "Add manually"}
             </Button>
-            {imageUrl && (
-              <div className="flex items-center gap-2 ml-auto">
-                <img src={imageUrl} alt="Scanned product preview" className="h-10 w-10 rounded-lg object-cover border border-border" />
-                <button onClick={() => setImageUrl("")} className="text-xs text-muted-foreground hover:text-destructive">Remove image</button>
-              </div>
-            )}
           </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            Scan a barcode for the fastest add — we'll fetch the name, image, and size for you.
+          </p>
         </Card>
+
+        {showManual && (
+          <Card className="p-6 rounded-3xl border-border/50 shadow-soft mb-8">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-8 gap-3">
+              <div className="lg:col-span-2">
+                <Label htmlFor="n" className="text-xs">Item</Label>
+                <Input id="n" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Brown rice" className="rounded-xl mt-1" />
+              </div>
+              <div>
+                <Label htmlFor="q" className="text-xs">Qty</Label>
+                <Input id="q" type="number" min={0} step="0.1" value={qty} onChange={(e) => setQty(e.target.value)} className="rounded-xl mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs">Unit</Label>
+                <Select value={unit} onValueChange={setUnit}>
+                  <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>{UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Category</Label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Location</Label>
+                <Select value={location} onValueChange={setLocation}>
+                  <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>{allLocations.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="e" className="text-xs">Expires</Label>
+                <div className="flex gap-1.5 mt-1">
+                  <Input id="e" type="date" value={expires} onChange={(e) => setExpires(e.target.value)} className="rounded-xl flex-1 min-w-0" />
+                  <ExpiryDateScanner onDate={setExpires} />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="t" className="text-xs">Low at</Label>
+                <Input id="t" type="number" min={0} step="0.1" value={threshold} onChange={(e) => setThreshold(e.target.value)} placeholder="opt." className="rounded-xl mt-1" />
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <Button variant="hero" onClick={add} disabled={adding} className="rounded-xl">
+                {adding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
+                Add to pantry
+              </Button>
+              {imageUrl && (
+                <div className="flex items-center gap-2 ml-auto">
+                  <img src={imageUrl} alt="Scanned product preview" className="h-10 w-10 rounded-lg object-cover border border-border" />
+                  <button onClick={() => setImageUrl("")} className="text-xs text-muted-foreground hover:text-destructive">Remove image</button>
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
 
         <BarcodeScanner open={scannerOpen} onOpenChange={setScannerOpen} onDetected={handleScanned} />
 
