@@ -106,11 +106,22 @@ Deno.serve(async (req) => {
     if (!user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
 
     const body = await req.json().catch(() => ({}));
-    const { lat, lng, radius_miles, cuisines } = body as {
-      lat?: number; lng?: number; radius_miles?: number; cuisines?: string[];
+    let { lat, lng, radius_miles, cuisines, location } = body as {
+      lat?: number; lng?: number; radius_miles?: number; cuisines?: string[]; location?: string;
     };
+
+    // Geocode a free-form location string (ZIP, city, address) if no coords given
+    if ((typeof lat !== "number" || typeof lng !== "number") && typeof location === "string" && location.trim()) {
+      const geoRes = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location.trim())}&key=${apiKey}`,
+      );
+      const geo = await geoRes.json();
+      const loc = geo?.results?.[0]?.geometry?.location;
+      if (loc) { lat = loc.lat; lng = loc.lng; }
+    }
+
     if (typeof lat !== "number" || typeof lng !== "number") {
-      return new Response(JSON.stringify({ error: "lat and lng required" }), { status: 400, headers: corsHeaders });
+      return new Response(JSON.stringify({ error: "Could not determine location. Try a ZIP code or city." }), { status: 400, headers: corsHeaders });
     }
 
     const radius = metersFromMiles(radius_miles ?? 10);
