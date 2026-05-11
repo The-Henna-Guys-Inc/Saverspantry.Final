@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
 import heroImg from "@/assets/hero-foods.jpg";
 import { Header } from "@/components/Header";
 import { HomeAuthed } from "@/components/HomeAuthed";
@@ -89,6 +90,10 @@ const Index = () => {
     );
   }
 
+  return <Navigate to="/welcome" replace />;
+
+  // Legacy marketing page (kept for reference, unreachable)
+  // eslint-disable-next-line no-unreachable
   return (
     <main className="min-h-screen bg-background">
       <Header />

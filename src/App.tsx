@@ -15,6 +15,8 @@ import Watchlist from "./pages/Watchlist.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import BulkBuy from "./pages/BulkBuy.tsx";
 import Swap from "./pages/Swap.tsx";
+import Welcome from "./pages/Welcome.tsx";
+import Demo from "./pages/Demo.tsx";
 import AdminAnalytics from "./pages/AdminAnalytics.tsx";
 import AdminSupport from "./pages/AdminSupport.tsx";
 import AdminAiUsage from "./pages/AdminAiUsage.tsx";
@@ -42,6 +44,8 @@ const App = () => (
         <div className="pb-mobile-nav">
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/welcome" element={<Welcome />} />
+          <Route path="/demo" element={<Demo />} />
           <Route path="/legal/:type" element={<Legal />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/library" element={<Library />} />
