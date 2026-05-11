@@ -32,7 +32,7 @@ export const Header = () => {
   };
 
   return (
-    <header className="hidden md:block sticky top-0 z-30 backdrop-blur-md bg-background/70 border-b border-border/40 safe-top">
+    <header className="hidden sticky top-0 z-30 backdrop-blur-md bg-background/70 border-b border-border/40 safe-top">
       <div className="container max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-gradient-leaf flex items-center justify-center shadow-soft">
