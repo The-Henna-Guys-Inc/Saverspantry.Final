@@ -20,7 +20,7 @@ type Item = {
 
 const SUGGESTIONS = ["basmati rice", "lentils", "olive oil", "paneer", "chicken thighs", "eggs", "yogurt", "tofu"];
 
-export default function Watchlist() {
+export default function Watchlist({ embedded = false }: { embedded?: boolean } = {}) {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [items, setItems] = useState<Item[]>([]);
