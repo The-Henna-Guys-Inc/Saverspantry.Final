@@ -135,7 +135,7 @@ export const EquivalencyEngine = () => {
         </div>
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => setCuisine(null)}
+            onClick={() => pickCuisine(null)}
             className={`text-xs px-3 py-1.5 rounded-full transition-smooth ${
               cuisine === null
                 ? "bg-primary text-primary-foreground shadow-soft"
@@ -147,7 +147,7 @@ export const EquivalencyEngine = () => {
           {CUISINES.map((c) => (
             <button
               key={c}
-              onClick={() => setCuisine((prev) => (prev === c ? null : c))}
+              onClick={() => pickCuisine(cuisine === c ? null : c)}
               className={`text-xs px-3 py-1.5 rounded-full transition-smooth ${
                 cuisine === c
                   ? "bg-primary text-primary-foreground shadow-soft"
@@ -158,6 +158,9 @@ export const EquivalencyEngine = () => {
             </button>
           ))}
         </div>
+        {!prefsLoading && prefCuisines.length === 0 && (
+          <CuisinePrefHint className="mt-2" />
+        )}
       </div>
 
       <div className="flex flex-wrap gap-2 mt-3">
