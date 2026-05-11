@@ -93,6 +93,7 @@ export const RecipeGenerator = () => {
   const [ingredients, setIngredients] = useState("");
   const [cuisine, setCuisine] = useState<string | null>(null);
   const [cuisineTouched, setCuisineTouched] = useState(false);
+  const [showAllCuisines, setShowAllCuisines] = useState(false);
   const { cuisines: prefCuisines, favoriteCuisines, loading: prefsLoading } = useCuisinePrefs();
   const cuisineOptions = buildCuisineOptions(BASE_CUISINES, favoriteCuisines);
   // Auto-default cuisine to user's first matching saved pref (until they touch it)
