@@ -92,13 +92,13 @@ export const RecipeGenerator = () => {
   const [ingredients, setIngredients] = useState("");
   const [cuisine, setCuisine] = useState<string | null>(null);
   const [cuisineTouched, setCuisineTouched] = useState(false);
-  const { cuisines: prefCuisines, loading: prefsLoading } = useCuisinePrefs();
+  const { cuisines: prefCuisines, favoriteCuisines, loading: prefsLoading } = useCuisinePrefs();
   // Auto-default cuisine to user's first matching saved pref (until they touch it)
   useEffect(() => {
     if (prefsLoading || cuisineTouched) return;
-    const def = pickDefaultCuisineOption(prefCuisines, CUISINES);
+    const def = pickDefaultCuisineOption(prefCuisines, CUISINES, favoriteCuisines);
     if (def) setCuisine(def);
-  }, [prefsLoading, prefCuisines, cuisineTouched]);
+  }, [prefsLoading, prefCuisines, favoriteCuisines, cuisineTouched]);
   const pickCuisine = (next: string | null) => { setCuisineTouched(true); setCuisine(next); };
   const [restrictions, setRestrictions] = useState<Restriction[]>([]);
   const [advOpen, setAdvOpen] = useState(false);
