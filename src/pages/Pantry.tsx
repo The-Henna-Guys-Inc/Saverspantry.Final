@@ -441,7 +441,7 @@ const Pantry = () => {
             Your pantry is empty. Add a few staples to start.
           </Card>
         ) : (
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="card-masonry">
             {Object.entries(grouped).map(([loc, list]) => (
               <Card key={loc} className="p-5 rounded-2xl border-border/50">
                 <div className="text-xs uppercase tracking-wider text-accent mb-3">{loc}</div>
