@@ -25,6 +25,7 @@ type Store = {
   region: string | null;
   latitude: number | null;
   longitude: number | null;
+  curation_source: string | null;
 };
 
 const CUISINES = [
