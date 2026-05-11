@@ -258,7 +258,7 @@ const Pantry = () => {
   return (
     <main className="min-h-screen bg-background">
       <Header />
-      <div className="container max-w-5xl mx-auto px-6 py-12">
+      <div className="container max-w-5xl mx-auto px-6 py-6 sm:py-10">
         <div className="flex items-center gap-2 text-accent text-xs font-semibold uppercase tracking-widest mb-2">
           <Refrigerator className="h-3.5 w-3.5" /> Pantry
         </div>
@@ -274,24 +274,24 @@ const Pantry = () => {
         />
 
         <Tabs value={tab} onValueChange={setTab} className="w-full">
-          <TabsList className="bg-transparent p-0 mb-6 gap-2 sm:gap-3 flex-wrap h-auto justify-start">
+          <TabsList className="grid w-full grid-cols-3 bg-transparent p-0 mb-6 gap-1.5 sm:gap-2 h-auto">
             <TabsTrigger
               value="items"
-              className="rounded-2xl gap-2 px-5 py-3 text-base sm:text-lg font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
+              className="rounded-xl gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
             >
-              <Package className="h-5 w-5" />Items
+              <Package className="h-4 w-4" />Items
             </TabsTrigger>
             <TabsTrigger
               value="expiry"
-              className="rounded-2xl gap-2 px-5 py-3 text-base sm:text-lg font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
+              className="rounded-xl gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
             >
-              <CalendarDays className="h-5 w-5" />Expiry
+              <CalendarDays className="h-4 w-4" />Expiry
             </TabsTrigger>
             <TabsTrigger
               value="bulk-buy"
-              className="rounded-2xl gap-2 px-5 py-3 text-base sm:text-lg font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
+              className="rounded-xl gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
             >
-              <PackageOpen className="h-5 w-5" />Bulk-Buy
+              <PackageOpen className="h-4 w-4" />Bulk-Buy
             </TabsTrigger>
           </TabsList>
 

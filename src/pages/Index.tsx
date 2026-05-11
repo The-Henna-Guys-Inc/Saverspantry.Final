@@ -16,7 +16,7 @@ const Index = () => {
         <div className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full bg-primary-glow/10 blur-3xl" />
         <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] rounded-full bg-accent/15 blur-3xl" />
 
-        <div className="relative container max-w-6xl mx-auto px-6 pt-20 pb-16 sm:pt-28 sm:pb-24">
+        <div className="relative container max-w-6xl mx-auto px-6 pt-10 pb-6 sm:pt-20 sm:pb-16">
           <div className="text-center max-w-3xl mx-auto animate-fade-up">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-card border border-border shadow-soft mb-6">
               <Sparkles className="h-3.5 w-3.5 text-accent" />
@@ -40,14 +40,14 @@ const Index = () => {
               alt="Fresh whole foods including lentils, paneer, spinach, eggs and tomatoes arranged on linen"
               width={1536}
               height={1024}
-              className="mt-12 mx-auto rounded-3xl shadow-glow max-w-4xl w-full object-cover aspect-[3/2]"
+              className="mt-6 sm:mt-10 mx-auto rounded-3xl shadow-glow max-w-4xl w-full object-cover aspect-[3/2]"
             />
           </div>
         </div>
       </section>
 
       {/* Nutrition lookup */}
-      <section id="lookup" className="container max-w-6xl mx-auto px-6 py-20 sm:py-24">
+      <section id="lookup" className="container max-w-6xl mx-auto px-6 py-10 sm:py-16">
         <div className="text-center mb-10">
           <span className="text-xs font-semibold uppercase tracking-widest text-accent">Nutrition Lookup</span>
           <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
@@ -61,7 +61,7 @@ const Index = () => {
       </section>
 
       {/* Equivalency engine */}
-      <section id="swap" className="bg-gradient-warm py-20 sm:py-24">
+      <section id="swap" className="bg-gradient-warm py-10 sm:py-16">
         <div className="container max-w-6xl mx-auto px-6">
           <div className="text-center mb-10">
             <span className="text-xs font-semibold uppercase tracking-widest text-accent">Equivalency Engine</span>
@@ -77,7 +77,7 @@ const Index = () => {
       </section>
 
       {/* Recipe generator */}
-      <section id="recipe" className="container max-w-6xl mx-auto px-6 py-20 sm:py-24">
+      <section id="recipe" className="container max-w-6xl mx-auto px-6 py-10 sm:py-16">
         <div className="text-center mb-10">
           <span className="text-xs font-semibold uppercase tracking-widest text-accent">Recipe Generator</span>
           <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
@@ -91,7 +91,7 @@ const Index = () => {
       </section>
 
       {/* Pillars */}
-      <section id="services" className="bg-gradient-warm py-20 sm:py-24">
+      <section id="services" className="bg-gradient-warm py-10 sm:py-16">
         <div className="container max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
             <span className="text-xs font-semibold uppercase tracking-widest text-accent">How it works</span>
@@ -121,7 +121,7 @@ const Index = () => {
       </section>
 
       {/* CTA */}
-      <section className="container max-w-4xl mx-auto px-6 py-20 sm:py-24">
+      <section className="container max-w-4xl mx-auto px-6 py-10 sm:py-16">
         <a href="/planner" className="block">
           <Card className="p-10 sm:p-14 rounded-[2rem] bg-gradient-leaf border-0 shadow-glow text-center hover:shadow-soft transition-smooth">
             <Beef className="h-10 w-10 text-primary-foreground mx-auto mb-4" />

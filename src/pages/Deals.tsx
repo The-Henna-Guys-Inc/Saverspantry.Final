@@ -18,25 +18,25 @@ const Deals = () => {
   return (
     <main className="min-h-screen bg-background">
       <Header />
-      <div className="container max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <div className="container max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
         <div className="flex items-center gap-2 text-accent text-xs font-semibold uppercase tracking-widest mb-2">
           <Tag className="h-3.5 w-3.5" /> Deals
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-6">Stores & sales</h1>
 
         <Tabs value={tab} onValueChange={(v) => setParams({ tab: v })} className="w-full">
-          <TabsList className="bg-transparent p-0 mb-2 gap-2 sm:gap-3 flex-wrap h-auto justify-start">
+          <TabsList className="grid w-full grid-cols-2 bg-transparent p-0 mb-2 gap-1.5 sm:gap-2 h-auto">
             <TabsTrigger
               value="stores"
-              className="rounded-2xl gap-2 px-5 py-3 text-base sm:text-lg font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
+              className="rounded-xl gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
             >
-              <StoreIcon className="h-5 w-5" />Stores
+              <StoreIcon className="h-4 w-4" />Stores
             </TabsTrigger>
             <TabsTrigger
               value="sales"
-              className="rounded-2xl gap-2 px-5 py-3 text-base sm:text-lg font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
+              className="rounded-xl gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
             >
-              <Tag className="h-5 w-5" />Sales
+              <Tag className="h-4 w-4" />Sales
             </TabsTrigger>
           </TabsList>
           <TabsContent value="stores" className="mt-6">
