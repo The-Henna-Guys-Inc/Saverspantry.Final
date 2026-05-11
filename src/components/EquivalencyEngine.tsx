@@ -147,7 +147,7 @@ export const EquivalencyEngine = () => {
           >
             Any
           </button>
-          {cuisineOptions.map((c) => (
+          {(showAllCuisines ? cuisineOptions : cuisineOptions.slice(0, TOP_CUISINES_COUNT)).map((c) => (
             <button
               key={c}
               onClick={() => pickCuisine(cuisine === c ? null : c)}
@@ -160,6 +160,14 @@ export const EquivalencyEngine = () => {
               {c}
             </button>
           ))}
+          {cuisineOptions.length > TOP_CUISINES_COUNT && (
+            <button
+              onClick={() => setShowAllCuisines((v) => !v)}
+              className="text-xs px-3 py-1.5 rounded-full bg-secondary/60 text-muted-foreground hover:bg-muted transition-smooth"
+            >
+              {showAllCuisines ? "Show less" : `View more (${cuisineOptions.length - TOP_CUISINES_COUNT})`}
+            </button>
+          )}
         </div>
         {!prefsLoading && prefCuisines.length === 0 && favoriteCuisines.length === 0 && (
           <CuisinePrefHint className="mt-2" />
