@@ -68,6 +68,7 @@ const Pantry = () => {
 
   // barcode scanner
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [showManual, setShowManual] = useState(false);
 
   const handleScanned = (r: { code: string; productName?: string; brand?: string; quantity?: string; categories?: string; imageUrl?: string }) => {
     const label = r.productName ? (r.brand ? `${r.brand} ${r.productName}` : r.productName) : `Item ${r.code}`;
