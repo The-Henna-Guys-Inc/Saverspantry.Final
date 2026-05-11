@@ -6,7 +6,7 @@ import { Header } from "@/components/Header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, MapPin, Store as StoreIcon, ExternalLink, Heart, Search, Pencil } from "lucide-react";
+import { Loader2, MapPin, Store as StoreIcon, ExternalLink, Heart, Search, Pencil, Locate } from "lucide-react";
 import { toast } from "sonner";
 import { AdminStoreDialog, type EditableStore } from "@/components/AdminStoreDialog";
 import { AdminStoreCsvUpload } from "@/components/AdminStoreCsvUpload";
@@ -140,14 +140,17 @@ const Stores = ({ embedded = false }: { embedded?: boolean }) => {
         <div className="flex items-center gap-2 text-accent text-xs font-semibold uppercase tracking-widest mb-2">
           <StoreIcon className="h-3.5 w-3.5" /> Stores
         </div>
-        <div className="flex items-start justify-between gap-3 mb-2">
+        <div className="flex items-start justify-between gap-3 mb-2 flex-wrap">
           <h1 className="text-3xl sm:text-4xl font-bold text-primary">Cuisine-specific grocers</h1>
-          {isAdmin && (
-            <div className="flex items-center gap-2 shrink-0">
-              <AdminStoreCsvUpload onCreated={loadStores} />
-              <AdminStoreDialog onSaved={loadStores} />
-            </div>
-          )}
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            <FindNearbyButton onDone={loadStores} prefCuisines={prefCuisines} cuisineFilterOn={cuisineFilterOn} />
+            {isAdmin && (
+              <>
+                <AdminStoreCsvUpload onCreated={loadStores} />
+                <AdminStoreDialog onSaved={loadStores} />
+              </>
+            )}
+          </div>
         </div>
         <p className="text-muted-foreground mb-4">
           Indian, Mexican, Asian, Middle Eastern and more — staples for these cuisines <strong className="font-semibold text-foreground">often cost 15-50% less in ethnic grocery stores</strong> than at mainstream supermarkets.
@@ -271,3 +274,55 @@ const Stores = ({ embedded = false }: { embedded?: boolean }) => {
 };
 
 export default Stores;
+
+function FindNearbyButton({
+  onDone,
+  prefCuisines,
+  cuisineFilterOn,
+}: {
+  onDone: () => void;
+  prefCuisines: string[];
+  cuisineFilterOn: boolean;
+}) {
+  const [busy, setBusy] = useState(false);
+  const handle = async () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation not supported on this device");
+      return;
+    }
+    setBusy(true);
+    const t = toast.loading("Finding stores near you...");
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { data, error } = await supabase.functions.invoke("store-finder", {
+            body: {
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              radius_miles: 10,
+              cuisines: cuisineFilterOn && prefCuisines.length ? prefCuisines : undefined,
+            },
+          });
+          if (error) throw error;
+          toast.success(`Found ${data?.total ?? 0} stores (${data?.inserted ?? 0} new)`, { id: t });
+          onDone();
+        } catch (e: any) {
+          toast.error(e.message || "Failed to find stores", { id: t });
+        } finally {
+          setBusy(false);
+        }
+      },
+      (err) => {
+        toast.error(err.message || "Could not get location", { id: t });
+        setBusy(false);
+      },
+      { enableHighAccuracy: false, timeout: 10000 },
+    );
+  };
+  return (
+    <Button onClick={handle} disabled={busy} variant="outline" size="sm" className="rounded-xl">
+      {busy ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Locate className="h-3.5 w-3.5 mr-1.5" />}
+      Find stores near me
+    </Button>
+  );
+}
