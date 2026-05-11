@@ -214,7 +214,7 @@ const Stores = ({ embedded = false }: { embedded?: boolean }) => {
           </Card>
         ) : (
           <>
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="card-masonry">
             {paginated.map((s) => (
               <Card key={s.id} className="p-5 rounded-2xl border-border/50">
                 <div className="flex items-start justify-between gap-3">
