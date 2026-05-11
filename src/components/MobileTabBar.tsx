@@ -3,17 +3,18 @@ import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  Home,
   CalendarDays,
+  Repeat,
   Refrigerator,
-  Utensils,
   Tag,
-  BarChart3,
   MoreHorizontal,
   BookmarkCheck,
   Settings as SettingsIcon,
   Shield,
   LogOut,
   Sprout,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -23,11 +24,11 @@ import { SavingsCounter } from "@/components/SavingsCounter";
 import { toast } from "sonner";
 
 const tabs = [
-  { to: "/planner", label: "Planner", Icon: CalendarDays },
+  { to: "/", label: "Home", Icon: Home, end: true },
+  { to: "/planner", label: "Plan", Icon: CalendarDays },
+  { to: "/swap", label: "Swap", Icon: Repeat },
   { to: "/pantry", label: "Pantry", Icon: Refrigerator },
-  { to: "/cook", label: "Cook", Icon: Utensils },
   { to: "/deals", label: "Deals", Icon: Tag },
-  { to: "/dashboard", label: "Stats", Icon: BarChart3 },
 ];
 
 export const MobileTabBar = () => {
@@ -48,7 +49,7 @@ export const MobileTabBar = () => {
       .then(({ data }) => setIsAdmin(!!data));
   }, [user]);
 
-  if (loading || !user || pathname.startsWith("/auth")) return null;
+  if (loading || pathname.startsWith("/auth")) return null;
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -66,10 +67,11 @@ export const MobileTabBar = () => {
       className="fixed bottom-0 inset-x-0 z-40 bg-background/90 backdrop-blur-md border-t border-border/60 safe-bottom"
     >
       <ul className="grid grid-cols-6 max-w-2xl mx-auto">
-        {tabs.map(({ to, label, Icon }) => (
+        {tabs.map(({ to, label, Icon, end }) => (
           <li key={to}>
             <NavLink
               to={to}
+              end={end}
               className={({ isActive }) =>
                 cn(
                   itemBase,
@@ -109,6 +111,9 @@ export const MobileTabBar = () => {
               </div>
 
               <div className="mt-4 grid gap-2">
+                <Button asChild variant="ghost" className="justify-start rounded-xl h-12" onClick={() => setMoreOpen(false)}>
+                  <Link to="/dashboard"><BarChart3 className="h-4 w-4 mr-2" />Stats</Link>
+                </Button>
                 <Button asChild variant="ghost" className="justify-start rounded-xl h-12" onClick={() => setMoreOpen(false)}>
                   <Link to="/library"><BookmarkCheck className="h-4 w-4 mr-2" />Library</Link>
                 </Button>

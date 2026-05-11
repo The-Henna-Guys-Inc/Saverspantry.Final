@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useSearchParams, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
@@ -8,12 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, ShoppingCart, RefreshCw, Calendar, Info, Copy, Share2, Printer, Tag, MapPin } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Sparkles, ShoppingCart, RefreshCw, Calendar, Info, Copy, Share2, Printer, Tag, MapPin, ChefHat, BookmarkCheck, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { SpecialtyStoreBanner } from "@/components/SpecialtyStoreBanner";
 import { AiFeedback } from "@/components/AiFeedback";
 import { detectItemCuisines, summarizeCuisines, CUISINE_LABEL } from "@/lib/cuisineHints";
 import { CuisinePrefHint } from "@/components/CuisinePrefHint";
+import { RecipeGenerator } from "@/components/RecipeGenerator";
 
 type Meal = { title: string; main_ingredients: string[]; estimated_cost_usd: number; time_minutes: number };
 type Day = { day: string; breakfast: Meal; lunch: Meal; dinner: Meal };
@@ -47,6 +49,10 @@ const mondayOf = (d = new Date()) => {
 
 const Planner = () => {
   const { user, loading: authLoading } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const planTab = tabParam === "recipes" || tabParam === "library" ? tabParam : "planner";
+  const setPlanTab = (v: string) => setSearchParams(v === "planner" ? {} : { tab: v });
   const [householdSize, setHouseholdSize] = useState(2);
   const [budget, setBudget] = useState<string>("");
   const [cuisine, setCuisine] = useState("");
@@ -237,8 +243,39 @@ const Planner = () => {
         <div className="flex items-center gap-2 text-accent text-xs font-semibold uppercase tracking-widest mb-2">
           <Calendar className="h-3.5 w-3.5" /> Week of {weekStart}
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">Weekly meal planner</h1>
-        <p className="text-muted-foreground mb-8">Generate a 7-day plan and turn it into a grocery list.</p>
+        <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">Plan</h1>
+        <p className="text-muted-foreground mb-6">Build your week, generate fresh recipes, and revisit what you've saved.</p>
+
+        <Tabs value={planTab} onValueChange={setPlanTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-transparent p-0 mb-6 gap-1.5 sm:gap-2 h-auto">
+            <TabsTrigger value="planner" className="w-full min-w-0 rounded-xl gap-1 sm:gap-2 px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth">
+              <Calendar className="h-4 w-4" />Meal planner
+            </TabsTrigger>
+            <TabsTrigger value="recipes" className="w-full min-w-0 rounded-xl gap-1 sm:gap-2 px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth">
+              <ChefHat className="h-4 w-4" />Recipes
+            </TabsTrigger>
+            <TabsTrigger value="library" className="w-full min-w-0 rounded-xl gap-1 sm:gap-2 px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth">
+              <BookmarkCheck className="h-4 w-4" />Library
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="recipes" className="mt-0">
+            <RecipeGenerator />
+          </TabsContent>
+
+          <TabsContent value="library" className="mt-0">
+            <Card className="p-6 rounded-3xl border-border/50 text-center">
+              <BookmarkCheck className="h-8 w-8 text-primary mx-auto mb-3" />
+              <h3 className="text-xl font-semibold text-primary mb-1">Your saved recipes & swaps</h3>
+              <p className="text-sm text-muted-foreground mb-4">Open the full library to browse, search and re-use everything you've saved.</p>
+              <Button asChild variant="hero" className="rounded-xl">
+                <Link to="/library">Open library <ArrowRight className="h-4 w-4 ml-1.5" /></Link>
+              </Button>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="planner" className="mt-0">
+        <div className="text-xs uppercase tracking-wider text-accent mb-2">Week of {weekStart}</div>
 
         <Card className="p-6 rounded-3xl border-border/50 shadow-soft mb-8">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -472,6 +509,8 @@ const Planner = () => {
           </div>
           );
         })()}
+          </TabsContent>
+        </Tabs>
       </div>
     </main>
   );
