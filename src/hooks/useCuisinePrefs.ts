@@ -46,5 +46,5 @@ export function useCuisinePrefs() {
   const activeCuisines: CuisineTag[] = filterEnabled ? cuisines : [];
   const isFiltering = filterEnabled && cuisines.length > 0;
 
-  return { cuisines, filterEnabled, loading, setPrefs, setEnabled, refresh, activeCuisines, isFiltering };
+  return { cuisines, favoriteCuisines, filterEnabled, loading, setPrefs, setEnabled, refresh, activeCuisines, isFiltering };
 }
