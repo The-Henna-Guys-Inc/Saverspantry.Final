@@ -341,6 +341,24 @@ export type Database = {
         }
         Relationships: []
       }
+      known_google_places: {
+        Row: {
+          first_seen_at: string
+          google_place_id: string
+          last_seen_at: string
+        }
+        Insert: {
+          first_seen_at?: string
+          google_place_id: string
+          last_seen_at?: string
+        }
+        Update: {
+          first_seen_at?: string
+          google_place_id?: string
+          last_seen_at?: string
+        }
+        Relationships: []
+      }
       legal_documents: {
         Row: {
           content_md: string
