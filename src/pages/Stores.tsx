@@ -285,38 +285,51 @@ function FindNearbyButton({
   cuisineFilterOn: boolean;
 }) {
   const [busy, setBusy] = useState(false);
-  const handle = async () => {
-    if (!navigator.geolocation) {
-      toast.error("Geolocation not supported on this device");
+
+  const runSearch = async (payload: Record<string, any>, toastId?: string | number) => {
+    const t = toastId ?? toast.loading("Finding stores...");
+    try {
+      const { data, error } = await supabase.functions.invoke("store-finder", {
+        body: {
+          ...payload,
+          radius_miles: 10,
+          cuisines: cuisineFilterOn && prefCuisines.length ? prefCuisines : undefined,
+        },
+      });
+      if (error) throw error;
+      toast.success(`Found ${data?.total ?? 0} stores (${data?.inserted ?? 0} new)`, { id: t });
+      onDone();
+    } catch (e: any) {
+      toast.error(e.message || "Failed to find stores", { id: t });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const promptForLocation = (toastId?: string | number) => {
+    const loc = window.prompt("Enter a ZIP code or city to search near:");
+    if (!loc || !loc.trim()) {
+      toast.dismiss(toastId);
+      setBusy(false);
       return;
     }
+    runSearch({ location: loc.trim() }, toastId);
+  };
+
+  const handle = async () => {
     setBusy(true);
+    if (!navigator.geolocation) {
+      promptForLocation();
+      return;
+    }
     const t = toast.loading("Finding stores near you...");
     navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const { data, error } = await supabase.functions.invoke("store-finder", {
-            body: {
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-              radius_miles: 10,
-              cuisines: cuisineFilterOn && prefCuisines.length ? prefCuisines : undefined,
-            },
-          });
-          if (error) throw error;
-          toast.success(`Found ${data?.total ?? 0} stores (${data?.inserted ?? 0} new)`, { id: t });
-          onDone();
-        } catch (e: any) {
-          toast.error(e.message || "Failed to find stores", { id: t });
-        } finally {
-          setBusy(false);
-        }
+      (pos) => runSearch({ lat: pos.coords.latitude, lng: pos.coords.longitude }, t),
+      () => {
+        toast.dismiss(t);
+        promptForLocation();
       },
-      (err) => {
-        toast.error(err.message || "Could not get location", { id: t });
-        setBusy(false);
-      },
-      { enableHighAccuracy: false, timeout: 10000 },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 },
     );
   };
   return (
