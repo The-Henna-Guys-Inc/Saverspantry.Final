@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { SpecialtyStoreBanner } from "@/components/SpecialtyStoreBanner";
 import { AiFeedback } from "@/components/AiFeedback";
 import { detectItemCuisines, summarizeCuisines, CUISINE_LABEL } from "@/lib/cuisineHints";
+import { CuisinePrefHint } from "@/components/CuisinePrefHint";
 
 type Meal = { title: string; main_ingredients: string[]; estimated_cost_usd: number; time_minutes: number };
 type Day = { day: string; breakfast: Meal; lunch: Meal; dinner: Meal };
@@ -265,6 +266,9 @@ const Planner = () => {
               <Label htmlFor="c" className="text-xs">Cuisine focus (optional)</Label>
               <Input id="c" value={cuisine} onChange={e => setCuisine(e.target.value)}
                 placeholder="e.g. Mediterranean" className="rounded-xl mt-1" />
+              {!Array.isArray(profilePrefs?.cuisines) || profilePrefs.cuisines.length === 0 ? (
+                <CuisinePrefHint className="mt-1.5" />
+              ) : null}
             </div>
           </div>
           <div className="mt-5">

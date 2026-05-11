@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,10 @@ import { AiFeedback } from "./AiFeedback";
 import { POPULAR_RECIPES } from "@/lib/popularRecipes";
 import { useDishImage } from "@/hooks/useDishImage";
 import { useVerifiedDishImage } from "@/hooks/useVerifiedDishImage";
+import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
+import { pickDefaultCuisineOption } from "@/lib/cuisineHints";
+import { CuisinePrefHint } from "./CuisinePrefHint";
+
 
 const GeneratedRecipeImage = ({ title, cuisine }: { title: string; cuisine?: string }) => {
   const img = useVerifiedDishImage(title, cuisine);
@@ -87,6 +91,15 @@ const numOrUndef = (v: string) => {
 export const RecipeGenerator = () => {
   const [ingredients, setIngredients] = useState("");
   const [cuisine, setCuisine] = useState<string | null>(null);
+  const [cuisineTouched, setCuisineTouched] = useState(false);
+  const { cuisines: prefCuisines, loading: prefsLoading } = useCuisinePrefs();
+  // Auto-default cuisine to user's first matching saved pref (until they touch it)
+  useEffect(() => {
+    if (prefsLoading || cuisineTouched) return;
+    const def = pickDefaultCuisineOption(prefCuisines, CUISINES);
+    if (def) setCuisine(def);
+  }, [prefsLoading, prefCuisines, cuisineTouched]);
+  const pickCuisine = (next: string | null) => { setCuisineTouched(true); setCuisine(next); };
   const [restrictions, setRestrictions] = useState<Restriction[]>([]);
   const [advOpen, setAdvOpen] = useState(false);
   const [maxCals, setMaxCals] = useState("");
@@ -165,7 +178,7 @@ export const RecipeGenerator = () => {
         </label>
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => setCuisine(null)}
+            onClick={() => pickCuisine(null)}
             className={`text-sm px-4 py-2 rounded-full transition-smooth min-h-[44px] ${
               cuisine === null
                 ? "bg-primary text-primary-foreground shadow-soft"
@@ -177,7 +190,7 @@ export const RecipeGenerator = () => {
           {CUISINES.map((c) => (
             <button
               key={c}
-              onClick={() => setCuisine((prev) => (prev === c ? null : c))}
+              onClick={() => pickCuisine(cuisine === c ? null : c)}
               className={`text-sm px-4 py-2 rounded-full transition-smooth min-h-[44px] ${
                 cuisine === c
                   ? "bg-primary text-primary-foreground shadow-soft"
@@ -188,6 +201,9 @@ export const RecipeGenerator = () => {
             </button>
           ))}
         </div>
+        {!prefsLoading && prefCuisines.length === 0 && (
+          <CuisinePrefHint className="mt-2" />
+        )}
 
         <label className="block text-xs uppercase tracking-wider text-muted-foreground font-semibold mt-5 mb-2">
           Dietary restrictions

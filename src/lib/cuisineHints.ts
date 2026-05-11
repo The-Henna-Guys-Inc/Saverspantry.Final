@@ -57,6 +57,43 @@ export function mapLegacyCuisines(names: string[] | undefined | null): CuisineTa
   return [...out];
 }
 
+// Maps a user-prefs CuisineTag to candidate display names found in widget option lists
+// (e.g. RecipeGenerator/EquivalencyEngine use ["American","Pakistani","Indian","Italian",
+// "Mexican","Chinese","Mediterranean","Thai"]). Order = priority.
+export const TAG_TO_DISPLAY_OPTIONS: Record<CuisineTag, string[]> = {
+  korean: ["Korean", "Chinese"],
+  japanese: ["Japanese", "Chinese"],
+  chinese: ["Chinese"],
+  south_asian: ["Indian", "Pakistani"],
+  southeast_asian: ["Thai"],
+  middle_eastern: ["Mediterranean"],
+  mexican: ["Mexican"],
+  latin_american: ["Mexican"],
+  african: ["Mediterranean"],
+  mediterranean: ["Mediterranean", "Italian"],
+};
+
+/**
+ * Given user cuisine prefs and a list of available widget options, return the first
+ * option that matches a pref. Returns null if no match (caller should fall back to "Any").
+ */
+export function pickDefaultCuisineOption(
+  prefs: CuisineTag[] | undefined | null,
+  options: string[],
+): string | null {
+  if (!prefs || prefs.length === 0) return null;
+  const optSet = new Set(options.map((o) => o.toLowerCase()));
+  for (const tag of prefs) {
+    const candidates = TAG_TO_DISPLAY_OPTIONS[tag] ?? [];
+    for (const c of candidates) {
+      if (optSet.has(c.toLowerCase())) {
+        return options.find((o) => o.toLowerCase() === c.toLowerCase()) ?? null;
+      }
+    }
+  }
+  return null;
+}
+
 export const CUISINE_LABEL: Record<CuisineTag, string> = {
   korean: "Korean",
   japanese: "Japanese",
