@@ -338,7 +338,7 @@ const Planner = () => {
                 </div>
               </div>
             </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <div className="card-masonry card-masonry-3 mb-6">
               {plan.days.map((d) => (
                 <Card key={d.day} className="p-5 rounded-2xl border-border/50">
                   <div className="text-xs uppercase tracking-wider text-accent mb-3">{d.day}</div>
