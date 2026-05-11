@@ -265,6 +265,9 @@ const Planner = () => {
               <Label htmlFor="c" className="text-xs">Cuisine focus (optional)</Label>
               <Input id="c" value={cuisine} onChange={e => setCuisine(e.target.value)}
                 placeholder="e.g. Mediterranean" className="rounded-xl mt-1" />
+              {!Array.isArray(profilePrefs?.cuisines) || profilePrefs.cuisines.length === 0 ? (
+                <CuisinePrefHint className="mt-1.5" />
+              ) : null}
             </div>
           </div>
           <div className="mt-5">
