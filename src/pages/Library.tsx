@@ -85,7 +85,7 @@ const Library = () => {
   return (
     <main className="min-h-screen bg-background">
       <Header />
-      <div className="container max-w-4xl mx-auto px-6 py-12">
+      <div className="container max-w-4xl mx-auto px-6 py-6 sm:py-10">
         <h1 className="text-3xl font-bold text-primary mb-2">Your library</h1>
         <p className="text-muted-foreground mb-6">Saved lookups, swaps, and recipes — or import a recipe from any URL.</p>
 
