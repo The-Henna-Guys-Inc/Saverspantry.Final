@@ -287,6 +287,8 @@ const Stores = ({ embedded = false }: { embedded?: boolean }) => {
               </Card>
             ))}
           </div>
+          <PagerBar page={page} pageSize={PAGE_SIZE} total={filtered.length} onPageChange={setPage} />
+          </>
         )}
       </div>
     </Wrapper>
