@@ -18,7 +18,7 @@ const Welcome = () => {
         <div className="w-16 h-16 rounded-3xl bg-gradient-leaf flex items-center justify-center shadow-glow mb-6">
           <Sprout className="h-8 w-8 text-primary-foreground" />
         </div>
-        <span className="text-sm font-semibold tracking-widest uppercase text-accent mb-3">ThriftPantry</span>
+        <span className="text-base font-bold text-primary mb-3">ThriftPantry</span>
         <h1 className="text-4xl sm:text-5xl font-bold text-primary leading-tight">
           Eat well,<br />
           <span className="bg-gradient-leaf bg-clip-text text-transparent">spend less.</span>
