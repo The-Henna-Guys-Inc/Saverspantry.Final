@@ -112,6 +112,9 @@ export const MobileTabBar = () => {
 
               <div className="mt-4 grid gap-2">
                 <Button asChild variant="ghost" className="justify-start rounded-xl h-12" onClick={() => setMoreOpen(false)}>
+                  <Link to="/dashboard"><BarChart3 className="h-4 w-4 mr-2" />Stats</Link>
+                </Button>
+                <Button asChild variant="ghost" className="justify-start rounded-xl h-12" onClick={() => setMoreOpen(false)}>
                   <Link to="/library"><BookmarkCheck className="h-4 w-4 mr-2" />Library</Link>
                 </Button>
                 <Button asChild variant="ghost" className="justify-start rounded-xl h-12" onClick={() => setMoreOpen(false)}>
