@@ -120,7 +120,7 @@ const Pantry = () => {
     if (!user) return;
     (async () => {
       const [itemsRes, locsRes] = await Promise.all([
-        supabase.from("pantry_items").select("id, item, quantity, unit, category, location, expires_on, low_stock_threshold, image_url").order("created_at", { ascending: false }),
+        supabase.from("pantry_items").select("id, item, quantity, unit, category, location, expires_on, low_stock_threshold, image_url, barcode").order("created_at", { ascending: false }),
         supabase.from("pantry_locations").select("id, name").order("name"),
       ]);
       if (itemsRes.error) toast.error(itemsRes.error.message);
