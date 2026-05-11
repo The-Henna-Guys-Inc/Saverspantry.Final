@@ -24,6 +24,7 @@ import AdminAudit from "./pages/AdminAudit.tsx";
 import AdminSessions from "./pages/AdminSessions.tsx";
 import Legal from "./pages/Legal.tsx";
 import { InstallPrompt } from "./components/InstallPrompt";
+import { MobileTabBar } from "./components/MobileTabBar";
 import { LegalAcceptanceGate } from "./components/LegalAcceptanceGate";
 import { SessionEnforcer } from "./components/SessionEnforcer";
 
@@ -38,6 +39,7 @@ const App = () => (
       <BrowserRouter>
         <LegalAcceptanceGate />
         <SessionEnforcer />
+        <div className="pb-mobile-nav">
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/legal/:type" element={<Legal />} />
@@ -64,6 +66,8 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </div>
+        <MobileTabBar />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
