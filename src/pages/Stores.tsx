@@ -78,7 +78,7 @@ const Stores = ({ embedded = false }: { embedded?: boolean }) => {
   const loadStores = async () => {
     const { data: s } = await supabase
       .from("specialty_stores")
-      .select("id, name, chain_name, cuisine_specialties, price_tier, description, address, city, region, latitude, longitude")
+      .select("id, name, chain_name, cuisine_specialties, price_tier, description, address, city, region, latitude, longitude, curation_source")
       .order("name");
     setStores((s as Store[]) ?? []);
   };
