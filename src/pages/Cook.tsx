@@ -25,24 +25,24 @@ const Cook = () => {
           <Utensils className="h-3.5 w-3.5" /> Cook
         </div>
         <Tabs value={tab} onValueChange={setTab} className="w-full">
-          <TabsList className="bg-transparent p-0 mb-3 gap-2 sm:gap-3 flex-wrap h-auto justify-start">
+          <TabsList className="grid w-full grid-cols-3 bg-transparent p-0 mb-3 gap-1.5 sm:gap-2 h-auto">
             <TabsTrigger
               value="recipes"
-              className="rounded-2xl gap-2 px-5 py-3 text-base sm:text-lg font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
+              className="rounded-xl gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
             >
-              <ChefHat className="h-5 w-5" />Recipes
+              <ChefHat className="h-4 w-4" />Recipes
             </TabsTrigger>
             <TabsTrigger
               value="swaps"
-              className="rounded-2xl gap-2 px-5 py-3 text-base sm:text-lg font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
+              className="rounded-xl gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
             >
-              <Repeat className="h-5 w-5" />Swaps
+              <Repeat className="h-4 w-4" />Swaps
             </TabsTrigger>
             <TabsTrigger
               value="nutrition"
-              className="rounded-2xl gap-2 px-5 py-3 text-base sm:text-lg font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
+              className="rounded-xl gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
             >
-              <Apple className="h-5 w-5" />Nutrition
+              <Apple className="h-4 w-4" />Nutrition
             </TabsTrigger>
           </TabsList>
           <p className="text-muted-foreground mb-6">
