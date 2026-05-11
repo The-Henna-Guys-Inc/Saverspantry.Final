@@ -297,7 +297,14 @@ function FindNearbyButton({
         },
       });
       if (error) throw error;
-      toast.success(`Found ${data?.total ?? 0} stores (${data?.inserted ?? 0} new)`, { id: t });
+      const failures = Array.isArray(data?.failures) ? data.failures : [];
+      if ((data?.total ?? 0) === 0 && failures.length) {
+        toast.error(failures[0]?.message || "Store lookup failed", { id: t });
+      } else if (failures.length) {
+        toast.success(`Found ${data?.total ?? 0} stores (${data?.inserted ?? 0} new). Some cuisines could not be searched.`, { id: t });
+      } else {
+        toast.success(`Found ${data?.total ?? 0} stores (${data?.inserted ?? 0} new)`, { id: t });
+      }
       onDone();
     } catch (e: any) {
       toast.error(e.message || "Failed to find stores", { id: t });
