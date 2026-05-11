@@ -143,10 +143,12 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
       <DialogContent className="max-w-lg w-[96vw] sm:w-full p-4 sm:p-6 rounded-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <ScanLine className="h-5 w-5 text-accent" /> Scan barcode
+            <ScanLine className="h-5 w-5 text-accent" /> {mode === "remove" ? "Scan to remove" : "Scan to add"}
           </DialogTitle>
           <DialogDescription>
-            Hold the barcode steady in front of your camera. UPC, EAN, and QR codes are supported.
+            {mode === "remove"
+              ? "Scan the barcode of an item you're using up — we'll deduct one from your pantry."
+              : "Hold the barcode steady — we'll fetch the product details for you."}
           </DialogDescription>
         </DialogHeader>
 
