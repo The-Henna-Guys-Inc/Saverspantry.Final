@@ -72,6 +72,17 @@ async function placesSearch(apiKey: string, query: string, lat: number, lng: num
   return await res.json();
 }
 
+function summarizePlacesError(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  if (message.includes("SERVICE_DISABLED") || message.includes("Places API (New) has not been used")) {
+    return "Google Places API (New) is not enabled for this API key yet. Enable Places API (New) in Google Cloud, wait a few minutes, then try again.";
+  }
+  if (message.includes("REQUEST_DENIED") || message.includes("API key")) {
+    return "Google Places rejected the request. Check that the API key is valid and allowed to call Places API (New).";
+  }
+  return message;
+}
+
 function priceTier(priceLevel?: string): string {
   // PRICE_LEVEL_INEXPENSIVE / MODERATE / EXPENSIVE / VERY_EXPENSIVE
   if (!priceLevel) return "unknown";
@@ -129,6 +140,7 @@ Deno.serve(async (req) => {
       .filter((c) => CUISINE_QUERIES[c]);
 
     const seen = new Map<string, any>(); // place_id → row
+    const failures: Array<{ cuisine: string; message: string }> = [];
     for (const cuisine of targetCuisines) {
       try {
         const result = await placesSearch(apiKey, CUISINE_QUERIES[cuisine], lat, lng, radius);
@@ -161,7 +173,21 @@ Deno.serve(async (req) => {
         }
       } catch (e) {
         console.error("Places query failed", cuisine, e);
+        failures.push({ cuisine, message: summarizePlacesError(e) });
       }
+    }
+
+    if (seen.size === 0 && failures.length === targetCuisines.length && failures.length > 0) {
+      return new Response(
+        JSON.stringify({
+          error: failures[0].message,
+          details: failures,
+        }),
+        {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     let inserted = 0, updated = 0;
@@ -186,7 +212,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ inserted, updated, total: seen.size }),
+      JSON.stringify({ inserted, updated, total: seen.size, failures }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
