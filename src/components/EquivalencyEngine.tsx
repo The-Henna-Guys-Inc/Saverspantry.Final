@@ -39,6 +39,7 @@ export const EquivalencyEngine = () => {
   const [restrictions, setRestrictions] = useState<Restriction[]>([]);
   const [cuisine, setCuisine] = useState<string | null>(null);
   const [cuisineTouched, setCuisineTouched] = useState(false);
+  const [showAllCuisines, setShowAllCuisines] = useState(false);
   const { cuisines: prefCuisines, favoriteCuisines, loading: prefsLoading } = useCuisinePrefs();
   const cuisineOptions = buildCuisineOptions(BASE_CUISINES, favoriteCuisines);
   const [loading, setLoading] = useState(false);
