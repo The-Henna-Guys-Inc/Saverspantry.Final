@@ -39,6 +39,7 @@ const App = () => (
       <BrowserRouter>
         <LegalAcceptanceGate />
         <SessionEnforcer />
+        <div className="pb-mobile-nav">
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/legal/:type" element={<Legal />} />
