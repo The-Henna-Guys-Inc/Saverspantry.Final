@@ -10,7 +10,7 @@ import { WatchlistButton } from "./WatchlistButton";
 import { AiFeedback } from "./AiFeedback";
 import { COST_SWAPS, CALORIE_SWAPS } from "@/lib/popularSwaps";
 import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
-import { pickDefaultCuisineOption } from "@/lib/cuisineHints";
+import { buildCuisineOptions, pickDefaultCuisineOption } from "@/lib/cuisineHints";
 import { CuisinePrefHint } from "./CuisinePrefHint";
 
 type Swap = {
@@ -29,7 +29,7 @@ type Result = {
 };
 
 const EXAMPLES = ["200g chicken breast", "2 large eggs", "1 cup Greek yogurt", "150g salmon"];
-const CUISINES = ["American", "Pakistani", "Indian", "Italian", "Mexican", "Chinese", "Mediterranean", "Thai"];
+const BASE_CUISINES = ["American", "Pakistani", "Indian", "Italian", "Mexican", "Chinese", "Mediterranean", "Thai"];
 const RESTRICTIONS = ["Halal", "Kosher", "Vegetarian"] as const;
 type Restriction = typeof RESTRICTIONS[number];
 
@@ -39,15 +39,16 @@ export const EquivalencyEngine = () => {
   const [cuisine, setCuisine] = useState<string | null>(null);
   const [cuisineTouched, setCuisineTouched] = useState(false);
   const { cuisines: prefCuisines, favoriteCuisines, loading: prefsLoading } = useCuisinePrefs();
+  const cuisineOptions = buildCuisineOptions(BASE_CUISINES, favoriteCuisines);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [profilePrefs, setProfilePrefs] = useState<any>(null);
 
   useEffect(() => {
     if (prefsLoading || cuisineTouched) return;
-    const def = pickDefaultCuisineOption(prefCuisines, CUISINES, favoriteCuisines);
+    const def = pickDefaultCuisineOption(prefCuisines, cuisineOptions, favoriteCuisines);
     if (def) setCuisine(def);
-  }, [prefsLoading, prefCuisines, favoriteCuisines, cuisineTouched]);
+  }, [prefsLoading, prefCuisines, favoriteCuisines, cuisineTouched, cuisineOptions]);
   const pickCuisine = (next: string | null) => { setCuisineTouched(true); setCuisine(next); };
 
   useEffect(() => {
@@ -144,7 +145,7 @@ export const EquivalencyEngine = () => {
           >
             Any
           </button>
-          {CUISINES.map((c) => (
+          {cuisineOptions.map((c) => (
             <button
               key={c}
               onClick={() => pickCuisine(cuisine === c ? null : c)}
