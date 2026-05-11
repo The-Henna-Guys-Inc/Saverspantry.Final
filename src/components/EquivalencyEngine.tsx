@@ -9,6 +9,9 @@ import { SaveButton } from "./SaveButton";
 import { WatchlistButton } from "./WatchlistButton";
 import { AiFeedback } from "./AiFeedback";
 import { COST_SWAPS, CALORIE_SWAPS } from "@/lib/popularSwaps";
+import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
+import { pickDefaultCuisineOption } from "@/lib/cuisineHints";
+import { CuisinePrefHint } from "./CuisinePrefHint";
 
 type Swap = {
   title: string;
