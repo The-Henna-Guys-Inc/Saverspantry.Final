@@ -49,6 +49,10 @@ const mondayOf = (d = new Date()) => {
 
 const Planner = () => {
   const { user, loading: authLoading } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const planTab = tabParam === "recipes" || tabParam === "library" ? tabParam : "planner";
+  const setPlanTab = (v: string) => setSearchParams(v === "planner" ? {} : { tab: v });
   const [householdSize, setHouseholdSize] = useState(2);
   const [budget, setBudget] = useState<string>("");
   const [cuisine, setCuisine] = useState("");
