@@ -467,6 +467,50 @@ const Pantry = () => {
 
         <BarcodeScanner open={scannerOpen} onOpenChange={setScannerOpen} onDetected={handleScanned} />
 
+        <Dialog open={!!scanResult} onOpenChange={(o) => !o && setScanResult(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>What do you want to do?</DialogTitle>
+              <DialogDescription>
+                {scanResult?.productName ?? `Code ${scanResult?.code ?? ""}`}
+              </DialogDescription>
+            </DialogHeader>
+            {scanResult && (
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 border border-border/40">
+                {scanResult.imageUrl ? (
+                  <img src={scanResult.imageUrl} alt={scanResult.productName ?? scanResult.code} className="h-14 w-14 rounded-lg object-cover border border-border" />
+                ) : (
+                  <div className="h-14 w-14 rounded-lg bg-muted border border-border flex items-center justify-center text-muted-foreground">
+                    <ScanLine className="h-5 w-5" />
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <div className="font-medium text-primary truncate">{scanResult.productName ?? "Unknown product"}</div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {scanResult.brand ? `${scanResult.brand} · ` : ""}{scanResult.code}
+                  </div>
+                </div>
+              </div>
+            )}
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button
+                variant="outline"
+                className="rounded-xl flex-1 h-12"
+                onClick={() => scanResult && applyRemove(scanResult)}
+              >
+                <Minus className="h-4 w-4 mr-1.5" /> Remove one
+              </Button>
+              <Button
+                variant="hero"
+                className="rounded-xl flex-1 h-12"
+                onClick={() => scanResult && applyAdd(scanResult)}
+              >
+                <Plus className="h-4 w-4 mr-1.5" /> Add to pantry
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : items.length === 0 ? (
