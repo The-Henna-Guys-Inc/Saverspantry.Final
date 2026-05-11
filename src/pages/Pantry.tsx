@@ -274,10 +274,25 @@ const Pantry = () => {
         />
 
         <Tabs value={tab} onValueChange={setTab} className="w-full">
-          <TabsList className="rounded-2xl mb-6">
-            <TabsTrigger value="items" className="rounded-xl gap-1.5"><Package className="h-4 w-4" />Items</TabsTrigger>
-            <TabsTrigger value="expiry" className="rounded-xl gap-1.5"><CalendarDays className="h-4 w-4" />Expiry</TabsTrigger>
-            <TabsTrigger value="bulk-buy" className="rounded-xl gap-1.5"><PackageOpen className="h-4 w-4" />Bulk-Buy</TabsTrigger>
+          <TabsList className="bg-transparent p-0 mb-6 gap-2 sm:gap-3 flex-wrap h-auto justify-start">
+            <TabsTrigger
+              value="items"
+              className="rounded-2xl gap-2 px-5 py-3 text-base sm:text-lg font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
+            >
+              <Package className="h-5 w-5" />Items
+            </TabsTrigger>
+            <TabsTrigger
+              value="expiry"
+              className="rounded-2xl gap-2 px-5 py-3 text-base sm:text-lg font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
+            >
+              <CalendarDays className="h-5 w-5" />Expiry
+            </TabsTrigger>
+            <TabsTrigger
+              value="bulk-buy"
+              className="rounded-2xl gap-2 px-5 py-3 text-base sm:text-lg font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
+            >
+              <PackageOpen className="h-5 w-5" />Bulk-Buy
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="expiry" className="mt-0">
