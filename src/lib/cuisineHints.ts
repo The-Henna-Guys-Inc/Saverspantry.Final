@@ -80,9 +80,19 @@ export const TAG_TO_DISPLAY_OPTIONS: Record<CuisineTag, string[]> = {
 export function pickDefaultCuisineOption(
   prefs: CuisineTag[] | undefined | null,
   options: string[],
+  rawNames?: string[] | null,
 ): string | null {
+  const optLower = options.map((o) => o.toLowerCase());
+  // 1. Direct match against raw favorite names (e.g. "Italian" -> "Italian")
+  if (Array.isArray(rawNames)) {
+    for (const raw of rawNames) {
+      const key = String(raw ?? "").trim().toLowerCase();
+      const idx = optLower.indexOf(key);
+      if (idx >= 0) return options[idx];
+    }
+  }
   if (!prefs || prefs.length === 0) return null;
-  const optSet = new Set(options.map((o) => o.toLowerCase()));
+  const optSet = new Set(optLower);
   for (const tag of prefs) {
     const candidates = TAG_TO_DISPLAY_OPTIONS[tag] ?? [];
     for (const c of candidates) {

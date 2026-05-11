@@ -6,6 +6,7 @@ import { mapLegacyCuisines, type CuisineTag } from "@/lib/cuisineHints";
 export function useCuisinePrefs() {
   const { user } = useAuth();
   const [cuisines, setCuisines] = useState<CuisineTag[]>([]);
+  const [favoriteCuisines, setFavoriteCuisines] = useState<string[]>([]);
   const [filterEnabled, setFilterEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
 
@@ -16,12 +17,13 @@ export function useCuisinePrefs() {
       .select("cuisine_preferences, cuisine_filter_enabled, dietary_prefs")
       .eq("user_id", user.id)
       .maybeSingle();
+    const legacy = (data?.dietary_prefs as any)?.cuisines as string[] | undefined;
     let prefs = ((data?.cuisine_preferences ?? []) as string[]) as CuisineTag[];
     if (!prefs.length) {
-      const legacy = (data?.dietary_prefs as any)?.cuisines as string[] | undefined;
       prefs = mapLegacyCuisines(legacy);
     }
     setCuisines(prefs);
+    setFavoriteCuisines(Array.isArray(legacy) ? legacy : []);
     setFilterEnabled(data?.cuisine_filter_enabled ?? true);
     setLoading(false);
   }, [user]);
@@ -44,5 +46,5 @@ export function useCuisinePrefs() {
   const activeCuisines: CuisineTag[] = filterEnabled ? cuisines : [];
   const isFiltering = filterEnabled && cuisines.length > 0;
 
-  return { cuisines, filterEnabled, loading, setPrefs, setEnabled, refresh, activeCuisines, isFiltering };
+  return { cuisines, favoriteCuisines, filterEnabled, loading, setPrefs, setEnabled, refresh, activeCuisines, isFiltering };
 }
