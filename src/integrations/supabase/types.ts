@@ -568,6 +568,7 @@ export type Database = {
       }
       pantry_items: {
         Row: {
+          barcode: string | null
           category: string | null
           created_at: string
           expires_on: string | null
@@ -583,6 +584,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          barcode?: string | null
           category?: string | null
           created_at?: string
           expires_on?: string | null
@@ -598,6 +600,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          barcode?: string | null
           category?: string | null
           created_at?: string
           expires_on?: string | null

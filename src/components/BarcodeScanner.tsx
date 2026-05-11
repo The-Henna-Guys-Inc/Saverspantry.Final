@@ -9,9 +9,46 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onDetected: (result: { code: string; productName?: string; brand?: string; quantity?: string; categories?: string; imageUrl?: string }) => void;
+  mode?: "add" | "remove";
 };
 
-export const BarcodeScanner = ({ open, onOpenChange, onDetected }: Props) => {
+// Short confirmation beep using WebAudio — no asset needed.
+function playBeep(success = true) {
+  try {
+    const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "sine";
+    o.frequency.value = success ? 1320 : 440;
+    g.gain.value = 0.0001;
+    o.connect(g).connect(ctx.destination);
+    const now = ctx.currentTime;
+    g.gain.exponentialRampToValueAtTime(0.25, now + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+    o.start(now);
+    o.stop(now + 0.2);
+    if (success) {
+      // second higher chirp
+      const o2 = ctx.createOscillator();
+      const g2 = ctx.createGain();
+      o2.type = "sine";
+      o2.frequency.value = 1760;
+      g2.gain.value = 0.0001;
+      o2.connect(g2).connect(ctx.destination);
+      g2.gain.exponentialRampToValueAtTime(0.25, now + 0.13);
+      g2.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+      o2.start(now + 0.12);
+      o2.stop(now + 0.3);
+    }
+    setTimeout(() => ctx.close().catch(() => {}), 400);
+  } catch {
+    /* ignore */
+  }
+}
+
+export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }: Props) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
@@ -52,6 +89,7 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected }: Props) => {
         if (result) {
           const code = result.getText();
           controls.stop();
+          playBeep(true);
           setStatus("looking-up");
           try {
             const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json`);
@@ -105,10 +143,12 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected }: Props) => {
       <DialogContent className="max-w-lg w-[96vw] sm:w-full p-4 sm:p-6 rounded-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <ScanLine className="h-5 w-5 text-accent" /> Scan barcode
+            <ScanLine className="h-5 w-5 text-accent" /> {mode === "remove" ? "Scan to remove" : "Scan to add"}
           </DialogTitle>
           <DialogDescription>
-            Hold the barcode steady in front of your camera. UPC, EAN, and QR codes are supported.
+            {mode === "remove"
+              ? "Scan the barcode of an item you're using up — we'll deduct one from your pantry."
+              : "Hold the barcode steady — we'll fetch the product details for you."}
           </DialogDescription>
         </DialogHeader>
 
