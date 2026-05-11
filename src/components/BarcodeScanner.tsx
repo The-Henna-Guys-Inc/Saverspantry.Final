@@ -48,7 +48,7 @@ function playBeep(success = true) {
   }
 }
 
-export const BarcodeScanner = ({ open, onOpenChange, onDetected }: Props) => {
+export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }: Props) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
