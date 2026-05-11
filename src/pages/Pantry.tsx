@@ -385,24 +385,14 @@ const Pantry = () => {
         </Card>
 
         <Card className="p-5 sm:p-6 rounded-3xl border-border/50 shadow-soft mb-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            <Button
-              variant="hero"
-              size="lg"
-              onClick={() => { setScanMode("add"); setScannerOpen(true); }}
-              className="rounded-xl h-14 text-base"
-            >
-              <ScanLine className="h-5 w-5 mr-2" /> Scan to add
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => { setScanMode("remove"); setScannerOpen(true); }}
-              className="rounded-xl h-14 text-base"
-            >
-              <Minus className="h-5 w-5 mr-2" /> Scan to remove
-            </Button>
-          </div>
+          <Button
+            variant="hero"
+            size="lg"
+            onClick={() => setScannerOpen(true)}
+            className="rounded-xl h-14 text-base w-full"
+          >
+            <ScanLine className="h-5 w-5 mr-2" /> Scan an item
+          </Button>
           <Button
             variant="ghost"
             onClick={() => setShowManual((v) => !v)}
@@ -411,7 +401,7 @@ const Pantry = () => {
             <Plus className="h-4 w-4 mr-2" /> {showManual ? "Hide manual entry" : "Add manually"}
           </Button>
           <p className="text-xs text-muted-foreground mt-3">
-            Scan to add fetches product details automatically. Scan to remove deducts one from the matching pantry item.
+            After a successful scan, you'll choose whether to add it to your pantry or remove one.
           </p>
         </Card>
 
