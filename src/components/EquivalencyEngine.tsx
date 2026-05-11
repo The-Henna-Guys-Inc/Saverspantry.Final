@@ -234,15 +234,13 @@ export const EquivalencyEngine = () => {
           <Card className="p-5 rounded-3xl bg-gradient-warm border-border/50">
             <div className="flex flex-col gap-3">
               <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <div className="text-xs uppercase tracking-wider text-muted-foreground">Original</div>
-                  <h3 className="text-lg font-semibold text-primary mt-1 break-words">{result.original.name}</h3>
-                </div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">Original</div>
                 <div className="flex items-center gap-2 shrink-0">
                   <WatchlistButton foodName={result.original.name} />
                   <SaveButton table="saved_swaps" payload={{ food: result.original.name, result }} />
                 </div>
               </div>
+              <h3 className="text-lg font-semibold text-primary break-words">{result.original.name}</h3>
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
                 <span>{Math.round(result.original.calories_kcal)} kcal</span>
                 <span aria-hidden>·</span>
