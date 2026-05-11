@@ -29,7 +29,7 @@ type Result = {
 };
 
 const EXAMPLES = ["200g chicken breast", "2 large eggs", "1 cup Greek yogurt", "150g salmon"];
-const BASE_CUISINES = ["Greek", "Italian", "Mexican", "Portuguese", "Spanish", "Japanese", "Turkish", "Chinese", "French", "Indian", "Polish", "American", "Pakistani", "Serbian", "Indonesian"];
+const BASE_CUISINES = ["Italian", "American", "Indian", "Mexican", "Chinese", "Greek", "Portuguese", "Spanish", "Japanese", "Turkish", "French", "Polish", "Pakistani", "Serbian", "Indonesian"];
 const TOP_CUISINES_COUNT = 5;
 const RESTRICTIONS = ["Halal", "Kosher", "Vegetarian"] as const;
 type Restriction = typeof RESTRICTIONS[number];
