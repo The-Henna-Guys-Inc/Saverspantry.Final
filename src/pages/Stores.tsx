@@ -6,7 +6,7 @@ import { Header } from "@/components/Header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, MapPin, Store as StoreIcon, ExternalLink, Heart, Search, Pencil, Locate } from "lucide-react";
+import { Loader2, MapPin, Store as StoreIcon, ExternalLink, Heart, Search, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { AdminStoreDialog, type EditableStore } from "@/components/AdminStoreDialog";
 import { AdminStoreCsvUpload } from "@/components/AdminStoreCsvUpload";
@@ -144,7 +144,7 @@ const Stores = ({ embedded = false }: { embedded?: boolean }) => {
         <div className="flex items-start justify-between gap-3 mb-2 flex-wrap">
           <h1 className="text-3xl sm:text-4xl font-bold text-primary">Cuisine-specific grocers</h1>
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
-            <FindNearbyButton onDone={loadStores} prefCuisines={prefCuisines} cuisineFilterOn={cuisineFilterOn} />
+            <ZipSearchBox onDone={loadStores} prefCuisines={prefCuisines} cuisineFilterOn={cuisineFilterOn} />
             {isAdmin && (
               <>
                 <AdminStoreCsvUpload onCreated={loadStores} />
@@ -282,7 +282,7 @@ const Stores = ({ embedded = false }: { embedded?: boolean }) => {
 
 export default Stores;
 
-function FindNearbyButton({
+function ZipSearchBox({
   onDone,
   prefCuisines,
   cuisineFilterOn,
@@ -292,13 +292,21 @@ function FindNearbyButton({
   cuisineFilterOn: boolean;
 }) {
   const [busy, setBusy] = useState(false);
+  const [zip, setZip] = useState("");
 
-  const runSearch = async (payload: Record<string, any>, toastId?: string | number) => {
-    const t = toastId ?? toast.loading("Finding stores...");
+  const handle = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const loc = zip.trim();
+    if (!loc) {
+      toast.error("Enter a ZIP code or city");
+      return;
+    }
+    setBusy(true);
+    const t = toast.loading(`Finding stores near ${loc}...`);
     try {
       const { data, error } = await supabase.functions.invoke("store-finder", {
         body: {
-          ...payload,
+          location: loc,
           radius_miles: 10,
           cuisines: cuisineFilterOn && prefCuisines.length ? prefCuisines : undefined,
         },
@@ -313,43 +321,27 @@ function FindNearbyButton({
         toast.success(`Found ${data?.total ?? 0} stores (${data?.inserted ?? 0} new)`, { id: t });
       }
       onDone();
-    } catch (e: any) {
-      toast.error(e.message || "Failed to find stores", { id: t });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to find stores", { id: t });
     } finally {
       setBusy(false);
     }
   };
 
-  const promptForLocation = (toastId?: string | number) => {
-    const loc = window.prompt("Enter a ZIP code or city to search near:");
-    if (!loc || !loc.trim()) {
-      toast.dismiss(toastId);
-      setBusy(false);
-      return;
-    }
-    runSearch({ location: loc.trim() }, toastId);
-  };
-
-  const handle = async () => {
-    setBusy(true);
-    if (!navigator.geolocation) {
-      promptForLocation();
-      return;
-    }
-    const t = toast.loading("Finding stores near you...");
-    navigator.geolocation.getCurrentPosition(
-      (pos) => runSearch({ lat: pos.coords.latitude, lng: pos.coords.longitude }, t),
-      () => {
-        toast.dismiss(t);
-        promptForLocation();
-      },
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 },
-    );
-  };
   return (
-    <Button onClick={handle} disabled={busy} variant="outline" size="sm" className="rounded-xl">
-      {busy ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Locate className="h-3.5 w-3.5 mr-1.5" />}
-      Find stores near me
-    </Button>
+    <form onSubmit={handle} className="flex items-center gap-2">
+      <Input
+        value={zip}
+        onChange={(e) => setZip(e.target.value)}
+        placeholder="ZIP code or city"
+        className="h-9 w-36 rounded-xl"
+        inputMode="text"
+        aria-label="ZIP code or city"
+      />
+      <Button type="submit" disabled={busy} variant="outline" size="sm" className="rounded-xl">
+        {busy ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Search className="h-3.5 w-3.5 mr-1.5" />}
+        Find stores
+      </Button>
+    </form>
   );
 }
