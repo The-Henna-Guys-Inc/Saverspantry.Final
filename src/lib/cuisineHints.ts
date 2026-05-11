@@ -73,6 +73,45 @@ export const TAG_TO_DISPLAY_OPTIONS: Record<CuisineTag, string[]> = {
   mediterranean: ["Mediterranean", "Italian"],
 };
 
+const normalizeCuisineName = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ");
+
+export function formatCuisineOptionLabel(value: string): string {
+  const normalized = normalizeCuisineName(value);
+  if (!normalized) return "";
+
+  return normalized
+    .split(" ")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+export function buildCuisineOptions(baseOptions: string[], rawNames?: string[] | null): string[] {
+  const seen = new Set<string>();
+  const merged: string[] = [];
+
+  for (const raw of rawNames ?? []) {
+    const label = formatCuisineOptionLabel(String(raw ?? ""));
+    const key = normalizeCuisineName(label);
+    if (!label || seen.has(key)) continue;
+    seen.add(key);
+    merged.push(label);
+  }
+
+  for (const option of baseOptions) {
+    const key = normalizeCuisineName(option);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(option);
+  }
+
+  return merged;
+}
+
 /**
  * Given user cuisine prefs and a list of available widget options, return the first
  * option that matches a pref. Returns null if no match (caller should fall back to "Any").
@@ -82,11 +121,11 @@ export function pickDefaultCuisineOption(
   options: string[],
   rawNames?: string[] | null,
 ): string | null {
-  const optLower = options.map((o) => o.toLowerCase());
+  const optLower = options.map((o) => normalizeCuisineName(o));
   // 1. Direct match against raw favorite names (e.g. "Italian" -> "Italian")
   if (Array.isArray(rawNames)) {
     for (const raw of rawNames) {
-      const key = String(raw ?? "").trim().toLowerCase();
+      const key = normalizeCuisineName(String(raw ?? ""));
       const idx = optLower.indexOf(key);
       if (idx >= 0) return options[idx];
     }
