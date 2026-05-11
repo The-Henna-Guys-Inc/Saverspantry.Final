@@ -1,6 +1,9 @@
 import { useState } from "react";
 import heroImg from "@/assets/hero-foods.jpg";
 import { Header } from "@/components/Header";
+import { HomeAuthed } from "@/components/HomeAuthed";
+import { useAuth } from "@/hooks/useAuth";
+import { Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeftRight, Sparkles, ChefHat, Beef, Lock, Apple, Repeat } from "lucide-react";
@@ -64,9 +67,27 @@ const FEATURES: Record<FeatureKey, {
 };
 
 const Index = () => {
+  const { user, loading } = useAuth();
   const [tab, setTab] = useState<FeatureKey>("nutrition");
   const active = FEATURES[tab];
   const ActiveIcon = active.icon;
+
+  if (loading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </main>
+    );
+  }
+
+  if (user) {
+    return (
+      <main className="min-h-screen bg-background">
+        <Header />
+        <HomeAuthed user={user} />
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-background">

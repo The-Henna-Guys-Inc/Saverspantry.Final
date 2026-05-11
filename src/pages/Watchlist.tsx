@@ -20,7 +20,7 @@ type Item = {
 
 const SUGGESTIONS = ["basmati rice", "lentils", "olive oil", "paneer", "chicken thighs", "eggs", "yogurt", "tofu"];
 
-export default function Watchlist() {
+export default function Watchlist({ embedded = false }: { embedded?: boolean } = {}) {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [items, setItems] = useState<Item[]>([]);
@@ -71,20 +71,19 @@ export default function Watchlist() {
     await supabase.from("watchlist_items").update({ min_savings_pct }).eq("id", id);
   };
 
+  const Outer: any = embedded ? "div" : "div";
+  const Inner: any = embedded ? "div" : "main";
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="container max-w-3xl mx-auto px-6 py-10">
+    <Outer className={embedded ? "" : "min-h-screen bg-background"}>
+      {!embedded && <Header />}
+      <Inner className={embedded ? "" : "container max-w-3xl mx-auto px-6 py-10"}>
         <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
           <div>
-            <h1 className="text-3xl font-bold text-primary">Your watchlist</h1>
+            {!embedded && <h1 className="text-3xl font-bold text-primary">Your watchlist</h1>}
             <p className="text-sm text-muted-foreground mt-1">
-              We'll surface matching sales on the Sales page. Quiet by default — no notifications you didn't ask for.
+              We'll surface matching sales on the Sales tab. Quiet by default — no notifications you didn't ask for.
             </p>
           </div>
-          <Button asChild variant="outline" size="sm" className="rounded-xl">
-            <Link to="/sales"><Tag className="h-4 w-4 mr-1.5" />See sales</Link>
-          </Button>
         </div>
 
         <Card className="p-5 rounded-3xl shadow-soft border-border/50 mb-6">
@@ -147,7 +146,7 @@ export default function Watchlist() {
             ))}
           </div>
         )}
-      </main>
-    </div>
+      </Inner>
+    </Outer>
   );
 }
