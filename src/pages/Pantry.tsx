@@ -376,25 +376,33 @@ const Pantry = () => {
         </Card>
 
         <Card className="p-5 sm:p-6 rounded-3xl border-border/50 shadow-soft mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <Button
               variant="hero"
               size="lg"
-              onClick={() => setScannerOpen(true)}
-              className="rounded-xl flex-1 h-14 text-base"
+              onClick={() => { setScanMode("add"); setScannerOpen(true); }}
+              className="rounded-xl h-14 text-base"
             >
-              <ScanLine className="h-5 w-5 mr-2" /> Scan an item
+              <ScanLine className="h-5 w-5 mr-2" /> Scan to add
             </Button>
             <Button
               variant="outline"
-              onClick={() => setShowManual((v) => !v)}
-              className="rounded-xl h-14 sm:h-auto sm:py-3"
+              size="lg"
+              onClick={() => { setScanMode("remove"); setScannerOpen(true); }}
+              className="rounded-xl h-14 text-base"
             >
-              <Plus className="h-4 w-4 mr-2" /> {showManual ? "Hide manual entry" : "Add manually"}
+              <Minus className="h-5 w-5 mr-2" /> Scan to remove
             </Button>
           </div>
+          <Button
+            variant="ghost"
+            onClick={() => setShowManual((v) => !v)}
+            className="rounded-xl mt-2 w-full"
+          >
+            <Plus className="h-4 w-4 mr-2" /> {showManual ? "Hide manual entry" : "Add manually"}
+          </Button>
           <p className="text-xs text-muted-foreground mt-3">
-            Scan a barcode for the fastest add — we'll fetch the name, image, and size for you.
+            Scan to add fetches product details automatically. Scan to remove deducts one from the matching pantry item.
           </p>
         </Card>
 
