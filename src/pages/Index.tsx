@@ -1,6 +1,9 @@
 import { useState } from "react";
 import heroImg from "@/assets/hero-foods.jpg";
 import { Header } from "@/components/Header";
+import { HomeAuthed } from "@/components/HomeAuthed";
+import { useAuth } from "@/hooks/useAuth";
+import { Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeftRight, Sparkles, ChefHat, Beef, Lock, Apple, Repeat } from "lucide-react";
