@@ -12,6 +12,9 @@ import { AdminStoreDialog, type EditableStore } from "@/components/AdminStoreDia
 import { AdminStoreCsvUpload } from "@/components/AdminStoreCsvUpload";
 import { CuisineFilterBar } from "@/components/CuisineFilterBar";
 import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
+import { PagerBar } from "@/components/PagerBar";
+
+const PAGE_SIZE = 10;
 
 type Store = {
   id: string;
@@ -61,6 +64,7 @@ const Stores = ({ embedded = false }: { embedded?: boolean }) => {
   const [visited, setVisited] = useState<Record<string, boolean>>({});
   const [active, setActive] = useState<string[]>([]);
   const [q, setQ] = useState("");
+  const [page, setPage] = useState(1);
   const [isAdmin, setIsAdmin] = useState(false);
   const { cuisines: prefCuisines, isFiltering: cuisineFilterOn, setEnabled: setCuisineEnabled, loading: prefsLoading } = useCuisinePrefs();
 
@@ -124,6 +128,14 @@ const Stores = ({ embedded = false }: { embedded?: boolean }) => {
       return true;
     });
   }, [stores, effectiveActive, q]);
+
+  const paginated = useMemo(
+    () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filtered, page],
+  );
+
+  // Reset to page 1 when filters/search change
+  useEffect(() => { setPage(1); }, [q, effectiveActive.join("|")]);
 
   const mapHref = (s: Store) => {
     const query = s.address ? encodeURIComponent(`${s.name}, ${s.address}, ${s.city ?? ""}`) : encodeURIComponent(s.name);
@@ -201,8 +213,9 @@ const Stores = ({ embedded = false }: { embedded?: boolean }) => {
             No stores match. Try clearing filters — we're growing the catalog and live location search is coming next.
           </Card>
         ) : (
+          <>
           <div className="grid md:grid-cols-2 gap-4">
-            {filtered.map((s) => (
+            {paginated.map((s) => (
               <Card key={s.id} className="p-5 rounded-2xl border-border/50">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -274,6 +287,8 @@ const Stores = ({ embedded = false }: { embedded?: boolean }) => {
               </Card>
             ))}
           </div>
+          <PagerBar page={page} pageSize={PAGE_SIZE} total={filtered.length} onPageChange={setPage} />
+          </>
         )}
       </div>
     </Wrapper>
