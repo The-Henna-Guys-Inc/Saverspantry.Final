@@ -67,10 +67,11 @@ export const MobileTabBar = () => {
       className="fixed bottom-0 inset-x-0 z-40 bg-background/90 backdrop-blur-md border-t border-border/60 safe-bottom"
     >
       <ul className="grid grid-cols-6 max-w-2xl mx-auto">
-        {tabs.map(({ to, label, Icon }) => (
+        {tabs.map(({ to, label, Icon, end }) => (
           <li key={to}>
             <NavLink
               to={to}
+              end={end}
               className={({ isActive }) =>
                 cn(
                   itemBase,
