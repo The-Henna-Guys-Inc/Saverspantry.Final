@@ -102,7 +102,7 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg w-[96vw] sm:w-full p-4 sm:p-6 rounded-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ScanLine className="h-5 w-5 text-accent" /> Scan barcode
