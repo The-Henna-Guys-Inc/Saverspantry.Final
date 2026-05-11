@@ -28,13 +28,13 @@ const Deals = () => {
           <TabsList className="grid w-full grid-cols-2 bg-transparent p-0 mb-2 gap-1.5 sm:gap-2 h-auto">
             <TabsTrigger
               value="stores"
-              className="rounded-xl gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
+              className="w-full min-w-0 rounded-xl gap-1 sm:gap-2 px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
             >
               <StoreIcon className="h-4 w-4" />Stores
             </TabsTrigger>
             <TabsTrigger
               value="sales"
-              className="rounded-xl gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
+              className="w-full min-w-0 rounded-xl gap-1 sm:gap-2 px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth"
             >
               <Tag className="h-4 w-4" />Sales
             </TabsTrigger>
