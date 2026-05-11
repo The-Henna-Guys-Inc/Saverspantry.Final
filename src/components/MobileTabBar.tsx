@@ -49,7 +49,7 @@ export const MobileTabBar = () => {
       .then(({ data }) => setIsAdmin(!!data));
   }, [user]);
 
-  if (loading || pathname.startsWith("/auth")) return null;
+  if (loading || pathname.startsWith("/auth") || pathname.startsWith("/welcome") || pathname.startsWith("/demo")) return null;
 
   const signOut = async () => {
     await supabase.auth.signOut();
