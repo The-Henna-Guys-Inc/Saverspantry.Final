@@ -279,6 +279,9 @@ const Planner = () => {
 
         <Card className="p-6 rounded-3xl border-border/50 shadow-soft mb-8">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <Label htmlFor="hh" className="text-xs">Household size</Label>
+              <Input id="hh" type="number" min={1} max={12} value={householdSize}
                 onChange={e => setHouseholdSize(Math.max(1, Number(e.target.value) || 1))}
                 className="rounded-xl mt-1" />
             </div>
