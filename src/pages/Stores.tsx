@@ -274,3 +274,55 @@ const Stores = ({ embedded = false }: { embedded?: boolean }) => {
 };
 
 export default Stores;
+
+function FindNearbyButton({
+  onDone,
+  prefCuisines,
+  cuisineFilterOn,
+}: {
+  onDone: () => void;
+  prefCuisines: string[];
+  cuisineFilterOn: boolean;
+}) {
+  const [busy, setBusy] = useState(false);
+  const handle = async () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation not supported on this device");
+      return;
+    }
+    setBusy(true);
+    const t = toast.loading("Finding stores near you...");
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { data, error } = await supabase.functions.invoke("store-finder", {
+            body: {
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              radius_miles: 10,
+              cuisines: cuisineFilterOn && prefCuisines.length ? prefCuisines : undefined,
+            },
+          });
+          if (error) throw error;
+          toast.success(`Found ${data?.total ?? 0} stores (${data?.inserted ?? 0} new)`, { id: t });
+          onDone();
+        } catch (e: any) {
+          toast.error(e.message || "Failed to find stores", { id: t });
+        } finally {
+          setBusy(false);
+        }
+      },
+      (err) => {
+        toast.error(err.message || "Could not get location", { id: t });
+        setBusy(false);
+      },
+      { enableHighAccuracy: false, timeout: 10000 },
+    );
+  };
+  return (
+    <Button onClick={handle} disabled={busy} variant="outline" size="sm" className="rounded-xl">
+      {busy ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Locate className="h-3.5 w-3.5 mr-1.5" />}
+      Find stores near me
+    </Button>
+  );
+}
