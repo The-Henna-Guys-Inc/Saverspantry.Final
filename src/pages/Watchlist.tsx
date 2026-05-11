@@ -146,7 +146,7 @@ export default function Watchlist({ embedded = false }: { embedded?: boolean } =
             ))}
           </div>
         )}
-      </main>
-    </div>
+      </Inner>
+    </Outer>
   );
 }
