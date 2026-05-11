@@ -102,7 +102,7 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg w-[96vw] sm:w-full p-4 sm:p-6 rounded-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ScanLine className="h-5 w-5 text-accent" /> Scan barcode
@@ -122,10 +122,10 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected }: Props) => {
           </div>
         ) : (
           <>
-            <div className="relative rounded-xl overflow-hidden bg-black aspect-video">
+            <div className="relative rounded-xl overflow-hidden bg-black aspect-[3/4] sm:aspect-video w-full">
               <video ref={videoRef} className="w-full h-full object-cover" muted playsInline />
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                <div className="w-3/4 h-1/3 border-2 border-accent/80 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
+                <div className="w-[88%] h-[28%] sm:w-3/4 sm:h-1/3 border-2 border-accent/80 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
               </div>
               {(status === "starting" || status === "looking-up") && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-sm gap-2">
