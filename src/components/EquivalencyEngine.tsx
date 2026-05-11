@@ -37,9 +37,18 @@ export const EquivalencyEngine = () => {
   const [food, setFood] = useState("");
   const [restrictions, setRestrictions] = useState<Restriction[]>([]);
   const [cuisine, setCuisine] = useState<string | null>(null);
+  const [cuisineTouched, setCuisineTouched] = useState(false);
+  const { cuisines: prefCuisines, loading: prefsLoading } = useCuisinePrefs();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [profilePrefs, setProfilePrefs] = useState<any>(null);
+
+  useEffect(() => {
+    if (prefsLoading || cuisineTouched) return;
+    const def = pickDefaultCuisineOption(prefCuisines, CUISINES);
+    if (def) setCuisine(def);
+  }, [prefsLoading, prefCuisines, cuisineTouched]);
+  const pickCuisine = (next: string | null) => { setCuisineTouched(true); setCuisine(next); };
 
   useEffect(() => {
     (async () => {
