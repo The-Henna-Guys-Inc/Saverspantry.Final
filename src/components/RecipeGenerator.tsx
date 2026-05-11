@@ -190,7 +190,7 @@ export const RecipeGenerator = () => {
           >
             Any
           </button>
-          {cuisineOptions.map((c) => (
+          {(showAllCuisines ? cuisineOptions : cuisineOptions.slice(0, TOP_CUISINES_COUNT)).map((c) => (
             <button
               key={c}
               onClick={() => pickCuisine(cuisine === c ? null : c)}
@@ -203,6 +203,14 @@ export const RecipeGenerator = () => {
               {c}
             </button>
           ))}
+          {cuisineOptions.length > TOP_CUISINES_COUNT && (
+            <button
+              onClick={() => setShowAllCuisines((v) => !v)}
+              className="text-sm px-4 py-2 rounded-full bg-secondary/60 text-muted-foreground hover:bg-muted transition-smooth min-h-[44px]"
+            >
+              {showAllCuisines ? "Show less" : `View more (${cuisineOptions.length - TOP_CUISINES_COUNT})`}
+            </button>
+          )}
         </div>
         {!prefsLoading && prefCuisines.length === 0 && favoriteCuisines.length === 0 && (
           <CuisinePrefHint className="mt-2" />
