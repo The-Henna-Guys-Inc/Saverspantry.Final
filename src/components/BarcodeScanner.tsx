@@ -89,6 +89,7 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
         if (result) {
           const code = result.getText();
           controls.stop();
+          playBeep(true);
           setStatus("looking-up");
           try {
             const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json`);
