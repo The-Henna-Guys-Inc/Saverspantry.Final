@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Plus, Trash2, Refrigerator, Minus, AlertTriangle, X, ScanLine, CalendarDays, Package } from "lucide-react";
 import { toast } from "sonner";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { ExpiryDateScanner } from "@/components/ExpiryDateScanner";
 import { CuisineFilterBar } from "@/components/CuisineFilterBar";
 import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
@@ -70,30 +71,17 @@ const Pantry = () => {
 
   // barcode scanner
   const [scannerOpen, setScannerOpen] = useState(false);
-  const [scanMode, setScanMode] = useState<"add" | "remove">("add");
   const [showManual, setShowManual] = useState(false);
+  const [scanResult, setScanResult] = useState<
+    | { code: string; productName?: string; brand?: string; quantity?: string; categories?: string; imageUrl?: string }
+    | null
+  >(null);
 
-  const handleScanned = async (r: { code: string; productName?: string; brand?: string; quantity?: string; categories?: string; imageUrl?: string }) => {
-    if (scanMode === "remove") {
-      // Find matching pantry item by barcode first, then fall back to name match
-      let match = items.find((x) => x.barcode && x.barcode === r.code) ?? null;
-      if (!match && r.productName) {
-        const needle = r.productName.toLowerCase();
-        match = items.find((x) => x.item.toLowerCase().includes(needle) || needle.includes(x.item.toLowerCase())) ?? null;
-      }
-      if (!match) {
-        toast.error("That item isn't in your pantry yet.", {
-          description: r.productName ? `Couldn't find "${r.productName}".` : `Code ${r.code} not matched.`,
-        });
-        return;
-      }
-      await adjust(match, -1);
-      toast.success(`Removed 1 ${match.unit} of ${match.item}`, {
-        description: `${Math.max(0, match.quantity - 1)} ${match.unit} left.`,
-      });
-      return;
-    }
+  const handleScanned = (r: { code: string; productName?: string; brand?: string; quantity?: string; categories?: string; imageUrl?: string }) => {
+    setScanResult(r);
+  };
 
+  const applyAdd = (r: NonNullable<typeof scanResult>) => {
     const label = r.productName ? (r.brand ? `${r.brand} ${r.productName}` : r.productName) : `Item ${r.code}`;
     setName(label);
     setBarcode(r.code);
@@ -114,6 +102,28 @@ const Pantry = () => {
       const match = CATEGORIES.find((c) => lower.includes(c));
       if (match) setCategory(match);
     }
+    toast.message("Review and save", { description: "We've prefilled the form below." });
+    setScanResult(null);
+  };
+
+  const applyRemove = async (r: NonNullable<typeof scanResult>) => {
+    let match = items.find((x) => x.barcode && x.barcode === r.code) ?? null;
+    if (!match && r.productName) {
+      const needle = r.productName.toLowerCase();
+      match = items.find((x) => x.item.toLowerCase().includes(needle) || needle.includes(x.item.toLowerCase())) ?? null;
+    }
+    if (!match) {
+      toast.error("That item isn't in your pantry yet.", {
+        description: r.productName ? `Couldn't find "${r.productName}".` : `Code ${r.code} not matched.`,
+      });
+      setScanResult(null);
+      return;
+    }
+    await adjust(match, -1);
+    toast.success(`Removed 1 ${match.unit} of ${match.item}`, {
+      description: `${Math.max(0, match.quantity - 1)} ${match.unit} left.`,
+    });
+    setScanResult(null);
   };
 
   useEffect(() => {
@@ -376,24 +386,14 @@ const Pantry = () => {
         </Card>
 
         <Card className="p-5 sm:p-6 rounded-3xl border-border/50 shadow-soft mb-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            <Button
-              variant="hero"
-              size="lg"
-              onClick={() => { setScanMode("add"); setScannerOpen(true); }}
-              className="rounded-xl h-14 text-base"
-            >
-              <ScanLine className="h-5 w-5 mr-2" /> Scan to add
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => { setScanMode("remove"); setScannerOpen(true); }}
-              className="rounded-xl h-14 text-base"
-            >
-              <Minus className="h-5 w-5 mr-2" /> Scan to remove
-            </Button>
-          </div>
+          <Button
+            variant="hero"
+            size="lg"
+            onClick={() => setScannerOpen(true)}
+            className="rounded-xl h-14 text-base w-full"
+          >
+            <ScanLine className="h-5 w-5 mr-2" /> Scan an item
+          </Button>
           <Button
             variant="ghost"
             onClick={() => setShowManual((v) => !v)}
@@ -402,7 +402,7 @@ const Pantry = () => {
             <Plus className="h-4 w-4 mr-2" /> {showManual ? "Hide manual entry" : "Add manually"}
           </Button>
           <p className="text-xs text-muted-foreground mt-3">
-            Scan to add fetches product details automatically. Scan to remove deducts one from the matching pantry item.
+            After a successful scan, you'll choose whether to add it to your pantry or remove one.
           </p>
         </Card>
 
@@ -465,7 +465,51 @@ const Pantry = () => {
           </Card>
         )}
 
-        <BarcodeScanner open={scannerOpen} onOpenChange={setScannerOpen} onDetected={handleScanned} mode={scanMode} />
+        <BarcodeScanner open={scannerOpen} onOpenChange={setScannerOpen} onDetected={handleScanned} />
+
+        <Dialog open={!!scanResult} onOpenChange={(o) => !o && setScanResult(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>What do you want to do?</DialogTitle>
+              <DialogDescription>
+                {scanResult?.productName ?? `Code ${scanResult?.code ?? ""}`}
+              </DialogDescription>
+            </DialogHeader>
+            {scanResult && (
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 border border-border/40">
+                {scanResult.imageUrl ? (
+                  <img src={scanResult.imageUrl} alt={scanResult.productName ?? scanResult.code} className="h-14 w-14 rounded-lg object-cover border border-border" />
+                ) : (
+                  <div className="h-14 w-14 rounded-lg bg-muted border border-border flex items-center justify-center text-muted-foreground">
+                    <ScanLine className="h-5 w-5" />
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <div className="font-medium text-primary truncate">{scanResult.productName ?? "Unknown product"}</div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {scanResult.brand ? `${scanResult.brand} · ` : ""}{scanResult.code}
+                  </div>
+                </div>
+              </div>
+            )}
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button
+                variant="outline"
+                className="rounded-xl flex-1 h-12"
+                onClick={() => scanResult && applyRemove(scanResult)}
+              >
+                <Minus className="h-4 w-4 mr-1.5" /> Remove one
+              </Button>
+              <Button
+                variant="hero"
+                className="rounded-xl flex-1 h-12"
+                onClick={() => scanResult && applyAdd(scanResult)}
+              >
+                <Plus className="h-4 w-4 mr-1.5" /> Add to pantry
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
