@@ -158,7 +158,7 @@ export const EquivalencyEngine = () => {
             </button>
           ))}
         </div>
-        {!prefsLoading && prefCuisines.length === 0 && (
+        {!prefsLoading && prefCuisines.length === 0 && favoriteCuisines.length === 0 && (
           <CuisinePrefHint className="mt-2" />
         )}
       </div>
