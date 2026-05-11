@@ -458,6 +458,30 @@ export type Database = {
         }
         Relationships: []
       }
+      nutrition_search_events: {
+        Row: {
+          created_at: string
+          id: string
+          normalized_query: string
+          query: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          normalized_query: string
+          query: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          normalized_query?: string
+          query?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       operational_alerts: {
         Row: {
           alert_type: string
@@ -1266,6 +1290,13 @@ export type Database = {
           _title: string
         }
         Returns: string
+      }
+      top_nutrition_searches: {
+        Args: { _limit?: number }
+        Returns: {
+          count: number
+          query: string
+        }[]
       }
     }
     Enums: {
