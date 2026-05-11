@@ -24,6 +24,7 @@ import AdminAudit from "./pages/AdminAudit.tsx";
 import AdminSessions from "./pages/AdminSessions.tsx";
 import Legal from "./pages/Legal.tsx";
 import { InstallPrompt } from "./components/InstallPrompt";
+import { MobileTabBar } from "./components/MobileTabBar";
 import { LegalAcceptanceGate } from "./components/LegalAcceptanceGate";
 import { SessionEnforcer } from "./components/SessionEnforcer";
 
