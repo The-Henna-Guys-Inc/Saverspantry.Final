@@ -15,7 +15,7 @@ import { useVerifiedDishImage } from "@/hooks/useVerifiedDishImage";
 import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
 import { pickDefaultCuisineOption } from "@/lib/cuisineHints";
 import { CuisinePrefHint } from "./CuisinePrefHint";
-import { useEffect } from "react";
+
 
 const GeneratedRecipeImage = ({ title, cuisine }: { title: string; cuisine?: string }) => {
   const img = useVerifiedDishImage(title, cuisine);
