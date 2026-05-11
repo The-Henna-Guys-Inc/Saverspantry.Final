@@ -133,7 +133,7 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
             <Link to="/settings" className="text-primary underline">add cuisines in Settings</Link>.
           </Card>
         ) : (
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="card-masonry">
             {recs.map((r) => {
               const savedPct = r.est_savings_pct;
               return (
