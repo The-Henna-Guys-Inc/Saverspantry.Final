@@ -13,7 +13,7 @@ import { POPULAR_RECIPES } from "@/lib/popularRecipes";
 import { useDishImage } from "@/hooks/useDishImage";
 import { useVerifiedDishImage } from "@/hooks/useVerifiedDishImage";
 import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
-import { pickDefaultCuisineOption } from "@/lib/cuisineHints";
+import { buildCuisineOptions, pickDefaultCuisineOption } from "@/lib/cuisineHints";
 import { CuisinePrefHint } from "./CuisinePrefHint";
 
 
@@ -79,7 +79,7 @@ type Recipe = {
   constraint_conflict?: string;
 };
 
-const CUISINES = ["American", "Pakistani", "Indian", "Italian", "Mexican", "Chinese", "Mediterranean", "Thai"];
+const BASE_CUISINES = ["American", "Pakistani", "Indian", "Italian", "Mexican", "Chinese", "Mediterranean", "Thai"];
 const RESTRICTIONS = ["Halal", "Kosher", "Vegetarian"] as const;
 type Restriction = typeof RESTRICTIONS[number];
 
@@ -93,12 +93,13 @@ export const RecipeGenerator = () => {
   const [cuisine, setCuisine] = useState<string | null>(null);
   const [cuisineTouched, setCuisineTouched] = useState(false);
   const { cuisines: prefCuisines, favoriteCuisines, loading: prefsLoading } = useCuisinePrefs();
+  const cuisineOptions = buildCuisineOptions(BASE_CUISINES, favoriteCuisines);
   // Auto-default cuisine to user's first matching saved pref (until they touch it)
   useEffect(() => {
     if (prefsLoading || cuisineTouched) return;
-    const def = pickDefaultCuisineOption(prefCuisines, CUISINES, favoriteCuisines);
+    const def = pickDefaultCuisineOption(prefCuisines, cuisineOptions, favoriteCuisines);
     if (def) setCuisine(def);
-  }, [prefsLoading, prefCuisines, favoriteCuisines, cuisineTouched]);
+  }, [prefsLoading, prefCuisines, favoriteCuisines, cuisineTouched, cuisineOptions]);
   const pickCuisine = (next: string | null) => { setCuisineTouched(true); setCuisine(next); };
   const [restrictions, setRestrictions] = useState<Restriction[]>([]);
   const [advOpen, setAdvOpen] = useState(false);
@@ -187,7 +188,7 @@ export const RecipeGenerator = () => {
           >
             Any
           </button>
-          {CUISINES.map((c) => (
+          {cuisineOptions.map((c) => (
             <button
               key={c}
               onClick={() => pickCuisine(cuisine === c ? null : c)}
