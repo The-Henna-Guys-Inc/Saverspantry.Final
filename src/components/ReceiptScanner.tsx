@@ -263,11 +263,11 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
 
   return (
     <>
-      <span onClick={() => { reset(); setOpen(true); }}>
+      <span onClick={() => { reset(); setOpen(true); }} className="block w-full">
         {trigger ?? (
-          <Button variant="outline" className="rounded-xl">
-            <Receipt className="h-4 w-4 mr-2" />
-            {mode === "add" ? "Scan receipt" : "Scan removal list"}
+          <Button variant="outline" size="sm" className="rounded-xl w-full px-2 text-xs sm:text-sm whitespace-normal h-auto min-h-[44px] leading-tight">
+            <Receipt className="h-4 w-4 mr-1.5 shrink-0" />
+            <span className="truncate">{mode === "add" ? "Scan receipt" : "Scan removal list"}</span>
           </Button>
         )}
       </span>
