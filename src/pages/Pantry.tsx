@@ -14,6 +14,7 @@ import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { ScanPantryWizard, type ScanResult } from "@/components/ScanPantryWizard";
 import { ExpiryDateScanner } from "@/components/ExpiryDateScanner";
+import { ReceiptScanner } from "@/components/ReceiptScanner";
 import { CuisineFilterBar } from "@/components/CuisineFilterBar";
 import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
 import { detectItemCuisines, CUISINE_LABEL } from "@/lib/cuisineHints";
