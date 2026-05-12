@@ -107,7 +107,9 @@ export const WatchlistActivity = ({ userId }: { userId: string }) => {
       <Card className="p-6 rounded-3xl border-border/50 shadow-soft">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-primary">Deals matching your watchlist</h2>
-...
+        </div>
+        {matches.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
             No live deals for your watched foods right now. We'll keep looking.
           </p>
         ) : (
