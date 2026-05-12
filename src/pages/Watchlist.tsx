@@ -75,6 +75,34 @@ export default function Watchlist({ embedded = false }: { embedded?: boolean } =
     await supabase.from("watchlist_items").update({ min_savings_pct }).eq("id", id);
   };
 
+  const seedFromCuisines = async () => {
+    if (!user) return;
+    if (!cuisines.length) {
+      toast.info("Set cuisine preferences first in Settings");
+      return;
+    }
+    setSeeding(true);
+    const existing = new Set(items.map((i) => i.food_name.toLowerCase()));
+    const wanted = new Set<string>();
+    for (const c of cuisines) {
+      const staples = CUISINE_STAPLES[c.toLowerCase()];
+      if (staples) staples.forEach((s) => wanted.add(s));
+    }
+    const toInsert = Array.from(wanted)
+      .filter((s) => !existing.has(s))
+      .map((food_name) => ({ user_id: user.id, food_name, min_savings_pct: DEFAULT_WATCH_MIN_PCT }));
+    if (toInsert.length === 0) {
+      setSeeding(false);
+      toast.info("All staples already on your watchlist");
+      return;
+    }
+    const { error } = await supabase.from("watchlist_items").insert(toInsert);
+    setSeeding(false);
+    if (error) return toast.error(error.message);
+    toast.success(`Added ${toInsert.length} staples — alerts at 15%+ off`);
+    refresh();
+  };
+
   const Outer: any = embedded ? "div" : "div";
   const Inner: any = embedded ? "div" : "main";
   return (
