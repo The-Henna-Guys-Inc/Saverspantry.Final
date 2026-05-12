@@ -30,10 +30,10 @@ export const Header = () => {
     <header className="sticky top-0 z-30 backdrop-blur-md bg-background/70 border-b border-border/40 safe-top">
       <div className="container max-w-6xl mx-auto px-4 sm:px-6 h-14 grid grid-cols-[1fr_auto_1fr] items-center">
         <div />
-        <Link to="/" className="flex items-center justify-center min-h-[44px]" aria-label="ThriftPantry home">
+        <Link to="/" className="flex items-center justify-center min-h-[44px]" aria-label="Saver's Pantry home">
           <div className="flex flex-col leading-tight items-center text-center">
             <span className="text-xl sm:text-2xl font-bold text-primary tracking-tight">
-              Thrift<span className="text-accent">Pantry</span>
+              Saver's <span className="text-accent">Pantry</span>
             </span>
             <span className="text-[10px] sm:text-xs text-muted-foreground -mt-0.5">
               Eat well, spend less

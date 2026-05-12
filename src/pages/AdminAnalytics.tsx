@@ -124,7 +124,7 @@ const AdminAnalytics = () => {
           <Shield className="h-3.5 w-3.5" /> Admin
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">Platform analytics</h1>
-        <p className="text-muted-foreground mb-8">Aggregated, anonymized activity across all ThriftPantry users (last 12 weeks).</p>
+        <p className="text-muted-foreground mb-8">Aggregated, anonymized activity across all Saver's Pantry users (last 12 weeks).</p>
 
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>

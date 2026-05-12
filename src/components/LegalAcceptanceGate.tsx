@@ -70,7 +70,7 @@ export const LegalAcceptanceGate = () => {
             {isUpdate ? "We've updated our terms" : "Please review and accept"}
           </DialogTitle>
           <DialogDescription>
-            Take a moment to review the {pending.map((d) => d.title).join(" and ")}. You'll need to accept to keep using ThriftPantry.
+            Take a moment to review the {pending.map((d) => d.title).join(" and ")}. You'll need to accept to keep using Saver's Pantry.
           </DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto space-y-4 pr-2">

@@ -17,7 +17,7 @@ const Welcome = () => {
       <div className="flex-1 flex flex-col items-center justify-center text-center max-w-md w-full">
         <img
           src={logoBadge}
-          alt="ThriftPantry"
+          alt="Saver's Pantry"
           width={1024}
           height={1024}
           className="w-32 h-32 sm:w-36 sm:h-36 mb-4 drop-shadow-soft"

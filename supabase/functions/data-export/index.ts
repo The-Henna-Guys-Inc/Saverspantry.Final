@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
       user_id: userId, status: "complete", completed_at: new Date().toISOString(),
     });
 
-    const filename = `thriftpantry-export-${new Date().toISOString().slice(0,10)}.json`;
+    const filename = `saverspantry-export-${new Date().toISOString().slice(0,10)}.json`;
     return new Response(JSON.stringify(dump, null, 2), {
       headers: {
         ...corsHeaders,
