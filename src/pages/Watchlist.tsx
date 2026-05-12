@@ -90,7 +90,7 @@ export default function Watchlist({ embedded = false }: { embedded?: boolean } =
         <div className="mb-6">
           {!embedded && <h1 className="text-3xl font-bold text-primary">Your watchlist</h1>}
           <p className="text-sm text-muted-foreground mt-1">
-            Top staples for your cuisines are watched automatically. We'll surface matching sales on the Sales tab — quiet by default, no notifications you didn't ask for.
+            Top staples for your cuisines are watched automatically. We'll surface matching deals on the Deals tab — quiet by default, no notifications you didn't ask for.
           </p>
         </div>
 
