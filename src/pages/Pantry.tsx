@@ -538,7 +538,7 @@ const Pantry = () => {
               <Button
                 variant="outline"
                 className="rounded-xl flex-1 h-12"
-                onClick={() => scanResult && applyRemove(scanResult)}
+                onClick={() => scanResult && startWizardRemove(scanResult)}
               >
                 <Minus className="h-4 w-4 mr-1.5" /> Remove one
               </Button>
