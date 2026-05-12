@@ -75,11 +75,11 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
   const loadSales = async () => {
     const { data: salesData } = await supabase
       .from("sale_observations")
-      .select("*")
+      .select("*, specialty_stores(latitude, longitude)")
       .in("moderation_status", ["auto_approved", "approved"])
       .gt("ends_at", new Date().toISOString())
       .order("ends_at", { ascending: true })
-      .limit(100);
+      .limit(200);
     setSales((salesData ?? []) as Sale[]);
   };
 
