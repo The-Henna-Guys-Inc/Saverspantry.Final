@@ -347,13 +347,13 @@ const Planner = () => {
               </div>
             </div>
           )}
-          <div className="mt-5 flex gap-3">
-            <Button variant="hero" onClick={generate} disabled={genLoading} className="rounded-xl">
+          <div className="mt-5 flex flex-wrap gap-2 sm:gap-3">
+            <Button variant="hero" size="sm" onClick={generate} disabled={genLoading} className="rounded-xl">
               {genLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : plan ? <RefreshCw className="h-4 w-4 mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
               {plan ? "Regenerate plan" : "Generate plan"}
             </Button>
             {plan && (
-              <Button variant="outline" onClick={buildGrocery} disabled={groceryLoading} className="rounded-xl">
+              <Button variant="outline" size="sm" onClick={buildGrocery} disabled={groceryLoading} className="rounded-xl">
                 {groceryLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ShoppingCart className="h-4 w-4 mr-2" />}
                 Build grocery list
               </Button>
