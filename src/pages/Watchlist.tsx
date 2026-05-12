@@ -6,9 +6,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { BellRing, Plus, Trash2, Loader2, Tag } from "lucide-react";
+import { BellRing, Plus, Trash2, Loader2, Tag, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
+import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
+import { CUISINE_STAPLES, DEFAULT_WATCH_MIN_PCT } from "@/lib/cuisineStaples";
 
 type Item = {
   id: string;
