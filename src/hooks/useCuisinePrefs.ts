@@ -35,6 +35,8 @@ export function useCuisinePrefs() {
     if (!user) return;
     setCuisines(next);
     await supabase.from("profiles").update({ cuisine_preferences: next }).eq("user_id", user.id);
+    // Auto-seed top-5 staples for any newly selected cuisines.
+    syncWatchlistStaples(user.id, next).catch(() => {});
   };
 
   const setEnabled = async (on: boolean) => {
