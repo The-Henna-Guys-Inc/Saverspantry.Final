@@ -137,8 +137,8 @@ export function AdminSaleCsvUpload({ userId, onCreated }: { userId: string; onCr
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="rounded-xl">
-          <Upload className="h-4 w-4 mr-1" /> Bulk CSV
+        <Button variant="outline" size="sm" className="rounded-xl h-8 px-3 text-xs">
+          <Upload className="h-3.5 w-3.5 mr-1" /> CSV
         </Button>
       </DialogTrigger>
       <DialogContent className="rounded-3xl max-w-2xl">

@@ -23,10 +23,7 @@ const Deals = () => {
     <main className="min-h-screen bg-background">
       <Header />
       <div className="container max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-        <div className="flex items-center gap-2 text-accent text-xs font-semibold uppercase tracking-widest mb-2">
-          <Tag className="h-3.5 w-3.5" /> Deals
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-6">Sales, stores & watchlist</h1>
+
 
         <Tabs value={tab} onValueChange={(v) => setParams({ tab: v })} className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-transparent p-0 mb-2 gap-1.5 sm:gap-2 h-auto">

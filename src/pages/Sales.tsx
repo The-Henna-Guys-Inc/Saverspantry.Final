@@ -161,11 +161,11 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
               Some verified by stores, some by the community. We never rank by paid placement.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             {isAdmin && user && <AdminSaleCsvUpload userId={user.id} onCreated={loadSales} />}
             {isAdmin && user && <AdminSaleDialog userId={user.id} onCreated={loadSales} />}
-            <Button asChild variant="hero" size="sm" className="rounded-xl">
-              <Link to="/watchlist">Manage watchlist</Link>
+            <Button asChild variant="hero" size="sm" className="rounded-xl h-8 px-3 text-xs">
+              <Link to="/watchlist">Watchlist</Link>
             </Button>
           </div>
         </div>

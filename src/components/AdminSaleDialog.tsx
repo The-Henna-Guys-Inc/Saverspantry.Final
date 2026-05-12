@@ -128,9 +128,9 @@ export function AdminSaleDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger ?? (
-          <Button variant="hero" size="sm" className="rounded-xl">
-            {isEdit ? <Pencil className="h-4 w-4 mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
-            {isEdit ? "Edit" : "Curate sale"}
+          <Button variant="hero" size="sm" className="rounded-xl h-8 px-3 text-xs">
+            {isEdit ? <Pencil className="h-3.5 w-3.5 mr-1" /> : <Plus className="h-3.5 w-3.5 mr-1" />}
+            {isEdit ? "Edit" : "Curate"}
           </Button>
         )}
       </DialogTrigger>
