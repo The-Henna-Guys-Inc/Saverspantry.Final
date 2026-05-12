@@ -220,7 +220,7 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
                       disabled={adding === r.id}
                     >
                       {adding === r.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Eye className="h-3.5 w-3.5 mr-1.5" />}
-                      Watch for sales
+                      Watch for deals
                     </Button>
                     {r.on_sale && r.sale && (
                       <Button asChild size="sm" variant="hero" className="rounded-xl">
