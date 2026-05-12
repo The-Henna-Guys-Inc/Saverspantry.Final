@@ -6,9 +6,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { BellRing, Plus, Trash2, Loader2, Tag } from "lucide-react";
+import { BellRing, Plus, Trash2, Loader2, Tag, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
+import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
+import { CUISINE_STAPLES, DEFAULT_WATCH_MIN_PCT } from "@/lib/cuisineStaples";
 
 type Item = {
   id: string;
@@ -23,10 +25,12 @@ const SUGGESTIONS = ["basmati rice", "lentils", "olive oil", "paneer", "chicken 
 export default function Watchlist({ embedded = false }: { embedded?: boolean } = {}) {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { cuisines } = useCuisinePrefs();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [newItem, setNewItem] = useState("");
   const [adding, setAdding] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
@@ -71,6 +75,34 @@ export default function Watchlist({ embedded = false }: { embedded?: boolean } =
     await supabase.from("watchlist_items").update({ min_savings_pct }).eq("id", id);
   };
 
+  const seedFromCuisines = async () => {
+    if (!user) return;
+    if (!cuisines.length) {
+      toast.info("Set cuisine preferences first in Settings");
+      return;
+    }
+    setSeeding(true);
+    const existing = new Set(items.map((i) => i.food_name.toLowerCase()));
+    const wanted = new Set<string>();
+    for (const c of cuisines) {
+      const staples = CUISINE_STAPLES[c.toLowerCase()];
+      if (staples) staples.forEach((s) => wanted.add(s));
+    }
+    const toInsert = Array.from(wanted)
+      .filter((s) => !existing.has(s))
+      .map((food_name) => ({ user_id: user.id, food_name, min_savings_pct: DEFAULT_WATCH_MIN_PCT }));
+    if (toInsert.length === 0) {
+      setSeeding(false);
+      toast.info("All staples already on your watchlist");
+      return;
+    }
+    const { error } = await supabase.from("watchlist_items").insert(toInsert);
+    setSeeding(false);
+    if (error) return toast.error(error.message);
+    toast.success(`Added ${toInsert.length} staples — alerts at 15%+ off`);
+    refresh();
+  };
+
   const Outer: any = embedded ? "div" : "div";
   const Inner: any = embedded ? "div" : "main";
   return (
@@ -78,12 +110,23 @@ export default function Watchlist({ embedded = false }: { embedded?: boolean } =
       {!embedded && <Header />}
       <Inner className={embedded ? "" : "container max-w-3xl mx-auto px-6 py-10"}>
         <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
-          <div>
+          <div className="flex-1 min-w-0">
             {!embedded && <h1 className="text-3xl font-bold text-primary">Your watchlist</h1>}
             <p className="text-sm text-muted-foreground mt-1">
               We'll surface matching sales on the Sales tab. Quiet by default — no notifications you didn't ask for.
             </p>
           </div>
+          <Button
+            onClick={seedFromCuisines}
+            disabled={seeding || !cuisines.length}
+            variant="hero"
+            size="sm"
+            className="rounded-xl shrink-0"
+            title={cuisines.length ? `Add top 5 staples for ${cuisines.join(", ")}` : "Set cuisines in Settings first"}
+          >
+            {seeding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            <span className="ml-1.5">Add top 5 per cuisine</span>
+          </Button>
         </div>
 
         <Card className="p-5 rounded-3xl shadow-soft border-border/50 mb-6">
