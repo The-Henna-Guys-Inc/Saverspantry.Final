@@ -328,6 +328,9 @@ function SaleList({
                   <MapPin className="h-3 w-3 shrink-0" />
                   <span className="truncate">
                     {s.store_name}{s.city ? ` · ${s.city}${s.region ? `, ${s.region}` : ""}` : ""}
+                    {s._distance != null && (
+                      <span className="ml-1.5 text-primary font-medium">· {formatDistance(s._distance)}</span>
+                    )}
                   </span>
                 </p>
                 {s.address && (
