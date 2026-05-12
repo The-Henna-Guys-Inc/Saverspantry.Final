@@ -432,6 +432,7 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
+                      </div>
                     </div>
                     {mode === "remove" && (
                       <div className="mt-2 text-xs flex items-center gap-1.5">
