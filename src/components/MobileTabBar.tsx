@@ -13,7 +13,7 @@ import {
   Settings as SettingsIcon,
   Shield,
   LogOut,
-  Sprout,
+  
   BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
