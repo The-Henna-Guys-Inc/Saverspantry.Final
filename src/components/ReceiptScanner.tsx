@@ -329,7 +329,21 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
               <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1 -mr-1">
                 {items.map((it) => (
                   <div key={it._key} className="rounded-xl border border-border/60 bg-card p-3">
-                    <div className="grid grid-cols-12 gap-2 items-end">
+                    <div className="flex gap-3 items-start">
+                      <div className="shrink-0">
+                        {it.imageUrl ? (
+                          <img src={it.imageUrl} alt={it.name} className="h-12 w-12 rounded-lg object-cover border border-border bg-muted" />
+                        ) : (
+                          <div className={`h-12 w-12 rounded-lg border border-border bg-muted flex items-center justify-center ${it.imageLoading ? "animate-pulse" : ""}`}>
+                            {it.imageLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                            ) : (
+                              <Receipt className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 grid grid-cols-12 gap-2 items-end">
                       <div className="col-span-12 sm:col-span-5">
                         <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Item</Label>
                         <Input
