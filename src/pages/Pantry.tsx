@@ -12,6 +12,7 @@ import { Loader2, Plus, Trash2, Refrigerator, Minus, AlertTriangle, X, ScanLine,
 import { toast } from "sonner";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { ScanPantryWizard, type ScanResult } from "@/components/ScanPantryWizard";
 import { ExpiryDateScanner } from "@/components/ExpiryDateScanner";
 import { CuisineFilterBar } from "@/components/CuisineFilterBar";
 import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
