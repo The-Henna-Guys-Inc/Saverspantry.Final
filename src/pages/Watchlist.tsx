@@ -30,7 +30,7 @@ export default function Watchlist({ embedded = false }: { embedded?: boolean } =
   const [loading, setLoading] = useState(true);
   const [newItem, setNewItem] = useState("");
   const [adding, setAdding] = useState(false);
-  const [seeding, setSeeding] = useState(false);
+  // (seeding state removed — staples now auto-sync from cuisine prefs)
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
