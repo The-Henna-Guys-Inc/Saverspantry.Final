@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { BrowserMultiFormatReader, IScannerControls } from "@zxing/browser";
+import { DecodeHintType, BarcodeFormat } from "@zxing/library";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, ScanLine, Camera } from "lucide-react";
+import { Loader2, ScanLine, Camera, Zap, ZapOff } from "lucide-react";
 import { toast } from "sonner";
 
 type Props = {
@@ -36,11 +37,33 @@ function playBeep(ctx: AudioContext | null) {
   }
 }
 
+// Lookup product details from Open Food Facts
+async function lookupProduct(code: string) {
+  try {
+    const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json`);
+    const data = await res.json();
+    if (data.status === 1 && data.product) {
+      const p = data.product;
+      return {
+        code,
+        productName: p.product_name || p.generic_name || undefined,
+        brand: p.brands || undefined,
+        quantity: p.quantity || undefined,
+        categories: p.categories || undefined,
+        imageUrl: p.image_front_url || p.image_url || p.image_small_url || undefined,
+      };
+    }
+  } catch { /* ignore */ }
+  return { code };
+}
+
 export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }: Props) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const nativeRafRef = useRef<number | null>(null);
+  const stoppedRef = useRef(false);
   const onDetectedRef = useRef(onDetected);
   const onOpenChangeRef = useRef(onOpenChange);
   onDetectedRef.current = onDetected;
@@ -49,10 +72,17 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
   const [status, setStatus] = useState<"needs-permission" | "requesting" | "scanning" | "looking-up" | "error">("needs-permission");
   const [errorMsg, setErrorMsg] = useState("");
   const [permanentlyDenied, setPermanentlyDenied] = useState(false);
+  const [torchOn, setTorchOn] = useState(false);
+  const [torchSupported, setTorchSupported] = useState(false);
 
   const stopAll = () => {
+    stoppedRef.current = true;
     try { controlsRef.current?.stop(); } catch { /* */ }
     controlsRef.current = null;
+    if (nativeRafRef.current != null) {
+      cancelAnimationFrame(nativeRafRef.current);
+      nativeRafRef.current = null;
+    }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => { try { t.stop(); } catch { /* */ } });
       streamRef.current = null;
@@ -62,7 +92,7 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
     }
   };
 
-  // Prime AudioContext on open (user just tapped Scan).
+  // Prime AudioContext on open.
   useEffect(() => {
     if (!open) return;
     try {
@@ -74,63 +104,98 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
     } catch { /* */ }
   }, [open]);
 
-  // Cleanup on close + reset state.
   useEffect(() => {
     if (!open) {
       stopAll();
       setStatus("needs-permission");
       setErrorMsg("");
       setPermanentlyDenied(false);
+      setTorchOn(false);
+      setTorchSupported(false);
       return;
     }
-    // On open, peek at permission state — but DON'T auto-call getUserMedia
-    // (Chrome can refuse if not in a user-gesture even when granted).
+    stoppedRef.current = false;
     (async () => {
       try {
         // @ts-ignore
         const perm: PermissionStatus | undefined = await navigator.permissions?.query({ name: "camera" as PermissionName });
         if (perm?.state === "denied") setPermanentlyDenied(true);
-      } catch { /* permissions API unavailable */ }
+      } catch { /* */ }
     })();
   }, [open]);
 
-  // The critical path: called directly from the user's click.
-  // Do getUserMedia FIRST (synchronously inside the gesture), then everything else.
+  const handleDetected = async (code: string) => {
+    if (stoppedRef.current) return;
+    stoppedRef.current = true;
+    try { controlsRef.current?.stop(); } catch { /* */ }
+    if (nativeRafRef.current != null) cancelAnimationFrame(nativeRafRef.current);
+    playBeep(audioCtxRef.current);
+    setStatus("looking-up");
+    const result = await lookupProduct(code);
+    onDetectedRef.current(result);
+    if (result.productName) toast.success(`Found: ${result.productName}`);
+    else toast.message(`Scanned ${code}`, { description: "Not in product database — fill name manually." });
+    onOpenChangeRef.current(false);
+  };
+
   const requestCamera = async () => {
     setStatus("requesting");
     setErrorMsg("");
+    stoppedRef.current = false;
 
     let stream: MediaStream;
     try {
+      // High-resolution constraints help dramatically with small/dense barcodes on iPhone.
       stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" } },
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          // @ts-ignore — non-standard but iOS Safari respects these
+          focusMode: "continuous",
+          // @ts-ignore
+          advanced: [{ focusMode: "continuous" }, { focusMode: "auto" }],
+        },
         audio: false,
       });
     } catch (e: any) {
       console.error("[scanner] getUserMedia failed:", e?.name, e?.message);
-      const name = e?.name as string | undefined;
-      if (name === "NotAllowedError" || name === "SecurityError") {
-        setPermanentlyDenied(true);
-        setErrorMsg("Camera permission was blocked by the browser.");
-      } else if (name === "NotFoundError" || name === "OverconstrainedError") {
-        setErrorMsg("No camera was found on this device.");
-      } else if (name === "NotReadableError") {
-        setErrorMsg("Camera is in use by another app. Close it and try again.");
-      } else {
-        setErrorMsg(e?.message ?? "Could not start the camera.");
+      // Retry with looser constraints if iOS rejected the advanced ones
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" } },
+          audio: false,
+        });
+      } catch (e2: any) {
+        const name = e2?.name as string | undefined;
+        if (name === "NotAllowedError" || name === "SecurityError") {
+          setPermanentlyDenied(true);
+          setErrorMsg("Camera permission was blocked by the browser.");
+        } else if (name === "NotFoundError" || name === "OverconstrainedError") {
+          setErrorMsg("No camera was found on this device.");
+        } else if (name === "NotReadableError") {
+          setErrorMsg("Camera is in use by another app. Close it and try again.");
+        } else {
+          setErrorMsg(e2?.message ?? "Could not start the camera.");
+        }
+        setStatus("error");
+        return;
       }
-      setStatus("error");
-      return;
     }
 
     streamRef.current = stream;
     setStatus("scanning");
 
-    // Wait one frame for the <video> element to mount in the new state.
+    // Probe torch support
+    try {
+      const track = stream.getVideoTracks()[0];
+      const caps: any = track.getCapabilities?.() || {};
+      if (caps.torch) setTorchSupported(true);
+    } catch { /* */ }
+
     await new Promise((r) => requestAnimationFrame(() => r(null)));
     const video = videoRef.current;
     if (!video) {
-      console.error("[scanner] video element missing after mount");
       stopAll();
       setErrorMsg("Scanner failed to initialize.");
       setStatus("error");
@@ -142,38 +207,53 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
     video.muted = true;
     try { await video.play(); } catch (e) { console.warn("[scanner] video.play() warn:", e); }
 
-    // Hand the already-running video to zxing — no second getUserMedia.
+    // 1) Prefer the native BarcodeDetector — it's *much* faster than ZXing on iOS 17+ Safari and Android Chrome.
+    const NativeDetector = (window as any).BarcodeDetector;
+    if (NativeDetector) {
+      try {
+        const supported: string[] = (await NativeDetector.getSupportedFormats?.()) || [];
+        const formats = ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39", "itf", "qr_code"]
+          .filter((f) => supported.length === 0 || supported.includes(f));
+        const detector = new NativeDetector({ formats });
+        const tick = async () => {
+          if (stoppedRef.current || !videoRef.current) return;
+          try {
+            const codes = await detector.detect(videoRef.current);
+            if (codes && codes.length > 0) {
+              const code = codes[0].rawValue || codes[0].rawValue?.toString?.() || "";
+              if (code) {
+                await handleDetected(code);
+                return;
+              }
+            }
+          } catch { /* keep trying */ }
+          nativeRafRef.current = requestAnimationFrame(tick);
+        };
+        nativeRafRef.current = requestAnimationFrame(tick);
+        return;
+      } catch (e) {
+        console.warn("[scanner] BarcodeDetector failed, falling back to ZXing:", e);
+      }
+    }
+
+    // 2) ZXing fallback with TRY_HARDER + restricted formats for speed.
     try {
-      const reader = new BrowserMultiFormatReader();
+      const hints = new Map();
+      hints.set(DecodeHintType.TRY_HARDER, true);
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.EAN_13,
+        BarcodeFormat.EAN_8,
+        BarcodeFormat.UPC_A,
+        BarcodeFormat.UPC_E,
+        BarcodeFormat.CODE_128,
+        BarcodeFormat.CODE_39,
+        BarcodeFormat.ITF,
+        BarcodeFormat.QR_CODE,
+      ]);
+      const reader = new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 100 });
       const controls = await reader.decodeFromVideoElement(video, async (result) => {
         if (!result) return;
-        const code = result.getText();
-        try { controls.stop(); } catch { /* */ }
-        playBeep(audioCtxRef.current);
-        setStatus("looking-up");
-        try {
-          const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json`);
-          const data = await res.json();
-          if (data.status === 1 && data.product) {
-            const p = data.product;
-            onDetectedRef.current({
-              code,
-              productName: p.product_name || p.generic_name || undefined,
-              brand: p.brands || undefined,
-              quantity: p.quantity || undefined,
-              categories: p.categories || undefined,
-              imageUrl: p.image_front_url || p.image_url || p.image_small_url || undefined,
-            });
-            toast.success(`Found: ${p.product_name || code}`);
-          } else {
-            onDetectedRef.current({ code });
-            toast.message(`Scanned ${code}`, { description: "Not in product database — fill name manually." });
-          }
-        } catch {
-          onDetectedRef.current({ code });
-          toast.message(`Scanned ${code}`);
-        }
-        onOpenChangeRef.current(false);
+        await handleDetected(result.getText());
       });
       controlsRef.current = controls;
     } catch (e: any) {
@@ -181,6 +261,20 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
       stopAll();
       setErrorMsg(e?.message ?? "Failed to start the barcode reader.");
       setStatus("error");
+    }
+  };
+
+  const toggleTorch = async () => {
+    const track = streamRef.current?.getVideoTracks()[0];
+    if (!track) return;
+    try {
+      const next = !torchOn;
+      // @ts-ignore — torch is non-standard but supported on most mobile browsers
+      await track.applyConstraints({ advanced: [{ torch: next }] });
+      setTorchOn(next);
+    } catch (e) {
+      console.warn("[scanner] torch toggle failed:", e);
+      toast.message("Flashlight not available on this device");
     }
   };
 
@@ -196,7 +290,7 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
           <DialogDescription>
             {mode === "remove"
               ? "Scan the barcode of an item you're using up — we'll deduct one from your pantry."
-              : "Hold the barcode steady — we'll fetch the product details for you."}
+              : "Hold the barcode steady, fill the box, and tap the flashlight if it's dim."}
           </DialogDescription>
         </DialogHeader>
 
@@ -239,6 +333,19 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
             <video ref={videoRef} className="w-full h-full object-cover" muted playsInline autoPlay />
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
               <div className="w-[88%] h-[28%] sm:w-3/4 sm:h-1/3 border-2 border-accent/80 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
+            </div>
+            {torchSupported && (
+              <button
+                type="button"
+                onClick={toggleTorch}
+                className="absolute top-3 right-3 h-10 w-10 rounded-full bg-black/60 text-white flex items-center justify-center backdrop-blur-sm active:scale-95 transition"
+                aria-label={torchOn ? "Turn flashlight off" : "Turn flashlight on"}
+              >
+                {torchOn ? <ZapOff className="h-5 w-5" /> : <Zap className="h-5 w-5" />}
+              </button>
+            )}
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-white/90 text-xs bg-black/50 rounded-full px-3 py-1 backdrop-blur-sm">
+              Fill the box with the barcode • hold ~10cm away
             </div>
             {status === "looking-up" && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-sm gap-2">
