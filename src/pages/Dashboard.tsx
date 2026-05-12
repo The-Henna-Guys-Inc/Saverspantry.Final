@@ -154,7 +154,7 @@ const Dashboard = () => {
             <div className="text-5xl mb-3">🌱</div>
             <h2 className="text-xl font-semibold text-primary mb-2">No savings yet</h2>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              Save a swap from the Equivalency Engine, capture a sale, or generate a meal plan — your savings will start showing up here.
+              Save a swap from the Equivalency Engine, capture a deal, or generate a meal plan — your savings will start showing up here.
             </p>
           </Card>
         ) : (
