@@ -176,7 +176,7 @@ export const HomeAuthed = ({ user }: Props) => {
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-sm font-semibold">
-                {watchlistCount > 0 ? "Check sales on your staples" : "Start a price watchlist"}
+                {watchlistCount > 0 ? "Check deals on your staples" : "Start a price watchlist"}
               </div>
               <div className="text-xs text-muted-foreground mt-0.5">
                 {watchlistCount > 0

@@ -27,7 +27,7 @@ export const WatchlistButton = ({ foodName, size = "sm" }: Props) => {
 
   const toggle = async () => {
     if (!user) {
-      toast.info("Sign in to watch for sales");
+      toast.info("Sign in to watch for deals");
       navigate("/auth");
       return;
     }
@@ -49,14 +49,14 @@ export const WatchlistButton = ({ foodName, size = "sm" }: Props) => {
       setBusy(false);
       if (error) return toast.error(error.message);
       setWatching(true);
-      toast.success("We'll surface sales for this");
+      toast.success("We'll surface deals for this");
     }
   };
 
   return (
     <Button onClick={toggle} disabled={busy} variant="outline" size={size === "icon" ? "icon" : "sm"} className="rounded-xl">
       {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : watching ? <BellRing className="h-3.5 w-3.5 fill-current" /> : <Bell className="h-3.5 w-3.5" />}
-      {size !== "icon" && <span className="ml-1.5">{watching ? "Watching" : "Watch sales"}</span>}
+      {size !== "icon" && <span className="ml-1.5">{watching ? "Watching" : "Watch deals"}</span>}
     </Button>
   );
 };

@@ -140,7 +140,7 @@ const AdminDeals = () => {
             <h1 className="text-2xl font-bold">Deal moderation</h1>
           </div>
           <Button asChild variant="outline" size="sm">
-            <Link to="/deals?tab=sales">Back to sales</Link>
+            <Link to="/deals?tab=sales">Back to deals</Link>
           </Button>
         </div>
 

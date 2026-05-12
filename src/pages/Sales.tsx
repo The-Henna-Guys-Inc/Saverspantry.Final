@@ -185,7 +185,7 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
   };
 
   const removeSale = async (saleId: string) => {
-    if (!window.confirm("Remove this sale from the feed?")) return;
+    if (!window.confirm("Remove this deal from the feed?")) return;
     const { error } = await supabase.from("sale_observations").delete().eq("id", saleId);
     if (error) return toast.error(error.message);
     setSales((prev) => prev.filter((s) => s.id !== saleId));
@@ -199,7 +199,7 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
       <main className={embedded ? "" : "container max-w-4xl mx-auto px-6 py-10"}>
         <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
           <div>
-            <h1 className="text-3xl font-bold text-primary">Sales near you</h1>
+            <h1 className="text-3xl font-bold text-primary">Deals near you</h1>
             <p className="text-sm text-muted-foreground mt-1">
               Some verified by stores, some by the community. We never rank by paid placement.
             </p>
@@ -251,7 +251,7 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
             <TabsTrigger value="watching" className="rounded-lg">
               On your watchlist {matched.length > 0 && <Badge variant="secondary" className="ml-2">{matched.length}</Badge>}
             </TabsTrigger>
-            <TabsTrigger value="all" className="rounded-lg">All sales</TabsTrigger>
+            <TabsTrigger value="all" className="rounded-lg">All deals</TabsTrigger>
           </TabsList>
 
           <TabsContent value="watching" className="mt-5">
@@ -262,7 +262,7 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
                 <Tag className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
                 <p className="font-medium">Nothing matched yet</p>
                 <p className="text-sm text-muted-foreground mt-1 mb-4">
-                  Add staples you regularly buy and we'll surface sales here.
+                  Add staples you regularly buy and we'll surface deals here.
                 </p>
                 <Button asChild variant="hero" size="sm" className="rounded-xl">
                   <Link to="/watchlist">Build my watchlist</Link>
@@ -282,7 +282,7 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
             ) : cuisineFiltered.length === 0 ? (
               <Card className="p-8 rounded-3xl text-center bg-gradient-warm">
                 <p className="text-sm text-muted-foreground">
-                  {isFiltering ? "No active sales match your cuisines. Try toggling \"Show everything\"." : "No active sales right now. Check back soon."}
+                  {isFiltering ? "No active deals match your cuisines. Try toggling \"Show everything\"." : "No active deals right now. Check back soon."}
                 </p>
               </Card>
             ) : (

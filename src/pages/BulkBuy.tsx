@@ -154,7 +154,7 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
                     </div>
                     {r.on_sale && (
                       <span className="shrink-0 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent/20 text-accent inline-flex items-center gap-1">
-                        <Tag className="h-3 w-3" /> On sale
+                        <Tag className="h-3 w-3" /> On deal
                       </span>
                     )}
                   </div>
@@ -220,11 +220,11 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
                       disabled={adding === r.id}
                     >
                       {adding === r.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Eye className="h-3.5 w-3.5 mr-1.5" />}
-                      Watch for sales
+                      Watch for deals
                     </Button>
                     {r.on_sale && r.sale && (
                       <Button asChild size="sm" variant="hero" className="rounded-xl">
-                        <Link to="/sales">See sale →</Link>
+                        <Link to="/sales">See deal →</Link>
                       </Button>
                     )}
                   </div>

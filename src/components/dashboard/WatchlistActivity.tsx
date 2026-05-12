@@ -68,7 +68,7 @@ export const WatchlistActivity = ({ userId }: { userId: string }) => {
         <div className="text-5xl mb-3">👀</div>
         <h2 className="text-xl font-semibold text-primary mb-2">Your watchlist is empty</h2>
         <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
-          Add foods you regularly buy and we'll surface matching sales here.
+          Add foods you regularly buy and we'll surface matching deals here.
         </p>
         <Button asChild variant="hero" className="rounded-xl">
           <Link to="/watchlist">Manage watchlist</Link>
@@ -106,14 +106,11 @@ export const WatchlistActivity = ({ userId }: { userId: string }) => {
 
       <Card className="p-6 rounded-3xl border-border/50 shadow-soft">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-primary">Sales matching your watchlist</h2>
-          <Button asChild size="sm" variant="ghost" className="rounded-xl">
-            <Link to="/watchlist">Edit watchlist</Link>
-          </Button>
+          <h2 className="text-sm font-semibold text-primary">Deals matching your watchlist</h2>
         </div>
         {matches.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">
-            No live sales for your watched foods right now. We'll keep looking.
+          <p className="text-sm text-muted-foreground">
+            No live deals for your watched foods right now. We'll keep looking.
           </p>
         ) : (
           <ul className="space-y-3">

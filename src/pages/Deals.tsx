@@ -28,7 +28,7 @@ const Deals = () => {
         <Tabs value={tab} onValueChange={(v) => setParams({ tab: v })} className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-transparent p-0 mb-2 gap-1.5 sm:gap-2 h-auto">
             <TabsTrigger value="sales" className={triggerClass}>
-              <Tag className="h-4 w-4" />Sales
+              <Tag className="h-4 w-4" />Deals
             </TabsTrigger>
             <TabsTrigger value="stores" className={triggerClass}>
               <StoreIcon className="h-4 w-4" />Stores
