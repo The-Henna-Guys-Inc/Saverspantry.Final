@@ -38,8 +38,14 @@ export default function Watchlist({ embedded = false }: { embedded?: boolean } =
 
   useEffect(() => {
     if (!user) return;
-    refresh();
-  }, [user]);
+    (async () => {
+      // Auto-seed staples for current cuisines (idempotent — backfills existing users).
+      if (cuisines.length) {
+        await syncWatchlistStaples(user.id, cuisines);
+      }
+      refresh();
+    })();
+  }, [user, cuisines.join(",")]);
 
   const refresh = async () => {
     setLoading(true);
