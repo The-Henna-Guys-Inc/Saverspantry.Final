@@ -553,6 +553,22 @@ const Pantry = () => {
           </DialogContent>
         </Dialog>
 
+        <ScanPantryWizard
+          open={wizard.open}
+          mode={wizard.mode}
+          scan={wizard.scan}
+          locations={allLocations}
+          units={UNITS}
+          defaultLocation={wizard.matchedItem?.location ?? "pantry"}
+          defaultUnit={wizard.matchedItem?.unit ?? "unit"}
+          matchedQuantity={wizard.mode === "remove" ? wizard.matchedItem?.quantity : undefined}
+          matchedExpires={wizard.matchedItem?.expires_on ?? null}
+          matchedUnit={wizard.matchedItem?.unit}
+          submitting={wizardSubmitting}
+          onCancel={() => setWizard({ open: false, mode: "add", scan: null, matchedItem: null })}
+          onComplete={handleWizardComplete}
+        />
+
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : items.length === 0 ? (
