@@ -64,7 +64,9 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
   const [isAdmin, setIsAdmin] = useState(false);
   const [matchedPage, setMatchedPage] = useState(1);
   const [allPage, setAllPage] = useState(1);
+  const [sortMode, setSortMode] = useState<SortMode>("distance");
   const { cuisines, isFiltering, setEnabled } = useCuisinePrefs();
+  const { location, radiusMiles } = useUserLocation();
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
