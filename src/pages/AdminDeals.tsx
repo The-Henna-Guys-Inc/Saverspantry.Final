@@ -156,9 +156,14 @@ const AdminDeals = () => {
             <ShieldCheck className="h-5 w-5 text-primary" />
             <h1 className="text-2xl font-bold">Deal moderation</h1>
           </div>
-          <Button asChild variant="outline" size="sm">
-            <Link to="/deals?tab=sales">Back to deals</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link to="/admin/email-inbox">Email inbox</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/deals?tab=sales">Back to deals</Link>
+            </Button>
+          </div>
         </div>
 
         {batchFilter && (

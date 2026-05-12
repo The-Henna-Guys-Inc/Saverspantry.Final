@@ -1,0 +1,1 @@
+ALTER TABLE public.flyer_extraction_batches ALTER COLUMN admin_user_id DROP NOT NULL;

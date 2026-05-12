@@ -55,11 +55,16 @@ Deno.serve(async (req) => {
   const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
 
   try {
-    const userId = await getUserIdFromAuth(req);
-    if (!userId) return json({ error: "Unauthorized" }, 401);
-
-    const { data: roleRow } = await admin.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
-    if (!roleRow) return json({ error: "Forbidden" }, 403);
+    // Allow service-role calls (e.g. from ingest-promo-email) by checking the bearer.
+    const auth = req.headers.get("authorization") ?? "";
+    const isServiceRole = auth === `Bearer ${serviceKey}`;
+    let userId: string | null = null;
+    if (!isServiceRole) {
+      userId = await getUserIdFromAuth(req);
+      if (!userId) return json({ error: "Unauthorized" }, 401);
+      const { data: roleRow } = await admin.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
+      if (!roleRow) return json({ error: "Forbidden" }, 403);
+    }
 
     if (!apiKey) return json({ error: "AI gateway not configured" }, 500);
 
