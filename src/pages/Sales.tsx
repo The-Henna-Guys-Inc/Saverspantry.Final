@@ -282,7 +282,7 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
             ) : cuisineFiltered.length === 0 ? (
               <Card className="p-8 rounded-3xl text-center bg-gradient-warm">
                 <p className="text-sm text-muted-foreground">
-                  {isFiltering ? "No active sales match your cuisines. Try toggling \"Show everything\"." : "No active sales right now. Check back soon."}
+                  {isFiltering ? "No active deals match your cuisines. Try toggling \"Show everything\"." : "No active deals right now. Check back soon."}
                 </p>
               </Card>
             ) : (
