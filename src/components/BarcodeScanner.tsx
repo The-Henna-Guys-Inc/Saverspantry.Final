@@ -43,8 +43,9 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
   const audioCtxRef = useRef<AudioContext | null>(null);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [deviceId, setDeviceId] = useState<string | undefined>();
-  const [status, setStatus] = useState<"idle" | "starting" | "scanning" | "looking-up" | "error">("idle");
+  const [status, setStatus] = useState<"needs-permission" | "requesting" | "starting" | "scanning" | "looking-up" | "error">("needs-permission");
   const [errorMsg, setErrorMsg] = useState("");
+  const [permanentlyDenied, setPermanentlyDenied] = useState(false);
 
   // Prime an AudioContext as soon as the dialog opens (user just tapped "Scan").
   useEffect(() => {
@@ -55,7 +56,6 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
       if (!audioCtxRef.current) audioCtxRef.current = new Ctx();
       const ctx = audioCtxRef.current!;
       if (ctx.state === "suspended") ctx.resume().catch(() => {});
-      // Play a near-silent tick to fully unlock audio on iOS.
       const o = ctx.createOscillator();
       const g = ctx.createGain();
       g.gain.value = 0.0001;
@@ -67,23 +67,51 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
     }
   }, [open]);
 
-  // List cameras when dialog opens
+  // Check current permission state when dialog opens — auto-start if already granted.
   useEffect(() => {
     if (!open) return;
     (async () => {
       try {
-        // Prompt for permission first so device labels appear
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        stream.getTracks().forEach((t) => t.stop());
-        const list = await BrowserMultiFormatReader.listVideoInputDevices();
-        setDevices(list);
-        setDeviceId(list[0]?.deviceId);
-      } catch (e: any) {
-        setStatus("error");
-        setErrorMsg(e?.message ?? "Camera permission denied");
+        // @ts-ignore - permissions API typing for camera varies by browser
+        const perm: PermissionStatus | undefined = await navigator.permissions?.query({ name: "camera" as PermissionName });
+        if (perm?.state === "granted") {
+          requestCamera();
+        } else if (perm?.state === "denied") {
+          setPermanentlyDenied(true);
+        }
+      } catch {
+        /* permissions API not supported — wait for user click */
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  const requestCamera = async () => {
+    setStatus("requesting");
+    setErrorMsg("");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } });
+      stream.getTracks().forEach((t) => t.stop());
+      const list = await BrowserMultiFormatReader.listVideoInputDevices();
+      setDevices(list);
+      // Prefer a back/environment camera if labels hint at it.
+      const back = list.find((d) => /back|rear|environment/i.test(d.label));
+      setDeviceId((back ?? list[0])?.deviceId);
+      setPermanentlyDenied(false);
+    } catch (e: any) {
+      const name = e?.name as string | undefined;
+      if (name === "NotAllowedError" || name === "SecurityError") {
+        setPermanentlyDenied(true);
+        setErrorMsg("Camera permission was blocked.");
+      } else if (name === "NotFoundError" || name === "OverconstrainedError") {
+        setErrorMsg("No camera was found on this device.");
+      } else {
+        setErrorMsg(e?.message ?? "Could not start the camera.");
+      }
+      setStatus("error");
+    }
+  };
+
 
   // Start scanning when device is selected
   useEffect(() => {
