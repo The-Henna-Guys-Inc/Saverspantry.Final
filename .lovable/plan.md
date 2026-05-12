@@ -1,70 +1,120 @@
-## v1.5 — Cuisine personalization + Bulk-Buy engine
+# Promo email → deals pipeline
 
-This slice does two things at once because they share the same spine: a per-user **cuisine profile** that filters every discovery surface (Pantry, Stores, Sales) and feeds a new **data-driven Bulk-Buy** recommender that replaces today's static curated UI.
+Goal: an inbox the app owns. Promo emails land there, the app pulls flyers + addresses out of them, and they show up in your existing moderation queue as `pending_review` deals tied to the right store.
 
-### 1. Cuisine profile (the spine)
+Build it in three slices. Slice 1 is the foundation we'll wire up first; slices 2–3 layer on after you've seen it work end-to-end.
 
-- Add `profiles.cuisine_preferences text[]` (e.g. `['korean','south_asian','mexican']`) and `profiles.cuisine_filter_enabled bool default true`.
-- Settings page gets a "My cuisines" multi-select using the existing `CuisineTag` list from `src/lib/cuisineHints.ts`.
-- New tiny hook `useCuisinePrefs()` — reads/writes profile, exposed app-wide.
-- New shared `<CuisineFilterBar />` component that shows the active cuisines as chips with a single **"Show everything"** toggle. Drops on Pantry / Stores / Sales / Bulk-Buy.
-- Auto-bootstrap: first time a user lands with no cuisines set, infer from their pantry + saved recipes (run `detectItemCuisines` over recent items, take top 3) and seed the profile. They can override anytime.
+---
 
-### 2. Pantry — cuisine-aware
+## Slice 1 — Inbox + admin review (attachments only)
 
-- Pantry list gets a small "Cuisines" column/chip per item (computed via `detectItemCuisines`).
-- When filter is on: show items whose cuisine matches the user's preferences first, others collapsed under a "Other items (N)" expand.
-- The existing **SpecialtyStoreBanner** already uses topCuisines — wire it so when the user has explicit prefs, those win over inferred ones.
+**Inbound provider:** Resend Inbound (cleanest fit; same vendor for sending, available as a Lovable connector). One forwarding address: `deals@<your-domain>`.
 
-### 3. Stores — cuisine-aware default
+**Flow**
 
-- `/stores` defaults active filter chips to the user's cuisine prefs (instead of empty).
-- Header shows "Showing stores for Korean / South Asian — [Show all stores]".
-- Empty state copy adjusts: "No Korean / South Asian stores nearby — [Show all stores]".
+```text
+Promo email
+   │
+   ▼
+Resend Inbound webhook ──► ingest-promo-email (edge fn)
+                              │  • verify signature
+                              │  • save raw email + attachments to storage
+                              │  • parse sender, subject, body, ZIP/address
+                              │  • try to match a store
+                              │  • for each PDF/image attachment:
+                              │       create flyer_extraction_batch
+                              │       invoke extract-flyer-deals
+                              ▼
+                       promo_email_ingestions row
+                              │
+                              ▼
+                Admin "Email inbox" tab on /admin/deals
+                  - shows email + matched store
+                  - admin can re-assign store
+                  - jumps into the existing batch review screen
+```
 
-### 4. Sales — cuisine-aware default
+**New schema**
 
-- `/sales` filters `sale_observations` to ones whose `food_name` maps (via `detectItemCuisines`) to the user's cuisines, OR generic staples (no cuisine tag) — those always show because rice/milk/eggs aren't ethnic.
-- Same "Show everything" toggle in the header.
+- `promo_email_ingestions`
+  - `from_address`, `from_domain`, `subject`, `received_at`
+  - `raw_storage_path` (full .eml in storage)
+  - `matched_store_id` (nullable), `match_confidence` (`high` / `low` / `unmatched`)
+  - `status`: `received` → `processed` → `failed` / `needs_assignment`
+  - `notes`, `attachment_count`
+- `flyer_extraction_batches.source_email_id` → nullable FK to the row above
+- `store_email_aliases` (admin-managed): `from_domain` or `from_address` → `chain_name` or specific `store_id`. Lets you teach the system: "anything from `weeklyad@kroger.com` is Kroger."
 
-### 5. Bulk-Buy engine (data-driven, replaces static UI)
+**New storage bucket**
 
-Replaces `BulkStoragePlanner` with a real recommender driven by what the user actually buys + cuisine.
+- `promo-emails` (private). Path: `{ingestion_id}/raw.eml` + `{ingestion_id}/attachments/<n>.pdf`.
 
-**New table `bulk_buy_candidates`** — pre-computed nightly:
-- `food_name`, `cuisine_tags text[]`, `typical_unit_price_usd`, `bulk_unit_price_usd`, `bulk_pack_size`, `est_savings_pct`, `shelf_life_days`, `storage_tip`, `best_store_type` (e.g. "south_asian_grocer"), `confidence` (low/med/high), `source` (`derived` | `curated`).
+**Admin UI additions** (no end-user UI yet)
 
-**Edge function `bulk-buy-recommend`** (called from new `/bulk-buy` page):
-- Inputs: user's cuisine prefs, household_size, pantry consumption frequency from `pantry_consumption_log`.
-- Logic:
-  1. Pull `bulk_buy_candidates` matching cuisine prefs.
-  2. Cross-reference with the user's `pantry_consumption_log` — items they actually use frequently get boosted score.
-  3. Cross-reference active `sale_observations` — if any candidate is currently on sale, surface it at top with "On sale now" badge.
-  4. Compute personalized `est_monthly_savings_usd` from consumption rate × savings_pct.
-  5. Return ranked list with reasoning.
+- New tab on `/admin/deals` → **Email inbox**
+  - Table: received_at · from · subject · matched store (badge: matched / low confidence / unmatched) · # deals extracted · status
+  - Row click → side panel:
+    - Email preview (subject, from, body excerpt, attachment list)
+    - Store picker (searchable, same component used in `AdminFlyerUpload`)
+    - "Reprocess" button (re-runs extraction with the corrected store)
+    - "Open batch" → existing `?batch=` review flow
+- New screen `/admin/email-aliases` — simple CRUD for `store_email_aliases`
 
-**New page `/bulk-buy`** (replaces the BulkStoragePlanner widget on Pantry — link out to it):
-- Hero shows total potential monthly savings.
-- Cards per recommendation: food, pack size, bulk vs typical price, where to buy (links to specialty stores nearby with that cuisine tag), shelf life, storage tip, current sale flag.
-- Filter bar at top — same cuisine bar as everywhere else.
-- "Add to grocery list" + "Add to watchlist" actions per card.
+**Edge function: `ingest-promo-email`**
 
-**Seed `bulk_buy_candidates`** with ~40 curated entries covering all 10 cuisines (rice in 20lb bags, lentils, gochujang tubs, masa, etc.) so the page has content immediately. Nightly cron `bulk-buy-rebuild` (deferred — schema-ready but not wired this slice) will later derive new candidates from sale/price observations.
+- Accepts Resend's webhook payload
+- Verifies `Resend-Signature` HMAC
+- Writes raw email, then iterates attachments; only PDFs/JPEGs/PNGs/WEBPs ≤20MB
+- Store matching order:
+  1. Exact match in `store_email_aliases`
+  2. ZIP code regex in body → if alias chain set, narrow to that chain in that ZIP
+  3. Address line regex → geocode (Google Places, key already in secrets) → nearest active store within 5 mi
+  4. Otherwise mark `unmatched`, status `needs_assignment`, skip extraction
+- For each valid attachment: insert `flyer_extraction_batches` (linked to ingestion + matched store) and invoke `extract-flyer-deals`
+- Write summary back to `promo_email_ingestions`
 
-### 6. Pantry page cleanup
+---
 
-- Remove the inline `BulkStoragePlanner` card; replace with a compact "Bulk-buy savings → $X/mo potential" link card pointing to `/bulk-buy`.
+## Slice 2 — Follow "view in browser" links
 
-### Order of operations within this slice
+Most chains don't attach the flyer; they link to it. After Slice 1 is solid:
 
-1. Migration: profile columns + `bulk_buy_candidates` table + RLS + seed data.
-2. `useCuisinePrefs` hook + `<CuisineFilterBar />` + Settings UI.
-3. Wire filter into Pantry, Stores, Sales (smallest changes first).
-4. `bulk-buy-recommend` edge fn + `/bulk-buy` page.
-5. Replace BulkStoragePlanner card on Pantry with the new link card.
+- In `ingest-promo-email`, scan the HTML body for `<a>` tags whose text/href looks like a flyer (`weekly ad`, `view flyer`, `.pdf`, known viewer hosts like `flippapp.com`, `circular.com`, etc.)
+- For direct PDF/image URLs → download and feed into the same pipeline
+- For JS-heavy viewers → call the Firecrawl connector to render the page and pull the flyer asset
+- Add a "Skip" filter via the AI prompt: if a flyer page yields zero priced items, mark the batch `skipped` instead of polluting the queue
 
-### Why this order
+## Slice 3 — User-facing forwarding + opt-in
 
-The cuisine profile is the dependency for everything else. Without it, the Bulk-Buy engine has no signal beyond raw consumption, and the Pantry/Stores/Sales filters are guesses. Built first, every later screen just reads from it.
+Once admin ingestion is reliable:
 
-Approve and I'll start with step 1 (migration).
+- Surface a per-user forwarding alias (`deals+u_<userId>@…`) so a user's forwarded emails are credited to them and only their nearby stores are considered
+- Optional: opt-in toggle in Settings → "Forward your store emails to ThriftPantry"
+- Notification when a forwarded email produces deals matching the user's watchlist (reuses `watchlist-sale-matcher`)
+
+---
+
+## Honest constraints to flag
+
+- Store newsletters are tied to the subscriber's loyalty account + ZIP; we **cannot** sign one shared inbox up for every region. Realistic sources are (a) admins subscribing per-region, (b) users forwarding their own emails (Slice 3).
+- JS-only ad viewers (Flipp, etc.) need Firecrawl — that's why it's deferred to Slice 2.
+- Promotional email = noisy. We rely on the AI extractor's existing "skip non-grocery" guard plus a hard floor: if `extracted_items_count = 0`, mark the batch `skipped` so admins don't see empty noise.
+
+---
+
+## Technical details (for reference)
+
+- **Provider auth:** Resend connector via `standard_connectors--connect`. Webhook URL is the deployed `ingest-promo-email` edge function. Signature verified with HMAC-SHA256 against a shared secret stored as `RESEND_WEBHOOK_SECRET`.
+- **`extract_flyer_deals` reuse:** unchanged. We just create batches with `source_email_id` set; existing review UI works as-is.
+- **RLS:** `promo_email_ingestions` and `store_email_aliases` are admin-only (same pattern as `flyer_extraction_batches`).
+- **Mobile:** admin screens only — desktop-first is fine, but the side-panel uses Sheet so it stacks on 360px.
+
+---
+
+## What I need from you to start Slice 1
+
+1. **Confirm Resend** as the inbound provider (vs. Mailgun / SendGrid).
+2. **Forwarding address** — what local part? (`deals@`, `flyers@`, `inbox@`?)
+3. **Confirm scope:** Slice 1 only for now (attachments + admin inbox), no link-following or user-facing pieces yet.
+
+Once you confirm those three, I'll: connect Resend → add the schema + bucket → build the edge function → add the Email inbox tab and alias screen.
