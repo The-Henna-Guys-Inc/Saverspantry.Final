@@ -199,6 +199,7 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
         category: it.category,
         location: it.location,
         expires_on: it.expires || null,
+        image_url: it.imageUrl || null,
       }));
       const { data, error } = await supabase
         .from("pantry_items")
