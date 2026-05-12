@@ -212,6 +212,8 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
           </div>
         </div>
 
+        <LocationHeader />
+
         <CuisineFilterBar
           cuisines={cuisines}
           isFiltering={isFiltering}
@@ -219,6 +221,24 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
           onResume={() => setEnabled(true)}
           className="mb-4"
         />
+        <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+          <div className="text-xs text-muted-foreground">
+            {cuisineFiltered.length} active deal{cuisineFiltered.length === 1 ? "" : "s"}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Sort:</span>
+            <Select value={sortMode} onValueChange={(v) => setSortMode(v as SortMode)}>
+              <SelectTrigger className="h-8 rounded-xl text-xs w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="distance">Nearest</SelectItem>
+                <SelectItem value="savings">Highest savings</SelectItem>
+                <SelectItem value="ending">Ending soonest</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         <Tabs defaultValue="watching" className="w-full">
           <TabsList className="rounded-xl">
             <TabsTrigger value="watching" className="rounded-lg">
