@@ -1,7 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Sprout, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { BrandMark } from "@/components/BrandMark";
 import { EquivalencyEngine } from "@/components/EquivalencyEngine";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -21,12 +22,7 @@ const Demo = () => {
             <ArrowLeft className="h-4 w-4" />
             Back
           </Link>
-          <Link to="/welcome" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-gradient-leaf flex items-center justify-center">
-              <Sprout className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-bold text-primary">ThriftPantry</span>
-          </Link>
+          <BrandMark to="/welcome" size="sm" />
           <div className="w-10" />
         </div>
       </header>

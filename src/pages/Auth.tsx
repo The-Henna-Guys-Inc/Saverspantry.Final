@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, Sprout, ArrowLeftRight, PiggyBank, ChefHat, Mail, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeftRight, PiggyBank, ChefHat, Mail, ArrowLeft } from "lucide-react";
+import { BrandMark } from "@/components/BrandMark";
 import { z } from "zod";
 
 const schema = z.object({
@@ -73,12 +74,9 @@ const Auth = () => {
   return (
     <main className="min-h-[100dvh] bg-gradient-warm flex items-center justify-center p-6">
       <div className="w-full max-w-md">
-        <Link to="/welcome" className="flex items-center justify-center gap-2 mb-6">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-leaf flex items-center justify-center shadow-soft">
-            <Sprout className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-bold text-primary">ThriftPantry</span>
-        </Link>
+        <div className="flex justify-center mb-6">
+          <BrandMark to="/welcome" size="md" />
+        </div>
 
         <Card className="p-7 rounded-3xl shadow-glow border-border/50">
           {mode === "choose" && (

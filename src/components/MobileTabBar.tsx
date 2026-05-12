@@ -13,7 +13,7 @@ import {
   Settings as SettingsIcon,
   Shield,
   LogOut,
-  Sprout,
+  
   BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -97,11 +97,8 @@ export const MobileTabBar = () => {
             </SheetTrigger>
             <SheetContent side="bottom" className="rounded-t-3xl safe-bottom">
               <SheetHeader>
-                <SheetTitle className="flex items-center gap-2 text-primary">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-leaf flex items-center justify-center">
-                    <Sprout className="h-4 w-4 text-primary-foreground" />
-                  </div>
-                  ThriftPantry
+                <SheetTitle className="text-primary">
+                  Thrift<span className="text-accent">Pantry</span>
                 </SheetTitle>
               </SheetHeader>
 
