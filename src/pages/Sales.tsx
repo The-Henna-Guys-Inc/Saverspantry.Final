@@ -107,14 +107,45 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
     })();
   }, [user]);
 
-  const cuisineFiltered = useMemo(() => {
-    if (!isFiltering) return sales;
-    return sales.filter((s) => {
-      const tags = detectItemCuisines(s.food_name);
-      // No cuisine tag => generic staple, always show. Otherwise must overlap.
-      return tags.length === 0 || tags.some((t) => cuisines.includes(t));
+  // Attach distance + apply radius filter
+  const withDistance = useMemo(() => {
+    return sales.map((s) => {
+      const lat = s.specialty_stores?.latitude;
+      const lng = s.specialty_stores?.longitude;
+      let d: number | null = null;
+      if (location && lat != null && lng != null) {
+        d = distanceMiles(location.lat, location.lng, Number(lat), Number(lng));
+      }
+      return { ...s, _distance: d };
     });
-  }, [sales, cuisines, isFiltering]);
+  }, [sales, location]);
+
+  const radiusFiltered = useMemo(() => {
+    if (!location) return withDistance;
+    return withDistance.filter((s) => s._distance == null || s._distance <= radiusMiles);
+  }, [withDistance, location, radiusMiles]);
+
+  const cuisineFiltered = useMemo(() => {
+    const base = isFiltering
+      ? radiusFiltered.filter((s) => {
+          const tags = detectItemCuisines(s.food_name);
+          return tags.length === 0 || tags.some((t) => cuisines.includes(t));
+        })
+      : radiusFiltered;
+    const sorted = [...base];
+    if (sortMode === "distance") {
+      sorted.sort((a, b) => {
+        const ad = a._distance ?? Number.POSITIVE_INFINITY;
+        const bd = b._distance ?? Number.POSITIVE_INFINITY;
+        return ad - bd;
+      });
+    } else if (sortMode === "savings") {
+      sorted.sort((a, b) => Number(b.savings_pct ?? 0) - Number(a.savings_pct ?? 0));
+    } else {
+      sorted.sort((a, b) => new Date(a.ends_at).getTime() - new Date(b.ends_at).getTime());
+    }
+    return sorted;
+  }, [radiusFiltered, cuisines, isFiltering, sortMode]);
 
   const matched = useMemo(() => {
     if (!watchedFoods.length) return [];
