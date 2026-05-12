@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, ArrowLeftRight, TrendingDown, DollarSign, Flame } from "lucide-react";
+import { Loader2, ArrowLeftRight, TrendingDown, DollarSign, Flame, ChevronDown, ChevronUp } from "lucide-react";
 import { SaveButton } from "./SaveButton";
 import { WatchlistButton } from "./WatchlistButton";
 import { AiFeedback } from "./AiFeedback";
@@ -45,6 +45,8 @@ export const EquivalencyEngine = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [profilePrefs, setProfilePrefs] = useState<any>(null);
+  const [costOpen, setCostOpen] = useState(true);
+  const [calOpen, setCalOpen] = useState(true);
 
   useEffect(() => {
     if (prefsLoading || cuisineTouched) return;
@@ -251,10 +253,17 @@ export const EquivalencyEngine = () => {
         <div className="mt-8 space-y-6">
           {COST_SWAPS[cuisine] && (
             <section>
-              <div className="flex items-center gap-2 mb-3 px-1">
-                <DollarSign className="h-4 w-4 text-primary" />
-                <h2 className="text-base font-bold text-primary">Top 10 cost-saving swaps · {cuisine}</h2>
-              </div>
+              <button
+                type="button"
+                onClick={() => setCostOpen((v) => !v)}
+                aria-expanded={costOpen}
+                className="w-full flex items-center gap-2 mb-3 px-1 min-h-[44px] text-left"
+              >
+                <DollarSign className="h-4 w-4 text-primary shrink-0" />
+                <h2 className="text-base font-bold text-primary flex-1">Top 10 cost-saving swaps · {cuisine}</h2>
+                {costOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+              </button>
+              {costOpen && (<>
               <p className="text-xs text-muted-foreground mb-3 px-1">High-cost ingredients → cheaper picks with similar nutrition. Tap to run a full swap.</p>
               <div className="grid sm:grid-cols-2 gap-2.5">
                 {COST_SWAPS[cuisine].map((s, i) => (
@@ -280,15 +289,23 @@ export const EquivalencyEngine = () => {
                   </button>
                 ))}
               </div>
+              </>)}
             </section>
           )}
 
           {CALORIE_SWAPS[cuisine] && (
             <section>
-              <div className="flex items-center gap-2 mb-3 px-1">
-                <Flame className="h-4 w-4 text-accent" />
-                <h2 className="text-base font-bold text-primary">Top 10 lighter swaps · {cuisine}</h2>
-              </div>
+              <button
+                type="button"
+                onClick={() => setCalOpen((v) => !v)}
+                aria-expanded={calOpen}
+                className="w-full flex items-center gap-2 mb-3 px-1 min-h-[44px] text-left"
+              >
+                <Flame className="h-4 w-4 text-accent shrink-0" />
+                <h2 className="text-base font-bold text-primary flex-1">Top 10 lighter swaps · {cuisine}</h2>
+                {calOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+              </button>
+              {calOpen && (<>
               <p className="text-xs text-muted-foreground mb-3 px-1">High-calorie ingredients → lighter alternatives with similar nutrition. Estimates are approximate.</p>
               <div className="grid sm:grid-cols-2 gap-2.5">
                 {CALORIE_SWAPS[cuisine].map((s, i) => (
@@ -314,6 +331,7 @@ export const EquivalencyEngine = () => {
                   </button>
                 ))}
               </div>
+              </>)}
             </section>
           )}
         </div>
