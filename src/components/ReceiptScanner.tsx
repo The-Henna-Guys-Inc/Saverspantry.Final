@@ -22,6 +22,8 @@ type EditableItem = ParsedItem & {
   _key: string;
   location: string; // for add mode
   expires: string;  // for add mode (YYYY-MM-DD)
+  imageUrl?: string | null;
+  imageLoading?: boolean;
   matchedId?: string | null; // for remove mode
   matchedName?: string | null;
   matchedQty?: number | null;
@@ -81,6 +83,33 @@ function fuzzyMatch(name: string, pantry: PantryItemLite[]): PantryItemLite | nu
   return best && best.score >= 50 ? best.item : null;
 }
 
+// Fetch a product thumbnail from Open Food Facts (free, no key, public).
+async function lookupProductImage(name: string): Promise<string | null> {
+  const q = name.trim();
+  if (!q) return null;
+  try {
+    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=1&fields=image_front_small_url,image_small_url,image_thumb_url`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const j = await res.json();
+    const p = j?.products?.[0];
+    return p?.image_front_small_url || p?.image_small_url || p?.image_thumb_url || null;
+  } catch { return null; }
+}
+
+// Resolve images for a list of items, max 4 in flight at once.
+async function resolveImages(items: EditableItem[], onUpdate: (key: string, url: string | null) => void) {
+  const queue = [...items];
+  const workers = Array.from({ length: 4 }, async () => {
+    while (queue.length) {
+      const it = queue.shift()!;
+      const url = await lookupProductImage(it.name);
+      onUpdate(it._key, url);
+    }
+  });
+  await Promise.all(workers);
+}
+
 interface Props {
   mode: Mode;
   userId: string;
@@ -118,20 +147,27 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
         return;
       }
       setStoreName(data?.store_name ?? null);
-      setItems(parsed.map((p, idx) => {
+      const editable: EditableItem[] = parsed.map((p, idx) => {
         const match = mode === "remove" ? fuzzyMatch(p.name, pantry) : null;
         return {
           ...p,
           _key: `${Date.now()}-${idx}`,
           location: defaultLocation,
           expires: "",
+          imageUrl: null,
+          imageLoading: true,
           matchedId: match?.id ?? null,
           matchedName: match?.item ?? null,
           matchedQty: match?.quantity ?? null,
           matchedUnit: match?.unit ?? null,
         };
-      }));
+      });
+      setItems(editable);
       toast.success(`Found ${parsed.length} item${parsed.length === 1 ? "" : "s"}`);
+      // Fire-and-forget image lookups (don't block the user).
+      resolveImages(editable, (key, url) => {
+        setItems((p) => p.map((it) => (it._key === key ? { ...it, imageUrl: url, imageLoading: false } : it)));
+      });
     } catch (e: any) {
       toast.error(e.message ?? "Scan failed");
     } finally {
@@ -163,6 +199,7 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
         category: it.category,
         location: it.location,
         expires_on: it.expires || null,
+        image_url: it.imageUrl || null,
       }));
       const { data, error } = await supabase
         .from("pantry_items")
@@ -292,7 +329,21 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
               <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1 -mr-1">
                 {items.map((it) => (
                   <div key={it._key} className="rounded-xl border border-border/60 bg-card p-3">
-                    <div className="grid grid-cols-12 gap-2 items-end">
+                    <div className="flex gap-3 items-start">
+                      <div className="shrink-0">
+                        {it.imageUrl ? (
+                          <img src={it.imageUrl} alt={it.name} className="h-12 w-12 rounded-lg object-cover border border-border bg-muted" />
+                        ) : (
+                          <div className={`h-12 w-12 rounded-lg border border-border bg-muted flex items-center justify-center ${it.imageLoading ? "animate-pulse" : ""}`}>
+                            {it.imageLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                            ) : (
+                              <Receipt className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 grid grid-cols-12 gap-2 items-end">
                       <div className="col-span-12 sm:col-span-5">
                         <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Item</Label>
                         <Input
@@ -380,6 +431,7 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
                         <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => removeRow(it._key)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
+                      </div>
                       </div>
                     </div>
                     {mode === "remove" && (
