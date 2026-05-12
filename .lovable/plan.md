@@ -89,7 +89,7 @@ Most chains don't attach the flyer; they link to it. After Slice 1 is solid:
 Once admin ingestion is reliable:
 
 - Surface a per-user forwarding alias (`deals+u_<userId>@…`) so a user's forwarded emails are credited to them and only their nearby stores are considered
-- Optional: opt-in toggle in Settings → "Forward your store emails to ThriftPantry"
+- Optional: opt-in toggle in Settings → "Forward your store emails to Saver's Pantry"
 - Notification when a forwarded email produces deals matching the user's watchlist (reuses `watchlist-sale-matcher`)
 
 ---
