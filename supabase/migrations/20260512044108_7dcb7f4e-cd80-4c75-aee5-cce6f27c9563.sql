@@ -1,0 +1,1 @@
+CREATE POLICY "Owner views household" ON public.households FOR SELECT TO authenticated USING (auth.uid() = owner_user_id);
