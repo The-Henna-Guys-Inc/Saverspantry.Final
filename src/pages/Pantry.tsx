@@ -344,7 +344,11 @@ const Pantry = () => {
         (i.barcode ?? "").toLowerCase().includes(q)
       );
 
-  const grouped = searchedItems.reduce<Record<string, PantryItem[]>>((acc, i) => {
+  const totalPages = Math.max(1, Math.ceil(searchedItems.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedItems = searchedItems.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  const grouped = pagedItems.reduce<Record<string, PantryItem[]>>((acc, i) => {
     const c = i.location || "other";
     (acc[c] ||= []).push(i); return acc;
   }, {});
