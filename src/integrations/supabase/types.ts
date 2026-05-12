@@ -358,6 +358,7 @@ export type Database = {
           id: string
           original_filename: string
           page_count: number
+          source_email_id: string | null
           store_id: string
           stored_file_url: string
         }
@@ -377,6 +378,7 @@ export type Database = {
           id?: string
           original_filename: string
           page_count?: number
+          source_email_id?: string | null
           store_id: string
           stored_file_url: string
         }
@@ -396,10 +398,18 @@ export type Database = {
           id?: string
           original_filename?: string
           page_count?: number
+          source_email_id?: string | null
           store_id?: string
           stored_file_url?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "flyer_extraction_batches_source_email_id_fkey"
+            columns: ["source_email_id"]
+            isOneToOne: false
+            referencedRelation: "promo_email_ingestions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "flyer_extraction_batches_store_id_fkey"
             columns: ["store_id"]
@@ -896,6 +906,77 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_email_ingestions: {
+        Row: {
+          attachment_count: number
+          body_text_excerpt: string | null
+          created_at: string
+          detected_address: string | null
+          detected_zip: string | null
+          from_address: string
+          from_domain: string
+          id: string
+          match_confidence: string
+          match_method: string | null
+          matched_store_id: string | null
+          notes: string | null
+          raw_storage_path: string | null
+          received_at: string
+          status: string
+          subject: string | null
+          to_address: string | null
+          updated_at: string
+        }
+        Insert: {
+          attachment_count?: number
+          body_text_excerpt?: string | null
+          created_at?: string
+          detected_address?: string | null
+          detected_zip?: string | null
+          from_address: string
+          from_domain: string
+          id?: string
+          match_confidence?: string
+          match_method?: string | null
+          matched_store_id?: string | null
+          notes?: string | null
+          raw_storage_path?: string | null
+          received_at?: string
+          status?: string
+          subject?: string | null
+          to_address?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attachment_count?: number
+          body_text_excerpt?: string | null
+          created_at?: string
+          detected_address?: string | null
+          detected_zip?: string | null
+          from_address?: string
+          from_domain?: string
+          id?: string
+          match_confidence?: string
+          match_method?: string | null
+          matched_store_id?: string | null
+          notes?: string | null
+          raw_storage_path?: string | null
+          received_at?: string
+          status?: string
+          subject?: string | null
+          to_address?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_email_ingestions_matched_store_id_fkey"
+            columns: ["matched_store_id"]
+            isOneToOne: false
+            referencedRelation: "specialty_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sale_confirmations: {
         Row: {
           confirmed_at: string
@@ -1264,6 +1345,50 @@ export type Database = {
           zip_code?: string | null
         }
         Relationships: []
+      }
+      store_email_aliases: {
+        Row: {
+          chain_name: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          match_type: string
+          match_value: string
+          notes: string | null
+          store_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          chain_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          match_type: string
+          match_value: string
+          notes?: string | null
+          store_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          chain_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          match_type?: string
+          match_value?: string
+          notes?: string | null
+          store_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_email_aliases_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "specialty_stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       store_visits: {
         Row: {
