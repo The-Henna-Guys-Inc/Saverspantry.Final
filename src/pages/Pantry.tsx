@@ -545,7 +545,7 @@ const Pantry = () => {
               <Button
                 variant="hero"
                 className="rounded-xl flex-1 h-12"
-                onClick={() => scanResult && applyAdd(scanResult)}
+                onClick={() => scanResult && startWizardAdd(scanResult)}
               >
                 <Plus className="h-4 w-4 mr-1.5" /> Add to pantry
               </Button>
