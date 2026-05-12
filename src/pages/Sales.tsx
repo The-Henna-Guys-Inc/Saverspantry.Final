@@ -262,7 +262,7 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
                 <Tag className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
                 <p className="font-medium">Nothing matched yet</p>
                 <p className="text-sm text-muted-foreground mt-1 mb-4">
-                  Add staples you regularly buy and we'll surface sales here.
+                  Add staples you regularly buy and we'll surface deals here.
                 </p>
                 <Button asChild variant="hero" size="sm" className="rounded-xl">
                   <Link to="/watchlist">Build my watchlist</Link>
