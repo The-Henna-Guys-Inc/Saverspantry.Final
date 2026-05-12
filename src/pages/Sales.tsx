@@ -12,6 +12,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { AdminSaleDialog } from "@/components/AdminSaleDialog";
 import { AdminSaleCsvUpload } from "@/components/AdminSaleCsvUpload";
+import { AdminFlyerUpload } from "@/components/AdminFlyerUpload";
 import { CuisineFilterBar } from "@/components/CuisineFilterBar";
 import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
 import { detectItemCuisines } from "@/lib/cuisineHints";
@@ -210,6 +211,7 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
                 <Link to="/admin/deals">Moderation</Link>
               </Button>
             )}
+            {isAdmin && user && <AdminFlyerUpload userId={user.id} onComplete={loadSales} />}
             {isAdmin && user && <AdminSaleCsvUpload userId={user.id} onCreated={loadSales} />}
             {isAdmin && user && <AdminSaleDialog userId={user.id} onCreated={loadSales} />}
             <UserSubmitDealDialog onSubmitted={loadSales} />
