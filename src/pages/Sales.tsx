@@ -199,7 +199,7 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
       <main className={embedded ? "" : "container max-w-4xl mx-auto px-6 py-10"}>
         <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
           <div>
-            <h1 className="text-3xl font-bold text-primary">Sales near you</h1>
+            <h1 className="text-3xl font-bold text-primary">Deals near you</h1>
             <p className="text-sm text-muted-foreground mt-1">
               Some verified by stores, some by the community. We never rank by paid placement.
             </p>
