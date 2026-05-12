@@ -90,11 +90,11 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
       const [{ data: salesData }, { data: wl }, { data: confirms }, { data: roles }] = await Promise.all([
         supabase
           .from("sale_observations")
-          .select("*")
+          .select("*, specialty_stores(latitude, longitude)")
           .in("moderation_status", ["auto_approved", "approved"])
           .gt("ends_at", new Date().toISOString())
           .order("ends_at", { ascending: true })
-          .limit(100),
+          .limit(200),
         supabase.from("watchlist_items").select("food_name").eq("user_id", user.id),
         supabase.from("sale_confirmations").select("sale_observation_id").eq("user_id", user.id),
         supabase.from("user_roles").select("role").eq("user_id", user.id),
