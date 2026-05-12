@@ -49,7 +49,7 @@ export const WatchlistButton = ({ foodName, size = "sm" }: Props) => {
       setBusy(false);
       if (error) return toast.error(error.message);
       setWatching(true);
-      toast.success("We'll surface sales for this");
+      toast.success("We'll surface deals for this");
     }
   };
 
