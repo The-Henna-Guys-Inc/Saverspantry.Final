@@ -716,7 +716,9 @@ const Pantry = () => {
                 </ul>
               </Card>
             ))}
-          </div>
+              </div>
+            )}
+          </>
         )}
 
         {otherItems.length > 0 && (
