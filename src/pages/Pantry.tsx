@@ -12,6 +12,7 @@ import { Loader2, Plus, Trash2, Refrigerator, Minus, AlertTriangle, X, ScanLine,
 import { toast } from "sonner";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { ScanPantryWizard, type ScanResult } from "@/components/ScanPantryWizard";
 import { ExpiryDateScanner } from "@/components/ExpiryDateScanner";
 import { CuisineFilterBar } from "@/components/CuisineFilterBar";
 import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
@@ -72,46 +73,42 @@ const Pantry = () => {
   // barcode scanner
   const [scannerOpen, setScannerOpen] = useState(false);
   const [showManual, setShowManual] = useState(false);
-  const [scanResult, setScanResult] = useState<
-    | { code: string; productName?: string; brand?: string; quantity?: string; categories?: string; imageUrl?: string }
-    | null
-  >(null);
+  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+  const [wizard, setWizard] = useState<{ open: boolean; mode: "add" | "remove"; scan: ScanResult | null; matchedItem: PantryItem | null }>({
+    open: false, mode: "add", scan: null, matchedItem: null,
+  });
+  const [wizardSubmitting, setWizardSubmitting] = useState(false);
 
-  const handleScanned = (r: { code: string; productName?: string; brand?: string; quantity?: string; categories?: string; imageUrl?: string }) => {
+  const handleScanned = (r: ScanResult) => {
     setScanResult(r);
   };
 
-  const applyAdd = (r: NonNullable<typeof scanResult>) => {
-    const label = r.productName ? (r.brand ? `${r.brand} ${r.productName}` : r.productName) : `Item ${r.code}`;
-    setName(label);
-    setBarcode(r.code);
-    setShowManual(true);
-    if (r.imageUrl) setImageUrl(r.imageUrl);
-    if (r.quantity) {
-      const m = r.quantity.match(/([\d.]+)\s*(g|kg|ml|l|oz|lb)?/i);
-      if (m) {
-        setQty(m[1]);
-        if (m[2]) {
-          const u = m[2].toLowerCase() === "l" ? "L" : m[2].toLowerCase();
-          if (UNITS.includes(u)) setUnit(u);
-        }
-      }
-    }
-    if (r.categories) {
-      const lower = r.categories.toLowerCase();
-      const match = CATEGORIES.find((c) => lower.includes(c));
-      if (match) setCategory(match);
-    }
-    toast.message("Review and save", { description: "We've prefilled the form below." });
-    setScanResult(null);
-  };
-
-  const applyRemove = async (r: NonNullable<typeof scanResult>) => {
+  const findMatch = (r: ScanResult): PantryItem | null => {
     let match = items.find((x) => x.barcode && x.barcode === r.code) ?? null;
     if (!match && r.productName) {
       const needle = r.productName.toLowerCase();
       match = items.find((x) => x.item.toLowerCase().includes(needle) || needle.includes(x.item.toLowerCase())) ?? null;
     }
+    return match;
+  };
+
+  const startWizardAdd = (r: ScanResult) => {
+    // Prefill manual form too so existing UX still works if user cancels.
+    const label = r.productName ? (r.brand ? `${r.brand} ${r.productName}` : r.productName) : `Item ${r.code}`;
+    setName(label);
+    setBarcode(r.code);
+    if (r.imageUrl) setImageUrl(r.imageUrl);
+    if (r.categories) {
+      const lower = r.categories.toLowerCase();
+      const cat = CATEGORIES.find((c) => lower.includes(c));
+      if (cat) setCategory(cat);
+    }
+    setWizard({ open: true, mode: "add", scan: r, matchedItem: findMatch(r) });
+    setScanResult(null);
+  };
+
+  const startWizardRemove = (r: ScanResult) => {
+    const match = findMatch(r);
     if (!match) {
       toast.error("That item isn't in your pantry yet.", {
         description: r.productName ? `Couldn't find "${r.productName}".` : `Code ${r.code} not matched.`,
@@ -119,11 +116,56 @@ const Pantry = () => {
       setScanResult(null);
       return;
     }
-    await adjust(match, -1);
-    toast.success(`Removed 1 ${match.unit} of ${match.item}`, {
-      description: `${Math.max(0, match.quantity - 1)} ${match.unit} left.`,
-    });
+    setWizard({ open: true, mode: "remove", scan: r, matchedItem: match });
     setScanResult(null);
+  };
+
+  const handleWizardComplete = async (data: { quantity: number; unit: string; location: string; expires: string | null }) => {
+    if (!wizard.scan) return;
+    setWizardSubmitting(true);
+    try {
+      if (wizard.mode === "add") {
+        const label = wizard.scan.productName ? (wizard.scan.brand ? `${wizard.scan.brand} ${wizard.scan.productName}` : wizard.scan.productName) : `Item ${wizard.scan.code}`;
+        const { data: row, error } = await supabase
+          .from("pantry_items")
+          .insert({
+            user_id: user!.id,
+            item: label,
+            quantity: data.quantity,
+            unit: data.unit,
+            category,
+            location: data.location,
+            expires_on: data.expires,
+            image_url: wizard.scan.imageUrl ?? null,
+            barcode: wizard.scan.code,
+          })
+          .select("id, item, quantity, unit, category, location, expires_on, low_stock_threshold, image_url, barcode")
+          .single();
+        if (error) { toast.error(error.message); return; }
+        setItems((p) => [row as PantryItem, ...p]);
+        toast.success(`Added ${data.quantity} ${data.unit} of ${label}`);
+        // reset prefill form fields
+        setName(""); setBarcode(""); setImageUrl("");
+      } else if (wizard.matchedItem) {
+        const it = wizard.matchedItem;
+        const next = Math.max(0, Number((it.quantity - data.quantity).toFixed(2)));
+        const prev = items;
+        setItems((p) => p.map((x) => (x.id === it.id ? { ...x, quantity: next, location: data.location, expires_on: data.expires } : x)));
+        const { error } = await supabase
+          .from("pantry_items")
+          .update({ quantity: next, location: data.location, expires_on: data.expires })
+          .eq("id", it.id);
+        if (error) { setItems(prev); toast.error(error.message); return; }
+        await logConsumption(it, data.quantity);
+        checkLowStock(it, next);
+        toast.success(`Removed ${data.quantity} ${data.unit} of ${it.item}`, {
+          description: `${next} ${data.unit} left.`,
+        });
+      }
+    } finally {
+      setWizardSubmitting(false);
+      setWizard({ open: false, mode: "add", scan: null, matchedItem: null });
+    }
   };
 
   useEffect(() => {
@@ -496,20 +538,36 @@ const Pantry = () => {
               <Button
                 variant="outline"
                 className="rounded-xl flex-1 h-12"
-                onClick={() => scanResult && applyRemove(scanResult)}
+                onClick={() => scanResult && startWizardRemove(scanResult)}
               >
                 <Minus className="h-4 w-4 mr-1.5" /> Remove one
               </Button>
               <Button
                 variant="hero"
                 className="rounded-xl flex-1 h-12"
-                onClick={() => scanResult && applyAdd(scanResult)}
+                onClick={() => scanResult && startWizardAdd(scanResult)}
               >
                 <Plus className="h-4 w-4 mr-1.5" /> Add to pantry
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <ScanPantryWizard
+          open={wizard.open}
+          mode={wizard.mode}
+          scan={wizard.scan}
+          locations={allLocations}
+          units={UNITS}
+          defaultLocation={wizard.matchedItem?.location ?? "pantry"}
+          defaultUnit={wizard.matchedItem?.unit ?? "unit"}
+          matchedQuantity={wizard.mode === "remove" ? wizard.matchedItem?.quantity : undefined}
+          matchedExpires={wizard.matchedItem?.expires_on ?? null}
+          matchedUnit={wizard.matchedItem?.unit}
+          submitting={wizardSubmitting}
+          onCancel={() => setWizard({ open: false, mode: "add", scan: null, matchedItem: null })}
+          onComplete={handleWizardComplete}
+        />
 
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
