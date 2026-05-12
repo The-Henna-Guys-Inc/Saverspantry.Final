@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Settings as SettingsIcon, LogOut, BookmarkCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import wordmark from "@/assets/thriftpantry-wordmark.png";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
