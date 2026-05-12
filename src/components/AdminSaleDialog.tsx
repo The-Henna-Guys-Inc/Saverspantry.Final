@@ -118,7 +118,7 @@ export function AdminSaleDialog({
     }
     setSaving(false);
     if (error) return toast.error(error.message);
-    toast.success(isEdit ? "Sale updated." : "Sale published.");
+    toast.success(isEdit ? "Deal updated." : "Deal published.");
     setOpen(false);
     if (!isEdit) setForm(emptyForm);
     onCreated();
