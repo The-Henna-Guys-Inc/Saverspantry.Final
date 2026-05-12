@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Settings as SettingsIcon, LogOut, BookmarkCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import wordmark from "@/assets/thriftpantry-wordmark.png";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,13 +30,14 @@ export const Header = () => {
     <header className="sticky top-0 z-30 backdrop-blur-md bg-background/70 border-b border-border/40 safe-top">
       <div className="container max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
         <Link to="/" className="flex items-center min-h-[44px]" aria-label="ThriftPantry home">
-          <img
-            src={wordmark}
-            alt="ThriftPantry"
-            width={1024}
-            height={1024}
-            className="h-12 sm:h-14 w-auto"
-          />
+          <div className="flex flex-col leading-tight">
+            <span className="text-xl sm:text-2xl font-bold text-primary tracking-tight">
+              Thrift<span className="text-accent">Pantry</span>
+            </span>
+            <span className="text-[10px] sm:text-xs text-muted-foreground -mt-0.5">
+              Eat well, spend less
+            </span>
+          </div>
         </Link>
 
         {loading ? null : !user ? (
