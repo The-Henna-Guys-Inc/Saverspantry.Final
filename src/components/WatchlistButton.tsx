@@ -27,7 +27,7 @@ export const WatchlistButton = ({ foodName, size = "sm" }: Props) => {
 
   const toggle = async () => {
     if (!user) {
-      toast.info("Sign in to watch for sales");
+      toast.info("Sign in to watch for deals");
       navigate("/auth");
       return;
     }
