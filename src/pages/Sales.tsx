@@ -205,6 +205,11 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
             </p>
           </div>
           <div className="flex items-center gap-1.5 flex-wrap">
+            {isAdmin && (
+              <Button asChild variant="outline" size="sm" className="rounded-xl h-8 px-3 text-xs">
+                <Link to="/admin/deals">Moderation</Link>
+              </Button>
+            )}
             {isAdmin && user && <AdminSaleCsvUpload userId={user.id} onCreated={loadSales} />}
             {isAdmin && user && <AdminSaleDialog userId={user.id} onCreated={loadSales} />}
             <UserSubmitDealDialog onSubmitted={loadSales} />
