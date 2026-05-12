@@ -25,6 +25,8 @@ import AdminUsers from "./pages/AdminUsers.tsx";
 import AdminAudit from "./pages/AdminAudit.tsx";
 import AdminSessions from "./pages/AdminSessions.tsx";
 import AdminDeals from "./pages/AdminDeals.tsx";
+import AdminEmailInbox from "./pages/AdminEmailInbox.tsx";
+import AdminEmailAliases from "./pages/AdminEmailAliases.tsx";
 import Legal from "./pages/Legal.tsx";
 import JoinHousehold from "./pages/JoinHousehold.tsx";
 import { InstallPrompt } from "./components/InstallPrompt";
@@ -74,6 +76,8 @@ const App = () => (
           <Route path="/admin/audit" element={<AdminAudit />} />
           <Route path="/admin/sessions" element={<AdminSessions />} />
           <Route path="/admin/deals" element={<AdminDeals />} />
+          <Route path="/admin/email-inbox" element={<AdminEmailInbox />} />
+          <Route path="/admin/email-aliases" element={<AdminEmailAliases />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
