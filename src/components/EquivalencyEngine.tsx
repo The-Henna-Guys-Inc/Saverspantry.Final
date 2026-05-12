@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, ArrowLeftRight, TrendingDown, DollarSign, Flame } from "lucide-react";
+import { Loader2, ArrowLeftRight, TrendingDown, DollarSign, Flame, ChevronDown, ChevronUp } from "lucide-react";
 import { SaveButton } from "./SaveButton";
 import { WatchlistButton } from "./WatchlistButton";
 import { AiFeedback } from "./AiFeedback";
