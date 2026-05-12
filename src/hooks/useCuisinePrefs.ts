@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { mapLegacyCuisines, type CuisineTag } from "@/lib/cuisineHints";
+import { syncWatchlistStaples } from "@/lib/watchlistSeeder";
 
 export function useCuisinePrefs() {
   const { user } = useAuth();
@@ -34,6 +35,8 @@ export function useCuisinePrefs() {
     if (!user) return;
     setCuisines(next);
     await supabase.from("profiles").update({ cuisine_preferences: next }).eq("user_id", user.id);
+    // Auto-seed top-5 staples for any newly selected cuisines.
+    syncWatchlistStaples(user.id, next).catch(() => {});
   };
 
   const setEnabled = async (on: boolean) => {
