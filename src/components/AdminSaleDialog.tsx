@@ -136,7 +136,7 @@ export function AdminSaleDialog({
       </DialogTrigger>
       <DialogContent className="rounded-3xl max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit sale" : "Add a curated sale"}</DialogTitle>
+          <DialogTitle>{isEdit ? "Edit deal" : "Add a curated deal"}</DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-3 py-2">
           <Field label="Food name *" hint="e.g. basmati rice"><Input value={form.food_name} onChange={(e) => set("food_name", e.target.value)} /></Field>
