@@ -172,8 +172,11 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
     if (!open) {
       controlsRef.current?.stop();
       controlsRef.current = null;
-      setStatus("idle");
+      setStatus("needs-permission");
       setErrorMsg("");
+      setDeviceId(undefined);
+      setDevices([]);
+      setPermanentlyDenied(false);
     }
   }, [open]);
 
@@ -191,13 +194,35 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
           </DialogDescription>
         </DialogHeader>
 
-        {status === "error" ? (
-          <div className="p-6 rounded-xl bg-destructive/5 text-destructive text-sm">
-            <div className="font-semibold mb-1">Camera error</div>
-            <div className="text-muted-foreground">{errorMsg}</div>
-            <div className="text-xs mt-2 text-muted-foreground">
-              On macOS Safari/Chrome, allow camera access for this site in browser settings.
+        {status === "needs-permission" || status === "requesting" ? (
+          <div className="p-6 rounded-xl bg-secondary/40 text-center space-y-3">
+            <Camera className="h-8 w-8 mx-auto text-accent" />
+            <div className="text-sm text-foreground font-medium">Camera access needed</div>
+            <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+              We use your camera only while this scanner is open. Tap below and your browser will ask for permission.
+            </p>
+            <Button onClick={requestCamera} disabled={status === "requesting"} variant="hero" size="sm" className="rounded-xl">
+              {status === "requesting" ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /><span className="ml-2">Requesting…</span></>
+              ) : (
+                <><Camera className="h-4 w-4" /><span className="ml-2">Allow camera</span></>
+              )}
+            </Button>
+          </div>
+        ) : status === "error" ? (
+          <div className="p-6 rounded-xl bg-destructive/5 text-sm space-y-3">
+            <div>
+              <div className="font-semibold mb-1 text-destructive">Camera unavailable</div>
+              <div className="text-muted-foreground">{errorMsg}</div>
             </div>
+            {permanentlyDenied && (
+              <div className="text-xs text-muted-foreground">
+                Your browser is blocking camera access for this site. Tap the lock/camera icon in the address bar, set Camera to <strong>Allow</strong>, then reload — or try again below.
+              </div>
+            )}
+            <Button onClick={requestCamera} variant="hero" size="sm" className="rounded-xl">
+              <Camera className="h-4 w-4" /><span className="ml-2">Try again</span>
+            </Button>
           </div>
         ) : (
           <>
