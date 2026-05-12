@@ -14,6 +14,7 @@ import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { ScanPantryWizard, type ScanResult } from "@/components/ScanPantryWizard";
 import { ExpiryDateScanner } from "@/components/ExpiryDateScanner";
+import { ReceiptScanner } from "@/components/ReceiptScanner";
 import { CuisineFilterBar } from "@/components/CuisineFilterBar";
 import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
 import { detectItemCuisines, CUISINE_LABEL } from "@/lib/cuisineHints";
@@ -446,6 +447,32 @@ const Pantry = () => {
           <p className="text-xs text-muted-foreground mt-3">
             After a successful scan, you'll choose whether to add it to your pantry or remove one.
           </p>
+
+          <div className="mt-4 pt-4 border-t border-border/50">
+            <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Bulk add or remove</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <ReceiptScanner
+                mode="add"
+                userId={user!.id}
+                pantry={items.map((i) => ({ id: i.id, item: i.item, quantity: i.quantity, unit: i.unit, location: i.location }))}
+                locations={allLocations}
+                defaultLocation={location}
+                onAdded={(rows) => setItems((p) => [...(rows as PantryItem[]), ...p])}
+              />
+              <ReceiptScanner
+                mode="remove"
+                userId={user!.id}
+                pantry={items.map((i) => ({ id: i.id, item: i.item, quantity: i.quantity, unit: i.unit, location: i.location }))}
+                locations={allLocations}
+                onRemoved={(updates) => {
+                  setItems((p) => p.map((it) => {
+                    const u = updates.find((x) => x.id === it.id);
+                    return u ? { ...it, quantity: u.newQuantity } : it;
+                  }));
+                }}
+              />
+            </div>
+          </div>
         </Card>
 
         {showManual && (
