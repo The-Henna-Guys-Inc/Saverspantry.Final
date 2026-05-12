@@ -199,10 +199,18 @@ export const EquivalencyEngine = () => {
                     onClick={() => { setFood(s.from); find(s.from); }}
                     className="text-left p-3 rounded-2xl bg-card border border-border/50 hover:shadow-glow transition-smooth min-h-[44px]"
                   >
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="font-semibold text-foreground">{s.from}</span>
-                      <ArrowLeftRight className="h-3.5 w-3.5 text-accent shrink-0" />
-                      <span className="text-primary font-semibold">{s.to}</span>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2 text-sm flex-wrap">
+                        <span className="font-semibold text-foreground">{s.from}</span>
+                        <ArrowLeftRight className="h-3.5 w-3.5 text-accent shrink-0" />
+                        <span className="text-primary font-semibold">{s.to}</span>
+                      </div>
+                      {typeof s.savings === "number" && (
+                        <span className="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-accent/20 text-foreground shrink-0">
+                          <TrendingDown className="h-3 w-3" />
+                          {s.savings}%
+                        </span>
+                      )}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">{s.note}</div>
                   </button>
