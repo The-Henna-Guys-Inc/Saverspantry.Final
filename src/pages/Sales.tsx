@@ -16,6 +16,10 @@ import { CuisineFilterBar } from "@/components/CuisineFilterBar";
 import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
 import { detectItemCuisines } from "@/lib/cuisineHints";
 import { PagerBar } from "@/components/PagerBar";
+import { LocationHeader } from "@/components/LocationHeader";
+import { useUserLocation } from "@/hooks/useUserLocation";
+import { distanceMiles, formatDistance } from "@/lib/distance";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const PAGE_SIZE = 10;
 
@@ -36,7 +40,12 @@ type Sale = {
   region: string | null;
   address: string | null;
   google_maps_url: string | null;
+  store_id: string | null;
+  specialty_stores?: { latitude: number | null; longitude: number | null } | null;
+  _distance?: number | null;
 };
+
+type SortMode = "distance" | "savings" | "ending";
 
 const sourceMeta: Record<string, { label: string; cls: string }> = {
   kroger_api: { label: "Kroger", cls: "bg-blue-500/10 text-blue-700 dark:text-blue-300" },
@@ -55,7 +64,9 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
   const [isAdmin, setIsAdmin] = useState(false);
   const [matchedPage, setMatchedPage] = useState(1);
   const [allPage, setAllPage] = useState(1);
+  const [sortMode, setSortMode] = useState<SortMode>("distance");
   const { cuisines, isFiltering, setEnabled } = useCuisinePrefs();
+  const { location, radiusMiles } = useUserLocation();
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
@@ -64,11 +75,11 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
   const loadSales = async () => {
     const { data: salesData } = await supabase
       .from("sale_observations")
-      .select("*")
+      .select("*, specialty_stores(latitude, longitude)")
       .in("moderation_status", ["auto_approved", "approved"])
       .gt("ends_at", new Date().toISOString())
       .order("ends_at", { ascending: true })
-      .limit(100);
+      .limit(200);
     setSales((salesData ?? []) as Sale[]);
   };
 
@@ -79,11 +90,11 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
       const [{ data: salesData }, { data: wl }, { data: confirms }, { data: roles }] = await Promise.all([
         supabase
           .from("sale_observations")
-          .select("*")
+          .select("*, specialty_stores(latitude, longitude)")
           .in("moderation_status", ["auto_approved", "approved"])
           .gt("ends_at", new Date().toISOString())
           .order("ends_at", { ascending: true })
-          .limit(100),
+          .limit(200),
         supabase.from("watchlist_items").select("food_name").eq("user_id", user.id),
         supabase.from("sale_confirmations").select("sale_observation_id").eq("user_id", user.id),
         supabase.from("user_roles").select("role").eq("user_id", user.id),
@@ -96,14 +107,45 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
     })();
   }, [user]);
 
-  const cuisineFiltered = useMemo(() => {
-    if (!isFiltering) return sales;
-    return sales.filter((s) => {
-      const tags = detectItemCuisines(s.food_name);
-      // No cuisine tag => generic staple, always show. Otherwise must overlap.
-      return tags.length === 0 || tags.some((t) => cuisines.includes(t));
+  // Attach distance + apply radius filter
+  const withDistance = useMemo(() => {
+    return sales.map((s) => {
+      const lat = s.specialty_stores?.latitude;
+      const lng = s.specialty_stores?.longitude;
+      let d: number | null = null;
+      if (location && lat != null && lng != null) {
+        d = distanceMiles(location.lat, location.lng, Number(lat), Number(lng));
+      }
+      return { ...s, _distance: d };
     });
-  }, [sales, cuisines, isFiltering]);
+  }, [sales, location]);
+
+  const radiusFiltered = useMemo(() => {
+    if (!location) return withDistance;
+    return withDistance.filter((s) => s._distance == null || s._distance <= radiusMiles);
+  }, [withDistance, location, radiusMiles]);
+
+  const cuisineFiltered = useMemo(() => {
+    const base = isFiltering
+      ? radiusFiltered.filter((s) => {
+          const tags = detectItemCuisines(s.food_name);
+          return tags.length === 0 || tags.some((t) => cuisines.includes(t));
+        })
+      : radiusFiltered;
+    const sorted = [...base];
+    if (sortMode === "distance") {
+      sorted.sort((a, b) => {
+        const ad = a._distance ?? Number.POSITIVE_INFINITY;
+        const bd = b._distance ?? Number.POSITIVE_INFINITY;
+        return ad - bd;
+      });
+    } else if (sortMode === "savings") {
+      sorted.sort((a, b) => Number(b.savings_pct ?? 0) - Number(a.savings_pct ?? 0));
+    } else {
+      sorted.sort((a, b) => new Date(a.ends_at).getTime() - new Date(b.ends_at).getTime());
+    }
+    return sorted;
+  }, [radiusFiltered, cuisines, isFiltering, sortMode]);
 
   const matched = useMemo(() => {
     if (!watchedFoods.length) return [];
@@ -170,6 +212,8 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
           </div>
         </div>
 
+        <LocationHeader />
+
         <CuisineFilterBar
           cuisines={cuisines}
           isFiltering={isFiltering}
@@ -177,6 +221,24 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
           onResume={() => setEnabled(true)}
           className="mb-4"
         />
+        <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+          <div className="text-xs text-muted-foreground">
+            {cuisineFiltered.length} active deal{cuisineFiltered.length === 1 ? "" : "s"}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Sort:</span>
+            <Select value={sortMode} onValueChange={(v) => setSortMode(v as SortMode)}>
+              <SelectTrigger className="h-8 rounded-xl text-xs w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="distance">Nearest</SelectItem>
+                <SelectItem value="savings">Highest savings</SelectItem>
+                <SelectItem value="ending">Ending soonest</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         <Tabs defaultValue="watching" className="w-full">
           <TabsList className="rounded-xl">
             <TabsTrigger value="watching" className="rounded-lg">
@@ -266,6 +328,9 @@ function SaleList({
                   <MapPin className="h-3 w-3 shrink-0" />
                   <span className="truncate">
                     {s.store_name}{s.city ? ` · ${s.city}${s.region ? `, ${s.region}` : ""}` : ""}
+                    {s._distance != null && (
+                      <span className="ml-1.5 text-primary font-medium">· {formatDistance(s._distance)}</span>
+                    )}
                   </span>
                 </p>
                 {s.address && (
