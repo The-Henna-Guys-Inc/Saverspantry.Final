@@ -35,7 +35,7 @@ export const Header = () => {
             alt="ThriftPantry"
             width={1024}
             height={1024}
-            className="h-8 sm:h-9 w-auto"
+            className="h-12 sm:h-14 w-auto"
           />
         </Link>
 
