@@ -343,7 +343,7 @@ export type Database = {
       }
       flyer_extraction_batches: {
         Row: {
-          admin_user_id: string
+          admin_user_id: string | null
           ai_cost_usd: number
           approved_items_count: number
           completed_at: string | null
@@ -363,7 +363,7 @@ export type Database = {
           stored_file_url: string
         }
         Insert: {
-          admin_user_id: string
+          admin_user_id?: string | null
           ai_cost_usd?: number
           approved_items_count?: number
           completed_at?: string | null
@@ -383,7 +383,7 @@ export type Database = {
           stored_file_url: string
         }
         Update: {
-          admin_user_id?: string
+          admin_user_id?: string | null
           ai_cost_usd?: number
           approved_items_count?: number
           completed_at?: string | null
