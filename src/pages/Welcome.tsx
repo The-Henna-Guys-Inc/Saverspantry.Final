@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import logoBadge from "@/assets/logo-options/logo-4-badge.png";
+import logoBadge from "@/assets/logo-badge-transparent.png";
 
 const Welcome = () => {
   const navigate = useNavigate();
