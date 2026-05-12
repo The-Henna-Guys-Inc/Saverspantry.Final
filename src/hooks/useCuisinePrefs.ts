@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { mapLegacyCuisines, type CuisineTag } from "@/lib/cuisineHints";
+import { syncWatchlistStaples } from "@/lib/watchlistSeeder";
 
 export function useCuisinePrefs() {
   const { user } = useAuth();
