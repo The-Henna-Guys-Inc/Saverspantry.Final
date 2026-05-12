@@ -1,5 +1,5 @@
 // Minimal service worker — network-first, no aggressive caching of API calls.
-const CACHE = "thriftpantry-v1";
+const CACHE = "saverspantry-v1";
 const STATIC = ["/", "/manifest.json", "/icon-192.png", "/icon-512.png"];
 
 self.addEventListener("install", (e) => {

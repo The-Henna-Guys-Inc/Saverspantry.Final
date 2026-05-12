@@ -48,7 +48,7 @@ export const InstallPrompt = () => {
         <Download className="h-4 w-4 text-primary-foreground" />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-semibold text-primary">Install ThriftPantry</div>
+        <div className="text-sm font-semibold text-primary">Install Saver's Pantry</div>
         <div className="text-xs text-muted-foreground mt-0.5">Add to your home screen for quick access.</div>
         <div className="flex gap-2 mt-3">
           <Button size="sm" variant="hero" className="rounded-xl h-8 text-xs" onClick={install}>Install</Button>

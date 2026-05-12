@@ -23,7 +23,7 @@ export const BrandMark = ({
   const content = (
     <div className={cn("flex flex-col leading-tight", className)}>
       <span className={cn("font-bold text-primary tracking-tight", sizeMap[size])}>
-        Thrift<span className="text-accent">Pantry</span>
+        Saver's <span className="text-accent">Pantry</span>
       </span>
       {showTagline && (
         <span className="text-[10px] sm:text-xs text-muted-foreground -mt-0.5">
@@ -35,7 +35,7 @@ export const BrandMark = ({
 
   if (!to) return content;
   return (
-    <Link to={to} className="flex items-center min-h-[44px]" aria-label="ThriftPantry home">
+    <Link to={to} className="flex items-center min-h-[44px]" aria-label="Saver's Pantry home">
       {content}
     </Link>
   );

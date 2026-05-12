@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
     }
 
     const html = await fetch(parsed.toString(), {
-      headers: { "User-Agent": "Mozilla/5.0 ThriftPantryBot/1.0" },
+      headers: { "User-Agent": "Mozilla/5.0 SaversPantryBot/1.0" },
     }).then((r) => r.ok ? r.text() : Promise.reject(new Error(`Fetch ${r.status}`)));
 
     // 1) JSON-LD path

@@ -98,7 +98,7 @@ export const MobileTabBar = () => {
             <SheetContent side="bottom" className="rounded-t-3xl safe-bottom">
               <SheetHeader>
                 <SheetTitle className="text-primary">
-                  Thrift<span className="text-accent">Pantry</span>
+                  Saver's <span className="text-accent">Pantry</span>
                 </SheetTitle>
               </SheetHeader>
 
