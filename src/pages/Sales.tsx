@@ -16,6 +16,10 @@ import { CuisineFilterBar } from "@/components/CuisineFilterBar";
 import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
 import { detectItemCuisines } from "@/lib/cuisineHints";
 import { PagerBar } from "@/components/PagerBar";
+import { LocationHeader } from "@/components/LocationHeader";
+import { useUserLocation } from "@/hooks/useUserLocation";
+import { distanceMiles, formatDistance } from "@/lib/distance";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const PAGE_SIZE = 10;
 
@@ -36,7 +40,12 @@ type Sale = {
   region: string | null;
   address: string | null;
   google_maps_url: string | null;
+  store_id: string | null;
+  specialty_stores?: { latitude: number | null; longitude: number | null } | null;
+  _distance?: number | null;
 };
+
+type SortMode = "distance" | "savings" | "ending";
 
 const sourceMeta: Record<string, { label: string; cls: string }> = {
   kroger_api: { label: "Kroger", cls: "bg-blue-500/10 text-blue-700 dark:text-blue-300" },
