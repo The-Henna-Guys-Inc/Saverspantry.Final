@@ -25,10 +25,12 @@ const SUGGESTIONS = ["basmati rice", "lentils", "olive oil", "paneer", "chicken 
 export default function Watchlist({ embedded = false }: { embedded?: boolean } = {}) {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { cuisines } = useCuisinePrefs();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [newItem, setNewItem] = useState("");
   const [adding, setAdding] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
