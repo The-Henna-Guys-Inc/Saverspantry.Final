@@ -83,6 +83,33 @@ function fuzzyMatch(name: string, pantry: PantryItemLite[]): PantryItemLite | nu
   return best && best.score >= 50 ? best.item : null;
 }
 
+// Fetch a product thumbnail from Open Food Facts (free, no key, public).
+async function lookupProductImage(name: string): Promise<string | null> {
+  const q = name.trim();
+  if (!q) return null;
+  try {
+    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=1&fields=image_front_small_url,image_small_url,image_thumb_url`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const j = await res.json();
+    const p = j?.products?.[0];
+    return p?.image_front_small_url || p?.image_small_url || p?.image_thumb_url || null;
+  } catch { return null; }
+}
+
+// Resolve images for a list of items, max 4 in flight at once.
+async function resolveImages(items: EditableItem[], onUpdate: (key: string, url: string | null) => void) {
+  const queue = [...items];
+  const workers = Array.from({ length: 4 }, async () => {
+    while (queue.length) {
+      const it = queue.shift()!;
+      const url = await lookupProductImage(it.name);
+      onUpdate(it._key, url);
+    }
+  });
+  await Promise.all(workers);
+}
+
 interface Props {
   mode: Mode;
   userId: string;
