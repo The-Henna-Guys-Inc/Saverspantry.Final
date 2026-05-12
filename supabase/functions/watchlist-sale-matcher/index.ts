@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
     const since = new Date(Date.now() - 35 * 60 * 1000).toISOString();
     const { data: sales } = await supabase
       .from("sale_observations")
-      .select("id, food_name, store_name, sale_price_usd, regular_price_usd, savings_pct, created_at")
+      .select("id, food_name, store_name, sale_price_usd, regular_price_usd, savings_pct, address, city, region, created_at")
       .gte("created_at", since)
       .in("moderation_status", ["auto_approved", "approved"]);
 
@@ -21,24 +21,53 @@ Deno.serve(async (req) => {
       .from("watchlist_items")
       .select("user_id, food_name, min_savings_pct, min_savings_usd, snoozed_until");
 
+    // Build user -> zip map for everyone with watches
+    const userIds = Array.from(new Set((watches ?? []).map((w) => w.user_id)));
+    const zipByUser = new Map<string, string | null>();
+    if (userIds.length) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, zip_code")
+        .in("user_id", userIds);
+      for (const p of profs ?? []) zipByUser.set(p.user_id, (p.zip_code ?? "").trim() || null);
+    }
+
     const now = new Date();
+    const seen = new Set<string>(); // dedupe per user+sale
     const notifs: any[] = [];
     for (const s of sales ?? []) {
+      const haystack = `${s.address ?? ""} ${s.city ?? ""} ${s.region ?? ""}`.toLowerCase();
+      const savedUsd = Number(s.regular_price_usd ?? 0) - Number(s.sale_price_usd ?? 0);
+      const savedPct = Number(s.savings_pct ?? 0);
+      // Strict: only notify when sale is at least 15% off
+      if (savedPct < 15) continue;
+
       for (const w of watches ?? []) {
         if (w.snoozed_until && new Date(w.snoozed_until) > now) continue;
-        if (!s.food_name?.toLowerCase().includes(w.food_name.toLowerCase()) &&
-            !w.food_name.toLowerCase().includes(s.food_name?.toLowerCase() ?? "")) continue;
-        const savedUsd = Number(s.regular_price_usd ?? 0) - Number(s.sale_price_usd ?? 0);
-        const savedPct = Number(s.savings_pct ?? 0);
-        if (savedPct < (w.min_savings_pct ?? 0)) continue;
+
+        // Zip-code gate: require user has zip and sale's address mentions it
+        const zip = zipByUser.get(w.user_id);
+        if (!zip) continue;
+        if (!haystack.includes(zip.toLowerCase())) continue;
+
+        const sName = (s.food_name ?? "").toLowerCase();
+        const wName = w.food_name.toLowerCase();
+        if (!sName.includes(wName) && !wName.includes(sName)) continue;
+
+        if (savedPct < (w.min_savings_pct ?? 15)) continue;
         if (savedUsd < Number(w.min_savings_usd ?? 0)) continue;
+
+        const key = `${w.user_id}:${s.id}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+
         notifs.push({
           user_id: w.user_id,
           kind: "sale_match",
           title: `${s.food_name} on sale at ${s.store_name}`,
-          body: `$${Number(s.sale_price_usd).toFixed(2)} — save ${savedPct ? Math.round(savedPct) + "%" : "$" + savedUsd.toFixed(2)}`,
+          body: `$${Number(s.sale_price_usd).toFixed(2)} — save ${Math.round(savedPct)}% near ${zip}`,
           link: "/sales",
-          metadata: { sale_id: s.id, food: s.food_name },
+          metadata: { sale_id: s.id, food: s.food_name, zip },
         });
       }
     }
