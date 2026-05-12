@@ -331,7 +331,6 @@ const Pantry = () => {
   const matchingItems = items.filter(itemMatchesPrefs);
   const otherItems = isFiltering ? items.filter((i) => !itemMatchesPrefs(i)) : [];
 
-  const [search, setSearch] = useState("");
   const searchedItems = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return matchingItems;
