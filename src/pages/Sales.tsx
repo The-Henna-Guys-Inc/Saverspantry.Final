@@ -251,7 +251,7 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
             <TabsTrigger value="watching" className="rounded-lg">
               On your watchlist {matched.length > 0 && <Badge variant="secondary" className="ml-2">{matched.length}</Badge>}
             </TabsTrigger>
-            <TabsTrigger value="all" className="rounded-lg">All sales</TabsTrigger>
+            <TabsTrigger value="all" className="rounded-lg">All deals</TabsTrigger>
           </TabsList>
 
           <TabsContent value="watching" className="mt-5">
