@@ -68,7 +68,7 @@ export const WatchlistActivity = ({ userId }: { userId: string }) => {
         <div className="text-5xl mb-3">👀</div>
         <h2 className="text-xl font-semibold text-primary mb-2">Your watchlist is empty</h2>
         <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
-          Add foods you regularly buy and we'll surface matching sales here.
+          Add foods you regularly buy and we'll surface matching deals here.
         </p>
         <Button asChild variant="hero" className="rounded-xl">
           <Link to="/watchlist">Manage watchlist</Link>
