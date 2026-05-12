@@ -22,6 +22,8 @@ type EditableItem = ParsedItem & {
   _key: string;
   location: string; // for add mode
   expires: string;  // for add mode (YYYY-MM-DD)
+  imageUrl?: string | null;
+  imageLoading?: boolean;
   matchedId?: string | null; // for remove mode
   matchedName?: string | null;
   matchedQty?: number | null;
