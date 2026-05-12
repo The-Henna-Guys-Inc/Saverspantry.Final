@@ -270,7 +270,7 @@ const Settings = () => {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mb-3">
-                Pantry, Stores, Sales, and Bulk-Buy will prioritize these cuisines. You can toggle the filter off anywhere to see everything.
+                Pantry, Stores, Deals, and Bulk-Buy will prioritize these cuisines. You can toggle the filter off anywhere to see everything.
               </p>
               <div className="flex flex-wrap gap-2">
                 {DISCOVERY_CUISINES.map((c) => {
