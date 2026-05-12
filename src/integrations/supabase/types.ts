@@ -341,6 +341,106 @@ export type Database = {
         }
         Relationships: []
       }
+      household_invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_by_user_id: string | null
+          code: string
+          created_at: string
+          expires_at: string
+          household_id: string
+          id: string
+          invited_by_user_id: string
+          invited_email: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by_user_id?: string | null
+          code: string
+          created_at?: string
+          expires_at?: string
+          household_id: string
+          id?: string
+          invited_by_user_id: string
+          invited_email?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by_user_id?: string | null
+          code?: string
+          created_at?: string
+          expires_at?: string
+          household_id?: string
+          id?: string
+          invited_by_user_id?: string
+          invited_email?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "household_invites_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      household_members: {
+        Row: {
+          household_id: string
+          id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          household_id: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          household_id?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "household_members_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      households: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       known_google_places: {
         Row: {
           first_seen_at: string
@@ -673,6 +773,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active_household_id: string | null
           created_at: string
           cuisine_filter_enabled: boolean
           cuisine_preferences: string[]
@@ -690,6 +791,7 @@ export type Database = {
           zip_code: string | null
         }
         Insert: {
+          active_household_id?: string | null
           created_at?: string
           cuisine_filter_enabled?: boolean
           cuisine_preferences?: string[]
@@ -707,6 +809,7 @@ export type Database = {
           zip_code?: string | null
         }
         Update: {
+          active_household_id?: string | null
           created_at?: string
           cuisine_filter_enabled?: boolean
           cuisine_preferences?: string[]
@@ -1281,6 +1384,14 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_household_member: {
+        Args: { _household_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_household_owner: {
+        Args: { _household_id: string; _user_id: string }
         Returns: boolean
       }
       record_alert: {
