@@ -30,6 +30,9 @@ const Welcome = () => {
 
       <div className="w-full max-w-md space-y-3">
         <Button asChild variant="hero" size="lg" className="w-full h-14 rounded-2xl text-base">
+          <Link to="/auth">Create free account</Link>
+        </Button>
+        <Button asChild variant="outline" size="lg" className="w-full h-14 rounded-2xl text-base">
           <Link to="/demo">Try it — no account needed</Link>
         </Button>
         <Link
