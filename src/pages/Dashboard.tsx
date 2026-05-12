@@ -25,7 +25,7 @@ type Event = {
 
 const CATEGORY_LABEL: Record<string, string> = {
   swap: "Swaps",
-  sale: "Sales",
+  sale: "Deals",
   meal_plan: "Meal plans",
   pantry_use: "Pantry use",
 };
