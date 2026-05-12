@@ -161,13 +161,33 @@ const AdminDeals = () => {
           </Button>
         </div>
 
-        <Tabs value={mode} onValueChange={(v) => setMode(v as QueueMode)}>
-          <TabsList className="rounded-xl">
-            <TabsTrigger value="pending" className="rounded-lg">Pending review</TabsTrigger>
-            <TabsTrigger value="flagged" className="rounded-lg">Flagged</TabsTrigger>
-            <TabsTrigger value="recent_user" className="rounded-lg">Recent community</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        {batchFilter && (
+          <Card className="p-4 rounded-2xl bg-primary/5 border-primary/20">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="text-sm">
+                <span className="font-semibold text-primary">Reviewing flyer batch</span>
+                {batchInfo && (
+                  <span className="text-muted-foreground ml-2">
+                    · {batchInfo.original_filename} · {batchInfo.extracted_items_count} extracted · AI cost ${Number(batchInfo.ai_cost_usd).toFixed(4)}
+                  </span>
+                )}
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setSearchParams({})}>
+                Clear filter
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {!batchFilter && (
+          <Tabs value={mode} onValueChange={(v) => setMode(v as QueueMode)}>
+            <TabsList className="rounded-xl">
+              <TabsTrigger value="pending" className="rounded-lg">Pending review</TabsTrigger>
+              <TabsTrigger value="flagged" className="rounded-lg">Flagged</TabsTrigger>
+              <TabsTrigger value="recent_user" className="rounded-lg">Recent community</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        )}
 
         <p className="text-xs text-muted-foreground">{counts.total} item{counts.total === 1 ? "" : "s"}</p>
 
