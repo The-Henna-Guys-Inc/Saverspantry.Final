@@ -27,7 +27,7 @@ export const BrandMark = ({
       </span>
       {showTagline && (
         <span className="text-[10px] sm:text-xs text-muted-foreground -mt-0.5">
-          Eat well, save more
+          Eat well, Save more
         </span>
       )}
     </div>

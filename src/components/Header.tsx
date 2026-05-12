@@ -36,7 +36,7 @@ export const Header = () => {
               Saver's <span className="text-accent">Pantry</span>
             </span>
             <span className="text-[10px] sm:text-xs text-muted-foreground -mt-0.5">
-              Eat well, save more
+              Eat well, Save more
             </span>
           </div>
         </Link>
