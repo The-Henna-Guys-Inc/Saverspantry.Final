@@ -93,7 +93,11 @@ export default function Watchlist({ embedded = false }: { embedded?: boolean } =
       .map((food_name) => ({ user_id: user.id, food_name, min_savings_pct: DEFAULT_WATCH_MIN_PCT }));
     if (toInsert.length === 0) {
       setSeeding(false);
-      toast.info("All staples already on your watchlist");
+      if (wanted.size === 0) {
+        toast.info(`No staples curated yet for: ${cuisines.join(", ")}`);
+      } else {
+        toast.info("All staples already on your watchlist");
+      }
       return;
     }
     const { error } = await supabase.from("watchlist_items").insert(toInsert);
