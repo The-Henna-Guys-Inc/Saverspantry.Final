@@ -724,6 +724,31 @@ const Pantry = () => {
             ))}
               </div>
             )}
+            {searchedItems.length > PAGE_SIZE && (
+              <div className="flex items-center justify-between gap-3 mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <div className="text-xs text-muted-foreground">
+                  Page {currentPage} of {totalPages} · {searchedItems.length} items
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
           </>
         )}
 
