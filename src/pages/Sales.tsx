@@ -17,6 +17,7 @@ import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
 import { detectItemCuisines } from "@/lib/cuisineHints";
 import { PagerBar } from "@/components/PagerBar";
 import { LocationHeader } from "@/components/LocationHeader";
+import { UserSubmitDealDialog } from "@/components/UserSubmitDealDialog";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { distanceMiles, formatDistance } from "@/lib/distance";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -206,7 +207,8 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
           <div className="flex items-center gap-1.5 flex-wrap">
             {isAdmin && user && <AdminSaleCsvUpload userId={user.id} onCreated={loadSales} />}
             {isAdmin && user && <AdminSaleDialog userId={user.id} onCreated={loadSales} />}
-            <Button asChild variant="hero" size="sm" className="rounded-xl h-8 px-3 text-xs">
+            <UserSubmitDealDialog onSubmitted={loadSales} />
+            <Button asChild variant="ghost" size="sm" className="rounded-xl h-8 px-3 text-xs">
               <Link to="/watchlist">Watchlist</Link>
             </Button>
           </div>
