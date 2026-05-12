@@ -28,9 +28,10 @@ export const Header = () => {
 
   return (
     <header className="sticky top-0 z-30 backdrop-blur-md bg-background/70 border-b border-border/40 safe-top">
-      <div className="container max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-        <Link to="/" className="flex items-center min-h-[44px]" aria-label="ThriftPantry home">
-          <div className="flex flex-col leading-tight">
+      <div className="container max-w-6xl mx-auto px-4 sm:px-6 h-14 grid grid-cols-[1fr_auto_1fr] items-center">
+        <div />
+        <Link to="/" className="flex items-center justify-center min-h-[44px]" aria-label="ThriftPantry home">
+          <div className="flex flex-col leading-tight items-center text-center">
             <span className="text-xl sm:text-2xl font-bold text-primary tracking-tight">
               Thrift<span className="text-accent">Pantry</span>
             </span>
@@ -40,6 +41,7 @@ export const Header = () => {
           </div>
         </Link>
 
+        <div className="flex justify-end">
         {loading ? null : !user ? (
           <Button asChild variant="hero" size="sm" className="rounded-xl">
             <Link to="/auth">Sign in</Link>
