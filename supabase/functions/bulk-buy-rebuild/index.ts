@@ -2,7 +2,25 @@
 // Looks at sales with high savings_pct and a pack_size hint, groups by food_name,
 // and upserts derived candidates that aren't already curated.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { detectItemCuisines } from "../_shared/cuisineHints.ts";
+
+// Lightweight cuisine detector (mirrors src/lib/cuisineHints.ts core rules).
+const RULES: Array<{ kw: string; tags: string[] }> = [
+  { kw: "gochujang", tags: ["korean"] }, { kw: "kimchi", tags: ["korean"] },
+  { kw: "miso", tags: ["japanese"] }, { kw: "mirin", tags: ["japanese"] }, { kw: "nori", tags: ["japanese"] },
+  { kw: "soy sauce", tags: ["chinese", "japanese", "korean"] }, { kw: "hoisin", tags: ["chinese"] },
+  { kw: "basmati", tags: ["south_asian"] }, { kw: "lentil", tags: ["south_asian"] }, { kw: "ghee", tags: ["south_asian"] },
+  { kw: "garam masala", tags: ["south_asian"] }, { kw: "paneer", tags: ["south_asian"] },
+  { kw: "fish sauce", tags: ["southeast_asian"] }, { kw: "coconut milk", tags: ["southeast_asian", "south_asian"] },
+  { kw: "tahini", tags: ["middle_eastern", "mediterranean"] }, { kw: "sumac", tags: ["middle_eastern"] },
+  { kw: "masa", tags: ["mexican"] }, { kw: "tortilla", tags: ["mexican"] }, { kw: "chipotle", tags: ["mexican"] },
+  { kw: "feta", tags: ["mediterranean"] }, { kw: "kalamata", tags: ["mediterranean"] },
+];
+function detectItemCuisines(name: string): string[] {
+  const n = name.toLowerCase();
+  const out = new Set<string>();
+  for (const r of RULES) if (n.includes(r.kw)) r.tags.forEach((t) => out.add(t));
+  return [...out];
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
