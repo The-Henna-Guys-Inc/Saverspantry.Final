@@ -331,16 +331,15 @@ const Pantry = () => {
   const matchingItems = items.filter(itemMatchesPrefs);
   const otherItems = isFiltering ? items.filter((i) => !itemMatchesPrefs(i)) : [];
 
-  const searchedItems = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return matchingItems;
-    return matchingItems.filter((i) =>
-      i.item.toLowerCase().includes(q) ||
-      (i.category ?? "").toLowerCase().includes(q) ||
-      (i.location ?? "").toLowerCase().includes(q) ||
-      (i.barcode ?? "").toLowerCase().includes(q)
-    );
-  }, [matchingItems, search]);
+  const q = search.trim().toLowerCase();
+  const searchedItems = !q
+    ? matchingItems
+    : matchingItems.filter((i) =>
+        i.item.toLowerCase().includes(q) ||
+        (i.category ?? "").toLowerCase().includes(q) ||
+        (i.location ?? "").toLowerCase().includes(q) ||
+        (i.barcode ?? "").toLowerCase().includes(q)
+      );
 
   const grouped = searchedItems.reduce<Record<string, PantryItem[]>>((acc, i) => {
     const c = i.location || "other";
