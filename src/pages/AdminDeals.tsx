@@ -96,7 +96,7 @@ const AdminDeals = () => {
   useEffect(() => {
     if (isAdmin) load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin, mode]);
+  }, [isAdmin, mode, batchFilter]);
 
   // Sign photo URLs for deal-submissions bucket
   useEffect(() => {
