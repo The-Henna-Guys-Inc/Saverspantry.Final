@@ -461,7 +461,7 @@ const Pantry = () => {
 
           <div className="mt-4 pt-4 border-t border-border/50">
             <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Bulk add or remove</div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <ReceiptScanner
                 mode="add"
                 userId={user!.id}
