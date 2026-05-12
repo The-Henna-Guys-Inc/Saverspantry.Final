@@ -56,7 +56,7 @@ export const WatchlistButton = ({ foodName, size = "sm" }: Props) => {
   return (
     <Button onClick={toggle} disabled={busy} variant="outline" size={size === "icon" ? "icon" : "sm"} className="rounded-xl">
       {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : watching ? <BellRing className="h-3.5 w-3.5 fill-current" /> : <Bell className="h-3.5 w-3.5" />}
-      {size !== "icon" && <span className="ml-1.5">{watching ? "Watching" : "Watch sales"}</span>}
+      {size !== "icon" && <span className="ml-1.5">{watching ? "Watching" : "Watch deals"}</span>}
     </Button>
   );
 };
