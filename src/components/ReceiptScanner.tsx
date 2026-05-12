@@ -147,20 +147,27 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
         return;
       }
       setStoreName(data?.store_name ?? null);
-      setItems(parsed.map((p, idx) => {
+      const editable: EditableItem[] = parsed.map((p, idx) => {
         const match = mode === "remove" ? fuzzyMatch(p.name, pantry) : null;
         return {
           ...p,
           _key: `${Date.now()}-${idx}`,
           location: defaultLocation,
           expires: "",
+          imageUrl: null,
+          imageLoading: true,
           matchedId: match?.id ?? null,
           matchedName: match?.item ?? null,
           matchedQty: match?.quantity ?? null,
           matchedUnit: match?.unit ?? null,
         };
-      }));
+      });
+      setItems(editable);
       toast.success(`Found ${parsed.length} item${parsed.length === 1 ? "" : "s"}`);
+      // Fire-and-forget image lookups (don't block the user).
+      resolveImages(editable, (key, url) => {
+        setItems((p) => p.map((it) => (it._key === key ? { ...it, imageUrl: url, imageLoading: false } : it)));
+      });
     } catch (e: any) {
       toast.error(e.message ?? "Scan failed");
     } finally {
