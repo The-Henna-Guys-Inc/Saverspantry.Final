@@ -289,15 +289,23 @@ export const EquivalencyEngine = () => {
                   </button>
                 ))}
               </div>
+              </>)}
             </section>
           )}
 
           {CALORIE_SWAPS[cuisine] && (
             <section>
-              <div className="flex items-center gap-2 mb-3 px-1">
-                <Flame className="h-4 w-4 text-accent" />
-                <h2 className="text-base font-bold text-primary">Top 10 lighter swaps · {cuisine}</h2>
-              </div>
+              <button
+                type="button"
+                onClick={() => setCalOpen((v) => !v)}
+                aria-expanded={calOpen}
+                className="w-full flex items-center gap-2 mb-3 px-1 min-h-[44px] text-left"
+              >
+                <Flame className="h-4 w-4 text-accent shrink-0" />
+                <h2 className="text-base font-bold text-primary flex-1">Top 10 lighter swaps · {cuisine}</h2>
+                {calOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+              </button>
+              {calOpen && (<>
               <p className="text-xs text-muted-foreground mb-3 px-1">High-calorie ingredients → lighter alternatives with similar nutrition. Estimates are approximate.</p>
               <div className="grid sm:grid-cols-2 gap-2.5">
                 {CALORIE_SWAPS[cuisine].map((s, i) => (
@@ -323,6 +331,7 @@ export const EquivalencyEngine = () => {
                   </button>
                 ))}
               </div>
+              </>)}
             </section>
           )}
         </div>
