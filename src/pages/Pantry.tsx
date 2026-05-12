@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash2, Refrigerator, Minus, AlertTriangle, X, ScanLine, CalendarDays, Package } from "lucide-react";
+import { Loader2, Plus, Trash2, Refrigerator, Minus, AlertTriangle, X, ScanLine, CalendarDays, Package, Search } from "lucide-react";
 import { toast } from "sonner";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -330,7 +330,19 @@ const Pantry = () => {
   const matchingItems = items.filter(itemMatchesPrefs);
   const otherItems = isFiltering ? items.filter((i) => !itemMatchesPrefs(i)) : [];
 
-  const grouped = matchingItems.reduce<Record<string, PantryItem[]>>((acc, i) => {
+  const [search, setSearch] = useState("");
+  const searchedItems = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return matchingItems;
+    return matchingItems.filter((i) =>
+      i.item.toLowerCase().includes(q) ||
+      (i.category ?? "").toLowerCase().includes(q) ||
+      (i.location ?? "").toLowerCase().includes(q) ||
+      (i.barcode ?? "").toLowerCase().includes(q)
+    );
+  }, [matchingItems, search]);
+
+  const grouped = searchedItems.reduce<Record<string, PantryItem[]>>((acc, i) => {
     const c = i.location || "other";
     (acc[c] ||= []).push(i); return acc;
   }, {});
@@ -603,12 +615,37 @@ const Pantry = () => {
             Your pantry is empty. Add a few staples to start.
           </Card>
         ) : (
-          <div className="card-masonry">
-            {Object.entries(grouped).map(([loc, list]) => (
-              <Card key={loc} className="p-5 rounded-2xl border-border/50">
-                <div className="text-xs uppercase tracking-wider text-accent mb-3">{loc}</div>
-                <ul className="space-y-3">
-                  {list.map((it) => {
+          <>
+            <div className="relative mb-4">
+              <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={`Search ${matchingItems.length} pantry item${matchingItems.length === 1 ? "" : "s"}…`}
+                className="rounded-xl pl-9 pr-9 h-11"
+                aria-label="Search pantry"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted"
+                  aria-label="Clear search"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            {searchedItems.length === 0 ? (
+              <Card className="p-8 rounded-2xl border-border/50 text-center text-muted-foreground">
+                No items match "{search}".
+              </Card>
+            ) : (
+              <div className="card-masonry">
+                {Object.entries(grouped).map(([loc, list]) => (
+                  <Card key={loc} className="p-5 rounded-2xl border-border/50">
+                    <div className="text-xs uppercase tracking-wider text-accent mb-3">{loc}</div>
+                    <ul className="space-y-3">
+                      {list.map((it) => {
                     const expSoon = isExpiringSoon(it.expires_on);
                     const out = it.quantity <= 0;
                     const low = isLow(it);
@@ -679,7 +716,9 @@ const Pantry = () => {
                 </ul>
               </Card>
             ))}
-          </div>
+              </div>
+            )}
+          </>
         )}
 
         {otherItems.length > 0 && (
