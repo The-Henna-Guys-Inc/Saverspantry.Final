@@ -341,6 +341,74 @@ export type Database = {
         }
         Relationships: []
       }
+      flyer_extraction_batches: {
+        Row: {
+          admin_user_id: string
+          ai_cost_usd: number
+          approved_items_count: number
+          completed_at: string | null
+          created_at: string
+          extracted_items_count: number
+          extraction_notes: string | null
+          extraction_status: string
+          file_hash: string | null
+          file_type: string
+          flyer_valid_from: string | null
+          flyer_valid_until: string | null
+          id: string
+          original_filename: string
+          page_count: number
+          store_id: string
+          stored_file_url: string
+        }
+        Insert: {
+          admin_user_id: string
+          ai_cost_usd?: number
+          approved_items_count?: number
+          completed_at?: string | null
+          created_at?: string
+          extracted_items_count?: number
+          extraction_notes?: string | null
+          extraction_status?: string
+          file_hash?: string | null
+          file_type: string
+          flyer_valid_from?: string | null
+          flyer_valid_until?: string | null
+          id?: string
+          original_filename: string
+          page_count?: number
+          store_id: string
+          stored_file_url: string
+        }
+        Update: {
+          admin_user_id?: string
+          ai_cost_usd?: number
+          approved_items_count?: number
+          completed_at?: string | null
+          created_at?: string
+          extracted_items_count?: number
+          extraction_notes?: string | null
+          extraction_status?: string
+          file_hash?: string | null
+          file_type?: string
+          flyer_valid_from?: string | null
+          flyer_valid_until?: string | null
+          id?: string
+          original_filename?: string
+          page_count?: number
+          store_id?: string
+          stored_file_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flyer_extraction_batches_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "specialty_stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       household_invites: {
         Row: {
           accepted_at: string | null
@@ -895,14 +963,19 @@ export type Database = {
       sale_observations: {
         Row: {
           address: string | null
+          approved_at: string | null
+          approved_by_admin_id: string | null
+          category: string | null
           city: string | null
           confirmation_count: number
           created_at: string
           ends_at: string
+          extraction_batch_id: string | null
           flag_count: number
           food_name: string
           google_maps_url: string | null
           id: string
+          moderation_notes: string | null
           moderation_status: string
           pack_size: string | null
           photo_url: string | null
@@ -911,6 +984,7 @@ export type Database = {
           sale_price_usd: number
           savings_pct: number | null
           source: string
+          source_flyer_url: string | null
           starts_at: string
           store_chain: string | null
           store_id: string | null
@@ -920,14 +994,19 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          approved_at?: string | null
+          approved_by_admin_id?: string | null
+          category?: string | null
           city?: string | null
           confirmation_count?: number
           created_at?: string
           ends_at: string
+          extraction_batch_id?: string | null
           flag_count?: number
           food_name: string
           google_maps_url?: string | null
           id?: string
+          moderation_notes?: string | null
           moderation_status?: string
           pack_size?: string | null
           photo_url?: string | null
@@ -936,6 +1015,7 @@ export type Database = {
           sale_price_usd: number
           savings_pct?: number | null
           source?: string
+          source_flyer_url?: string | null
           starts_at?: string
           store_chain?: string | null
           store_id?: string | null
@@ -945,14 +1025,19 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          approved_at?: string | null
+          approved_by_admin_id?: string | null
+          category?: string | null
           city?: string | null
           confirmation_count?: number
           created_at?: string
           ends_at?: string
+          extraction_batch_id?: string | null
           flag_count?: number
           food_name?: string
           google_maps_url?: string | null
           id?: string
+          moderation_notes?: string | null
           moderation_status?: string
           pack_size?: string | null
           photo_url?: string | null
@@ -961,6 +1046,7 @@ export type Database = {
           sale_price_usd?: number
           savings_pct?: number | null
           source?: string
+          source_flyer_url?: string | null
           starts_at?: string
           store_chain?: string | null
           store_id?: string | null
@@ -1103,6 +1189,7 @@ export type Database = {
       }
       specialty_stores: {
         Row: {
+          active: boolean
           address: string | null
           chain_name: string | null
           city: string | null
@@ -1119,11 +1206,15 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           name: string
+          phone: string | null
           price_tier: string
           region: string | null
           updated_at: string
+          website: string | null
+          zip_code: string | null
         }
         Insert: {
+          active?: boolean
           address?: string | null
           chain_name?: string | null
           city?: string | null
@@ -1140,11 +1231,15 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           name: string
+          phone?: string | null
           price_tier?: string
           region?: string | null
           updated_at?: string
+          website?: string | null
+          zip_code?: string | null
         }
         Update: {
+          active?: boolean
           address?: string | null
           chain_name?: string | null
           city?: string | null
@@ -1161,9 +1256,12 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           name?: string
+          phone?: string | null
           price_tier?: string
           region?: string | null
           updated_at?: string
+          website?: string | null
+          zip_code?: string | null
         }
         Relationships: []
       }
@@ -1278,6 +1376,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_deal_submissions: {
+        Row: {
+          deal_observation_id: string | null
+          id: string
+          ip_address: string | null
+          submitted_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          deal_observation_id?: string | null
+          id?: string
+          ip_address?: string | null
+          submitted_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          deal_observation_id?: string | null
+          id?: string
+          ip_address?: string | null
+          submitted_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_deal_submissions_deal_observation_id_fkey"
+            columns: ["deal_observation_id"]
+            isOneToOne: false
+            referencedRelation: "sale_observations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_legal_acceptances: {
         Row: {
