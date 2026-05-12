@@ -22,7 +22,7 @@ const Demo = () => {
             <ArrowLeft className="h-4 w-4" />
             Back
           </Link>
-          <BrandMark to="/welcome" size="sm" />
+          <BrandMark to="/welcome" size="sm" showTagline />
           <div className="w-10" />
         </div>
       </header>
