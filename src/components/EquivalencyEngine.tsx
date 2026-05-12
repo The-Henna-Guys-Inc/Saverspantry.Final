@@ -253,10 +253,17 @@ export const EquivalencyEngine = () => {
         <div className="mt-8 space-y-6">
           {COST_SWAPS[cuisine] && (
             <section>
-              <div className="flex items-center gap-2 mb-3 px-1">
-                <DollarSign className="h-4 w-4 text-primary" />
-                <h2 className="text-base font-bold text-primary">Top 10 cost-saving swaps · {cuisine}</h2>
-              </div>
+              <button
+                type="button"
+                onClick={() => setCostOpen((v) => !v)}
+                aria-expanded={costOpen}
+                className="w-full flex items-center gap-2 mb-3 px-1 min-h-[44px] text-left"
+              >
+                <DollarSign className="h-4 w-4 text-primary shrink-0" />
+                <h2 className="text-base font-bold text-primary flex-1">Top 10 cost-saving swaps · {cuisine}</h2>
+                {costOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+              </button>
+              {costOpen && (<>
               <p className="text-xs text-muted-foreground mb-3 px-1">High-cost ingredients → cheaper picks with similar nutrition. Tap to run a full swap.</p>
               <div className="grid sm:grid-cols-2 gap-2.5">
                 {COST_SWAPS[cuisine].map((s, i) => (
