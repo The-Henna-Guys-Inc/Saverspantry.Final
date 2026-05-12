@@ -143,7 +143,7 @@ export function AdminSaleCsvUpload({ userId, onCreated }: { userId: string; onCr
       </DialogTrigger>
       <DialogContent className="rounded-3xl max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Bulk upload curated sales</DialogTitle>
+          <DialogTitle>Bulk upload curated deals</DialogTitle>
           <DialogDescription>
             Upload a CSV to publish many sales at once. Required columns: food_name, title, store_name, sale_price_usd.
           </DialogDescription>
