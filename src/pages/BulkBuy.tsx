@@ -224,7 +224,7 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
                     </Button>
                     {r.on_sale && r.sale && (
                       <Button asChild size="sm" variant="hero" className="rounded-xl">
-                        <Link to="/sales">See sale →</Link>
+                        <Link to="/sales">See deal →</Link>
                       </Button>
                     )}
                   </div>
