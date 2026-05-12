@@ -24,6 +24,7 @@ import AdminAlerts from "./pages/AdminAlerts.tsx";
 import AdminUsers from "./pages/AdminUsers.tsx";
 import AdminAudit from "./pages/AdminAudit.tsx";
 import AdminSessions from "./pages/AdminSessions.tsx";
+import AdminDeals from "./pages/AdminDeals.tsx";
 import Legal from "./pages/Legal.tsx";
 import JoinHousehold from "./pages/JoinHousehold.tsx";
 import { InstallPrompt } from "./components/InstallPrompt";
