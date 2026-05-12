@@ -110,12 +110,23 @@ export default function Watchlist({ embedded = false }: { embedded?: boolean } =
       {!embedded && <Header />}
       <Inner className={embedded ? "" : "container max-w-3xl mx-auto px-6 py-10"}>
         <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
-          <div>
+          <div className="flex-1 min-w-0">
             {!embedded && <h1 className="text-3xl font-bold text-primary">Your watchlist</h1>}
             <p className="text-sm text-muted-foreground mt-1">
               We'll surface matching sales on the Sales tab. Quiet by default — no notifications you didn't ask for.
             </p>
           </div>
+          <Button
+            onClick={seedFromCuisines}
+            disabled={seeding || !cuisines.length}
+            variant="hero"
+            size="sm"
+            className="rounded-xl shrink-0"
+            title={cuisines.length ? `Add top 5 staples for ${cuisines.join(", ")}` : "Set cuisines in Settings first"}
+          >
+            {seeding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            <span className="ml-1.5">Add top 5 per cuisine</span>
+          </Button>
         </div>
 
         <Card className="p-5 rounded-3xl shadow-soft border-border/50 mb-6">
