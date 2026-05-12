@@ -12,6 +12,7 @@ import { Loader2, Save, Settings as SettingsIcon, TrendingDown, Utensils } from 
 import { toast } from "sonner";
 import { AccountManagement } from "@/components/AccountManagement";
 import { SupportTickets } from "@/components/SupportTickets";
+import { HouseholdManager } from "@/components/HouseholdManager";
 import { CUISINE_LABEL, mapLegacyCuisines, type CuisineTag } from "@/lib/cuisineHints";
 import { Switch } from "@/components/ui/switch";
 
@@ -293,6 +294,7 @@ const Settings = () => {
           </Card>
         )}
 
+        <HouseholdManager />
         <SupportTickets />
         <AccountManagement />
       </div>

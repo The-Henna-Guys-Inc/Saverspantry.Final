@@ -25,6 +25,7 @@ import AdminUsers from "./pages/AdminUsers.tsx";
 import AdminAudit from "./pages/AdminAudit.tsx";
 import AdminSessions from "./pages/AdminSessions.tsx";
 import Legal from "./pages/Legal.tsx";
+import JoinHousehold from "./pages/JoinHousehold.tsx";
 import { InstallPrompt } from "./components/InstallPrompt";
 import { MobileTabBar } from "./components/MobileTabBar";
 import { LegalAcceptanceGate } from "./components/LegalAcceptanceGate";
@@ -47,6 +48,7 @@ const App = () => (
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/demo" element={<Demo />} />
           <Route path="/legal/:type" element={<Legal />} />
+          <Route path="/join/:code" element={<JoinHousehold />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/library" element={<Library />} />
           <Route path="/planner" element={<Planner />} />
