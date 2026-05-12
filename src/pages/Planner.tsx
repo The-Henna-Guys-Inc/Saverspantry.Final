@@ -347,15 +347,15 @@ const Planner = () => {
               </div>
             </div>
           )}
-          <div className="mt-5 flex flex-wrap gap-2 sm:gap-3">
-            <Button variant="hero" size="sm" onClick={generate} disabled={genLoading} className="rounded-xl">
-              {genLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : plan ? <RefreshCw className="h-4 w-4 mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
-              {plan ? "Regenerate plan" : "Generate plan"}
+          <div className="mt-5 flex flex-nowrap gap-2 items-stretch">
+            <Button variant="hero" size="sm" onClick={generate} disabled={genLoading} className="rounded-xl flex-1 min-w-0 px-2 text-xs sm:text-sm whitespace-nowrap">
+              {genLoading ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin shrink-0" /> : plan ? <RefreshCw className="h-4 w-4 mr-1.5 shrink-0" /> : <Sparkles className="h-4 w-4 mr-1.5 shrink-0" />}
+              <span className="truncate">{plan ? "Regenerate" : "Generate plan"}</span>
             </Button>
             {plan && (
-              <Button variant="outline" size="sm" onClick={buildGrocery} disabled={groceryLoading} className="rounded-xl">
-                {groceryLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ShoppingCart className="h-4 w-4 mr-2" />}
-                Build grocery list
+              <Button variant="outline" size="sm" onClick={buildGrocery} disabled={groceryLoading} className="rounded-xl flex-1 min-w-0 px-2 text-xs sm:text-sm whitespace-nowrap">
+                {groceryLoading ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin shrink-0" /> : <ShoppingCart className="h-4 w-4 mr-1.5 shrink-0" />}
+                <span className="truncate">Grocery list</span>
               </Button>
             )}
           </div>
