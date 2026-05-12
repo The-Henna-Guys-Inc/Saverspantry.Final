@@ -20,7 +20,7 @@ const Welcome = () => {
         </div>
         <h1 className="text-4xl sm:text-5xl font-bold text-primary leading-tight">
           Eat well,<br />
-          <span className="bg-gradient-leaf bg-clip-text text-transparent">spend less.</span>
+          <span className="bg-gradient-leaf bg-clip-text text-transparent">save more.</span>
         </h1>
         <p className="mt-5 text-base sm:text-lg text-muted-foreground leading-relaxed">
           Swap any food for a cheaper alternative with the same nutrition — no diet, no guesswork.
