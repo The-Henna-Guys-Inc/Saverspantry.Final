@@ -1,8 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sprout } from "lucide-react";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import logoBadge from "@/assets/logo-options/logo-4-badge.png";
 
 const Welcome = () => {
   const navigate = useNavigate();
@@ -15,10 +15,13 @@ const Welcome = () => {
   return (
     <main className="h-[100dvh] bg-gradient-warm flex flex-col items-center justify-between px-6 py-10 overflow-hidden">
       <div className="flex-1 flex flex-col items-center justify-center text-center max-w-md w-full">
-        <div className="w-16 h-16 rounded-3xl bg-gradient-leaf flex items-center justify-center shadow-glow mb-2">
-          <Sprout className="h-8 w-8 text-primary-foreground" />
-        </div>
-        <span className="text-2xl font-bold text-primary mb-6">ThriftPantry</span>
+        <img
+          src={logoBadge}
+          alt="ThriftPantry"
+          width={1024}
+          height={1024}
+          className="w-32 h-32 sm:w-36 sm:h-36 mb-4 drop-shadow-soft"
+        />
         <h1 className="text-4xl sm:text-5xl font-bold text-primary leading-tight">
           Eat well,<br />
           <span className="bg-gradient-leaf bg-clip-text text-transparent">spend less.</span>
