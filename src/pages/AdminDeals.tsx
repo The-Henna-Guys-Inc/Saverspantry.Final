@@ -39,6 +39,8 @@ type QueueMode = "pending" | "flagged" | "recent_user";
 
 const AdminDeals = () => {
   const { user, loading: authLoading } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const batchFilter = searchParams.get("batch");
   const [checking, setChecking] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [deals, setDeals] = useState<Deal[]>([]);
@@ -46,6 +48,7 @@ const AdminDeals = () => {
   const [busy, setBusy] = useState<string | null>(null);
   const [mode, setMode] = useState<QueueMode>("pending");
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
+  const [batchInfo, setBatchInfo] = useState<{ extracted_items_count: number; ai_cost_usd: number; original_filename: string } | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -62,8 +65,10 @@ const AdminDeals = () => {
     let q = supabase.from("sale_observations")
       .select("*")
       .order("created_at", { ascending: false })
-      .limit(100);
-    if (mode === "pending") {
+      .limit(200);
+    if (batchFilter) {
+      q = q.eq("extraction_batch_id", batchFilter);
+    } else if (mode === "pending") {
       q = q.eq("moderation_status", "pending_review");
     } else if (mode === "flagged") {
       q = q.gte("flag_count", 1);
@@ -75,6 +80,18 @@ const AdminDeals = () => {
     setDeals((data ?? []) as Deal[]);
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (!batchFilter) { setBatchInfo(null); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("flyer_extraction_batches")
+        .select("extracted_items_count, ai_cost_usd, original_filename")
+        .eq("id", batchFilter)
+        .maybeSingle();
+      if (data) setBatchInfo(data as any);
+    })();
+  }, [batchFilter]);
 
   useEffect(() => {
     if (isAdmin) load();
