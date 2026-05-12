@@ -79,6 +79,7 @@ const Pantry = () => {
     open: false, mode: "add", scan: null, matchedItem: null,
   });
   const [wizardSubmitting, setWizardSubmitting] = useState(false);
+  const [search, setSearch] = useState("");
 
   const handleScanned = (r: ScanResult) => {
     setScanResult(r);
