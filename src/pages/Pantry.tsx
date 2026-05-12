@@ -80,6 +80,9 @@ const Pantry = () => {
   });
   const [wizardSubmitting, setWizardSubmitting] = useState(false);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
+  useEffect(() => { setPage(1); }, [search, isFiltering]);
 
   const handleScanned = (r: ScanResult) => {
     setScanResult(r);
@@ -341,7 +344,11 @@ const Pantry = () => {
         (i.barcode ?? "").toLowerCase().includes(q)
       );
 
-  const grouped = searchedItems.reduce<Record<string, PantryItem[]>>((acc, i) => {
+  const totalPages = Math.max(1, Math.ceil(searchedItems.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedItems = searchedItems.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  const grouped = pagedItems.reduce<Record<string, PantryItem[]>>((acc, i) => {
     const c = i.location || "other";
     (acc[c] ||= []).push(i); return acc;
   }, {});
@@ -715,6 +722,31 @@ const Pantry = () => {
                 </ul>
               </Card>
             ))}
+              </div>
+            )}
+            {searchedItems.length > PAGE_SIZE && (
+              <div className="flex items-center justify-between gap-3 mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <div className="text-xs text-muted-foreground">
+                  Page {currentPage} of {totalPages} · {searchedItems.length} items
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
               </div>
             )}
           </>
