@@ -191,6 +191,25 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
     setErrorMsg("");
     stoppedRef.current = false;
 
+    if (isNative) {
+      try {
+        setStatus("scanning");
+        const { barcodes } = await MLKitScanner.scan({
+          formats: [
+            MLKitFormat.Ean13, MLKitFormat.Ean8, MLKitFormat.UpcA, MLKitFormat.UpcE,
+            MLKitFormat.Code128, MLKitFormat.Code39, MLKitFormat.Itf, MLKitFormat.QrCode,
+          ],
+        });
+        const code = barcodes?.[0]?.rawValue;
+        if (code) await handleDetected(code);
+        else onOpenChangeRef.current(false);
+      } catch (e: any) {
+        setErrorMsg(e?.message ?? "Native scanner failed.");
+        setStatus("error");
+      }
+      return;
+    }
+
     let stream: MediaStream;
     try {
       // High-resolution constraints help dramatically with small/dense barcodes on iPhone.
