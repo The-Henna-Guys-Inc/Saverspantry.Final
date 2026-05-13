@@ -19,7 +19,7 @@ const Welcome = () => {
           <BrandMark to="" size="lg" showTagline />
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-primary leading-tight">
-          <span className="bg-gradient-leaf bg-clip-text text-transparent">Save $40+</span><br />
+          <span className="bg-gradient-leaf bg-clip-text text-transparent">Save $100+</span><br />
           a month on groceries
         </h1>
         <p className="mt-5 text-base sm:text-lg text-muted-foreground leading-relaxed">
