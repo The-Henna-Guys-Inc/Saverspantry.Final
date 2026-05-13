@@ -46,8 +46,8 @@ export const LEGACY_CUISINE_MAP: Record<string, CuisineTag[]> = {
   cuban: ["latin_american"],
   peruvian: ["latin_american"],
   brazilian: ["latin_american"],
-  caribbean: ["latin_american", "african"],
-  american: [],
+  caribbean: ["caribbean"],
+  american: ["american"],
 };
 
 export function mapLegacyCuisines(names: string[] | undefined | null): CuisineTag[] {
