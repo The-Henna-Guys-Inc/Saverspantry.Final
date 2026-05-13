@@ -49,6 +49,9 @@ export const CuisineFilterBar = ({ cuisines, isFiltering, onShowAll, onResume, c
           Filter to my cuisines
         </button>
       ) : null}
+      <Link to="/settings" className="text-[11px] text-muted-foreground hover:text-primary underline underline-offset-2 ml-auto">
+        Change in Settings
+      </Link>
     </div>
   );
 };
