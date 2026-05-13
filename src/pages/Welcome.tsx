@@ -26,7 +26,7 @@ const Welcome = () => {
           Swap ingredients to save money — same nutrition, your cuisine, no guesswork.
         </p>
 
-        <div className="mt-auto pt-10 w-full flex flex-col items-center text-center">
+        <div className="mt-12 w-full flex flex-col items-center text-center">
           <p className="text-base sm:text-lg font-medium text-muted-foreground/90 mb-3">
             With a free account, you also get:
           </p>
