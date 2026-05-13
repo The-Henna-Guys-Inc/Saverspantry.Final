@@ -61,13 +61,16 @@ export const EquivalencyEngine = () => {
   }, [prefsLoading, prefCuisines, favoriteCuisines, cuisineTouched, cuisineOptions]);
   const pickCuisine = (next: string | null) => { setCuisineTouched(true); setCuisine(next); };
 
+  const [zipCode, setZipCode] = useState<string | null>(null);
+
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data } = await supabase.from("profiles").select("dietary_prefs").eq("user_id", user.id).maybeSingle();
+      const { data } = await supabase.from("profiles").select("dietary_prefs, zip_code").eq("user_id", user.id).maybeSingle();
       const prefs = (data?.dietary_prefs ?? {}) as any;
       setProfilePrefs(prefs);
+      setZipCode(data?.zip_code ?? null);
       if (Array.isArray(prefs.restrictions)) {
         const fromProfile = prefs.restrictions
           .map((r: string) => r.charAt(0).toUpperCase() + r.slice(1))
