@@ -3,7 +3,8 @@
 
 export type CuisineTag =
   | "korean" | "japanese" | "chinese" | "south_asian" | "southeast_asian"
-  | "middle_eastern" | "mexican" | "latin_american" | "african" | "mediterranean";
+  | "middle_eastern" | "mexican" | "latin_american" | "african" | "mediterranean"
+  | "american" | "italian" | "french" | "caribbean" | "eastern_european";
 
 // Maps free-form / legacy cuisine names users may have saved into our CuisineTag taxonomy.
 export const LEGACY_CUISINE_MAP: Record<string, CuisineTag[]> = {
