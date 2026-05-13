@@ -29,6 +29,8 @@ type Swap = {
 type Result = {
   original: { name: string; protein_g: number; calories_kcal: number; estimated_cost_usd: number };
   swaps: Swap[];
+  price_source?: "estimate" | "kroger" | "mixed";
+  price_store?: string | null;
 };
 
 const EXAMPLES = ["200g chicken breast", "2 large eggs", "1 cup Greek yogurt", "150g salmon"];
