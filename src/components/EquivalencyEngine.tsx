@@ -280,6 +280,28 @@ export const EquivalencyEngine = () => {
                 <span>{s.protein_g.toFixed(0)}g protein</span>
                 <span className="font-semibold text-foreground">${s.estimated_cost_usd.toFixed(2)}</span>
               </div>
+              {bloodSugar && s.glycemic_impact && s.glycemic_impact !== "unknown" && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {s.glycemic_impact === "lower" && (
+                    <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-primary font-semibold">
+                      Lower GI
+                    </span>
+                  )}
+                  {s.glycemic_impact === "similar" && (
+                    <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent/30 text-foreground font-semibold">
+                      Similar GI
+                    </span>
+                  )}
+                  {s.glycemic_impact === "higher" && (
+                    <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-destructive/15 text-destructive font-semibold">
+                      Higher GI
+                    </span>
+                  )}
+                  {s.glycemic_tradeoff && (
+                    <span className="text-xs text-muted-foreground">{s.glycemic_tradeoff}</span>
+                  )}
+                </div>
+              )}
               {s.nutrient_coverage && s.nutrient_coverage.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {s.nutrient_coverage.map((n, k) => (
