@@ -29,6 +29,8 @@ type Swap = {
 type Result = {
   original: { name: string; protein_g: number; calories_kcal: number; estimated_cost_usd: number };
   swaps: Swap[];
+  price_source?: "estimate" | "kroger" | "mixed";
+  price_store?: string | null;
 };
 
 const EXAMPLES = ["200g chicken breast", "2 large eggs", "1 cup Greek yogurt", "150g salmon"];
@@ -59,13 +61,16 @@ export const EquivalencyEngine = () => {
   }, [prefsLoading, prefCuisines, favoriteCuisines, cuisineTouched, cuisineOptions]);
   const pickCuisine = (next: string | null) => { setCuisineTouched(true); setCuisine(next); };
 
+  const [zipCode, setZipCode] = useState<string | null>(null);
+
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data } = await supabase.from("profiles").select("dietary_prefs").eq("user_id", user.id).maybeSingle();
+      const { data } = await supabase.from("profiles").select("dietary_prefs, zip_code").eq("user_id", user.id).maybeSingle();
       const prefs = (data?.dietary_prefs ?? {}) as any;
       setProfilePrefs(prefs);
+      setZipCode(data?.zip_code ?? null);
       if (Array.isArray(prefs.restrictions)) {
         const fromProfile = prefs.restrictions
           .map((r: string) => r.charAt(0).toUpperCase() + r.slice(1))
@@ -89,6 +94,7 @@ export const EquivalencyEngine = () => {
           dietary_prefs: restrictions.map((r) => r.toLowerCase()),
           cuisine: cuisine ?? undefined,
           blood_sugar_friendly: bloodSugar,
+          zip: zipCode ?? undefined,
           profile: profilePrefs ? {
             cuisines: cuisine ? [cuisine] : (profilePrefs.cuisines ?? []),
             spice: profilePrefs.spice ?? null,
@@ -249,6 +255,13 @@ export const EquivalencyEngine = () => {
                 <span>{result.original.protein_g.toFixed(0)}g protein</span>
                 <span aria-hidden>·</span>
                 <span className="font-semibold text-foreground">${result.original.estimated_cost_usd.toFixed(2)}</span>
+              </div>
+              <div className="text-[11px] text-muted-foreground">
+                {result.price_source === "kroger" && result.price_store
+                  ? `Live prices from ${result.price_store}`
+                  : result.price_source === "mixed" && result.price_store
+                  ? `Some live prices from ${result.price_store}, others estimated`
+                  : "Estimated US grocery prices · varies by store & region"}
               </div>
             </div>
             <div className="mt-3 flex justify-end">
