@@ -18,7 +18,7 @@ const Welcome = () => {
         <div className="mb-8 scale-150 sm:scale-[1.75]">
           <BrandMark to="" size="lg" showTagline />
         </div>
-        <h1 className="text-4xl sm:text-5xl font-bold text-primary leading-tight">
+        <h1 className="text-2xl sm:text-3xl font-bold text-primary leading-tight">
           <span className="bg-gradient-leaf bg-clip-text text-transparent">Save $40+</span><br />
           a month on groceries
         </h1>
