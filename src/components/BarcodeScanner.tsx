@@ -122,6 +122,47 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
       return;
     }
     stoppedRef.current = false;
+
+    // Native (iOS/Android via Capacitor) — use ML Kit, skip the web video element entirely.
+    if (isNative) {
+      (async () => {
+        try {
+          const { camera } = await MLKitScanner.requestPermissions();
+          if (camera !== "granted" && camera !== "limited") {
+            setPermanentlyDenied(true);
+            setErrorMsg("Camera permission denied. Enable it in Settings → Saver's Pantry → Camera.");
+            setStatus("error");
+            return;
+          }
+          // Android needs the Google Barcode Scanner Module to be installed once.
+          if (Capacitor.getPlatform() === "android") {
+            try {
+              const { available } = await MLKitScanner.isGoogleBarcodeScannerModuleAvailable();
+              if (!available) await MLKitScanner.installGoogleBarcodeScannerModule();
+            } catch { /* best-effort */ }
+          }
+          setStatus("scanning");
+          const { barcodes } = await MLKitScanner.scan({
+            formats: [
+              MLKitFormat.Ean13, MLKitFormat.Ean8, MLKitFormat.UpcA, MLKitFormat.UpcE,
+              MLKitFormat.Code128, MLKitFormat.Code39, MLKitFormat.Itf, MLKitFormat.QrCode,
+            ],
+          });
+          const code = barcodes?.[0]?.rawValue;
+          if (code) {
+            await handleDetected(code);
+          } else {
+            onOpenChangeRef.current(false);
+          }
+        } catch (e: any) {
+          console.error("[scanner] native scan failed:", e);
+          setErrorMsg(e?.message ?? "Native scanner failed.");
+          setStatus("error");
+        }
+      })();
+      return;
+    }
+
     (async () => {
       try {
         // @ts-ignore
