@@ -109,8 +109,7 @@ export const MobileTabBar = () => {
                 </SheetTitle>
               </SheetHeader>
 
-              <div className="mt-4 flex items-center justify-between gap-3">
-                <SavingsCounter />
+              <div className="mt-4 flex items-center justify-end gap-3">
                 <NotificationBell />
               </div>
 
