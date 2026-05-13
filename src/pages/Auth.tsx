@@ -1,5 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
+import { SignInWithApple, type SignInWithAppleOptions } from "@capacitor-community/apple-sign-in";
+import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
@@ -57,18 +60,75 @@ const Auth = () => {
     navigate("/");
   };
 
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        GoogleAuth.initialize({
+          clientId: "", // iOS uses Info.plist GIDClientID; web client id optional here
+          scopes: ["profile", "email"],
+          grantOfflineAccess: false,
+        });
+      } catch (e) {
+        console.warn("GoogleAuth init failed", e);
+      }
+    }
+  }, []);
+
+  const handleNativeApple = async () => {
+    const options: SignInWithAppleOptions = {
+      clientId: "app.lovable.841c1cf5f5ea487c9e434f04dbb8c808", // bundle id for native iOS
+      redirectURI: window.location.origin,
+      scopes: "email name",
+      state: Math.random().toString(36).slice(2),
+      nonce: Math.random().toString(36).slice(2),
+    };
+    const res = await SignInWithApple.authorize(options);
+    const idToken = res.response?.identityToken;
+    if (!idToken) throw new Error("No Apple identity token");
+    const { error } = await supabase.auth.signInWithIdToken({
+      provider: "apple",
+      token: idToken,
+      nonce: options.nonce,
+    });
+    if (error) throw error;
+  };
+
+  const handleNativeGoogle = async () => {
+    const user = await GoogleAuth.signIn();
+    const idToken = user.authentication?.idToken;
+    if (!idToken) throw new Error("No Google id token");
+    const { error } = await supabase.auth.signInWithIdToken({
+      provider: "google",
+      token: idToken,
+    });
+    if (error) throw error;
+  };
+
   const handleOAuth = async (provider: "apple" | "google") => {
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        if (provider === "apple") await handleNativeApple();
+        else await handleNativeGoogle();
+        toast.success("Signed in!");
+        navigate("/");
+        return;
+      }
+      const result = await lovable.auth.signInWithOAuth(provider, {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        toast.error(`${provider === "apple" ? "Apple" : "Google"} sign-in failed`);
+        return;
+      }
+      if (result.redirected) return;
+      navigate("/");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || `${provider} sign-in failed`);
+    } finally {
       setLoading(false);
-      toast.error(`${provider === "apple" ? "Apple" : "Google"} sign-in failed`);
-      return;
     }
-    if (result.redirected) return;
-    navigate("/");
   };
 
   return (
