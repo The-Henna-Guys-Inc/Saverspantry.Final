@@ -26,11 +26,11 @@ const Welcome = () => {
           Swap ingredients to save money — same nutrition, your cuisine, no guesswork.
         </p>
 
-        <div className="mt-6 w-full text-left">
-          <p className="text-xs sm:text-sm font-medium text-muted-foreground/90 mb-2">
+        <div className="mt-6 w-full flex flex-col items-center text-center">
+          <p className="text-base sm:text-lg font-medium text-muted-foreground/90 mb-3">
             With a free account, you also get:
           </p>
-          <ul className="space-y-1.5 text-xs sm:text-sm text-muted-foreground">
+          <ul className="space-y-2 text-base sm:text-lg text-muted-foreground inline-block text-left">
             <li className="flex items-start gap-2"><span aria-hidden>🍳</span><span>Cuisine-aware recipes</span></li>
             <li className="flex items-start gap-2"><span aria-hidden>📋</span><span>Weekly meal plans + smart grocery lists</span></li>
             <li className="flex items-start gap-2"><span aria-hidden>🏪</span><span>Curated deals at grocers near you</span></li>
