@@ -29,7 +29,7 @@ const Demo = () => {
 
       <section className="container max-w-3xl mx-auto px-5 pt-6 pb-4 text-center">
         <span className="text-[11px] font-semibold uppercase tracking-widest text-accent">Live demo</span>
-        <h1 className="mt-2 text-3xl sm:text-4xl font-bold text-primary leading-tight">
+        <h1 className="mt-2 text-xl sm:text-2xl font-bold text-primary leading-tight">
           See what makes us different
         </h1>
         <p className="mt-3 text-muted-foreground max-w-xl mx-auto text-sm sm:text-base">
