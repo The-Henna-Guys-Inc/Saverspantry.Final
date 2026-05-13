@@ -44,7 +44,7 @@ const Demo = () => {
       <div className="fixed bottom-0 inset-x-0 bg-background/95 backdrop-blur border-t border-border/60 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="container max-w-3xl mx-auto flex flex-col sm:flex-row items-center gap-2">
           <p className="text-xs text-muted-foreground sm:flex-1 text-center sm:text-left">
-            Save your swaps, unlock recipes, pantry tracking and more.
+            Save your swaps, unlock deals, pantry tracking, plan our meals, create recipes, and a lot more.
           </p>
           <Button asChild variant="hero" size="lg" className="w-full sm:w-auto h-12 rounded-2xl">
             <Link to="/auth">Create free account</Link>
