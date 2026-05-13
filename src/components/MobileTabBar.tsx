@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/NotificationBell";
-import { SavingsCounter } from "@/components/SavingsCounter";
+
 import { toast } from "sonner";
 
 const tabs = [
@@ -109,8 +109,7 @@ export const MobileTabBar = () => {
                 </SheetTitle>
               </SheetHeader>
 
-              <div className="mt-4 flex items-center justify-between gap-3">
-                <SavingsCounter />
+              <div className="mt-4 flex items-center justify-end gap-3">
                 <NotificationBell />
               </div>
 
