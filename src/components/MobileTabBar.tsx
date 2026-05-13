@@ -97,10 +97,16 @@ export const MobileTabBar = () => {
             </SheetTrigger>
             <SheetContent side="bottom" className="rounded-t-3xl safe-bottom">
               <SheetHeader>
-                <SheetTitle className="text-primary leading-tight">
-                  Saver's <span className="text-accent">Pantry</span>
+                <SheetTitle asChild>
+                  <div className="flex flex-col items-center text-center leading-tight">
+                    <span className="text-xl font-bold text-primary tracking-tight">
+                      Saver's <span className="text-accent">Pantry</span>
+                    </span>
+                    <span className="text-[11px] text-muted-foreground -mt-0.5">
+                      Eat well, Save more
+                    </span>
+                  </div>
                 </SheetTitle>
-                <p className="text-xs text-muted-foreground -mt-1 text-left">Eat well, Save more</p>
               </SheetHeader>
 
               <div className="mt-4 flex items-center justify-between gap-3">
