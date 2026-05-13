@@ -26,7 +26,7 @@ export const BrandMark = ({
         Saver's <span className="text-accent">Pantry</span>
       </span>
       {showTagline && (
-        <span className="text-[10px] sm:text-xs text-muted-foreground -mt-0.5">
+        <span className="text-[10px] sm:text-xs text-muted-foreground -mt-0.5 text-center">
           Eat well, Save more
         </span>
       )}
