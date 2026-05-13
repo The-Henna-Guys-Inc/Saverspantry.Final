@@ -75,6 +75,11 @@ export const TAG_TO_DISPLAY_OPTIONS: Record<CuisineTag, string[]> = {
   latin_american: ["Mexican"],
   african: ["Mediterranean"],
   mediterranean: ["Mediterranean", "Italian"],
+  american: ["American"],
+  italian: ["Italian", "Mediterranean"],
+  french: ["French", "Mediterranean"],
+  caribbean: ["Caribbean", "Mexican"],
+  eastern_european: ["Polish", "Mediterranean"],
 };
 
 const normalizeCuisineName = (value: string) =>
