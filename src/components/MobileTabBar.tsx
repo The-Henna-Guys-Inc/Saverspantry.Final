@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/NotificationBell";
-import { SavingsCounter } from "@/components/SavingsCounter";
+
 import { toast } from "sonner";
 
 const tabs = [
