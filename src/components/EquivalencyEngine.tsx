@@ -256,6 +256,13 @@ export const EquivalencyEngine = () => {
                 <span aria-hidden>·</span>
                 <span className="font-semibold text-foreground">${result.original.estimated_cost_usd.toFixed(2)}</span>
               </div>
+              <div className="text-[11px] text-muted-foreground">
+                {result.price_source === "kroger" && result.price_store
+                  ? `Live prices from ${result.price_store}`
+                  : result.price_source === "mixed" && result.price_store
+                  ? `Some live prices from ${result.price_store}, others estimated`
+                  : "Estimated US grocery prices · varies by store & region"}
+              </div>
             </div>
             <div className="mt-3 flex justify-end">
               <AiFeedback
