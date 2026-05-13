@@ -59,8 +59,17 @@ const TOOL = {
                 description: "Key nutrients this swap intentionally covers (especially when replacing meat with plants). E.g. 'B12', 'iron', 'zinc', 'omega-3', 'complete protein'.",
                 items: { type: "string" },
               },
+              glycemic_impact: {
+                type: "string",
+                enum: ["lower", "similar", "higher", "unknown"],
+                description: "Estimated glycemic impact of this swap vs the original food. Only meaningful when blood_sugar_friendly mode is active; otherwise return 'unknown'.",
+              },
+              glycemic_tradeoff: {
+                type: "string",
+                description: "Short note when there is a glycemic tradeoff to flag (e.g. 'Cheaper, but similar glycemic impact'). Empty string if not relevant.",
+              },
             },
-            required: ["title", "items", "protein_g", "calories_kcal", "estimated_cost_usd", "savings_percent", "notes", "nutrient_coverage"],
+            required: ["title", "items", "protein_g", "calories_kcal", "estimated_cost_usd", "savings_percent", "notes", "nutrient_coverage", "glycemic_impact", "glycemic_tradeoff"],
             additionalProperties: false,
           },
         },
