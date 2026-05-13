@@ -88,6 +88,7 @@ export const EquivalencyEngine = () => {
           food: q,
           dietary_prefs: restrictions.map((r) => r.toLowerCase()),
           cuisine: cuisine ?? undefined,
+          blood_sugar_friendly: bloodSugar,
           profile: profilePrefs ? {
             cuisines: cuisine ? [cuisine] : (profilePrefs.cuisines ?? []),
             spice: profilePrefs.spice ?? null,
