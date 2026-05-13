@@ -216,77 +216,92 @@ const Settings = () => {
               <div className="flex items-center gap-2 text-accent text-xs font-semibold uppercase tracking-widest mb-3">
                 <Utensils className="h-3.5 w-3.5" /> Food profile
               </div>
-              <p className="text-xs text-muted-foreground mb-4">Used to tailor swaps, meal plans, and recipes to what you actually eat.</p>
 
-              <Label className="text-xs">Favorite cuisines</Label>
-              <div className="flex flex-wrap gap-2 mt-2 mb-4">
-                {CUISINES.map((c) => (
-                  <button key={c} type="button" onClick={() => toggleCuisine(c)}
-                    className={`text-xs px-3 py-1.5 rounded-full transition-smooth capitalize ${
-                      cuisines.includes(c) ? "bg-primary text-primary-foreground shadow-soft" : "bg-secondary text-secondary-foreground hover:bg-muted"
-                    }`}>{c.replace("-", " ")}</button>
-                ))}
+              {/* PRIMARY: Cuisines I cook — drives all curation */}
+              <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-4 mb-4">
+                <div className="flex items-start justify-between gap-3 mb-1 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Label className="text-sm font-semibold text-primary">Cuisines I cook</Label>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary text-primary-foreground">
+                      Drives recommendations
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">Filter on</span>
+                    <Switch checked={cuisineFilterOn} onCheckedChange={setCuisineFilterOn} />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Used everywhere — Swaps, Recipes, Deals, Stores, Pantry, and Bulk-Buy will prioritize these.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {DISCOVERY_CUISINES.map((c) => {
+                    const on = discoveryCuisines.includes(c);
+                    return (
+                      <button key={c} type="button"
+                        onClick={() => setDiscoveryCuisines((p) => p.includes(c) ? p.filter((x) => x !== c) : [...p, c])}
+                        className={`text-xs px-3 py-1.5 rounded-full transition-smooth min-h-[32px] ${
+                          on ? "bg-primary text-primary-foreground shadow-soft" : "bg-background text-foreground border border-border hover:bg-muted"
+                        }`}>{CUISINE_LABEL[c]}</button>
+                    );
+                  })}
+                </div>
+                {discoveryCuisines.length === 0 && cuisines.length > 0 && (
+                  <div className="mt-3 p-3 rounded-xl bg-accent/10 border border-accent/30 text-xs">
+                    <p className="text-foreground mb-2">
+                      You picked favorites below but nothing here — the app won't curate for you yet. Want to copy your favorites over?
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="rounded-full h-8 text-xs"
+                      onClick={() => setDiscoveryCuisines(mapLegacyCuisines(cuisines))}
+                    >
+                      Copy favorites to my cooking list
+                    </Button>
+                  </div>
+                )}
               </div>
 
-              <Label className="text-xs">Spice tolerance</Label>
-              <div className="flex flex-wrap gap-2 mt-2 mb-4">
-                {SPICE_LEVELS.map((s) => (
-                  <button key={s} type="button" onClick={() => setSpice(s)}
-                    className={`text-xs px-3 py-1.5 rounded-full transition-smooth capitalize ${
-                      spice === s ? "bg-primary text-primary-foreground shadow-soft" : "bg-secondary text-secondary-foreground hover:bg-muted"
-                    }`}>{s.replace("-", " ")}</button>
-                ))}
-              </div>
+              {/* SECONDARY: Cuisines I enjoy — profile only, collapsed */}
+              <details className="rounded-2xl border border-border/50 bg-secondary/30 group">
+                <summary className="flex items-center justify-between gap-3 p-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Label className="text-sm font-medium text-foreground cursor-pointer">Cuisines I enjoy eating</Label>
+                    <span className="text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                      Profile only
+                    </span>
+                  </div>
+                  <span className="text-xs text-muted-foreground group-open:hidden">Show</span>
+                  <span className="text-xs text-muted-foreground hidden group-open:inline">Hide</span>
+                </summary>
+                <div className="px-4 pb-4">
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Just for your profile. Doesn't change what the app shows you — that's controlled by <span className="font-medium text-foreground">Cuisines I cook</span> above.
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {CUISINES.map((c) => (
+                      <button key={c} type="button" onClick={() => toggleCuisine(c)}
+                        className={`text-xs px-3 py-1.5 rounded-full transition-smooth capitalize min-h-[32px] ${
+                          cuisines.includes(c) ? "bg-foreground text-background shadow-soft" : "bg-background text-foreground border border-border hover:bg-muted"
+                        }`}>{c.replace("-", " ")}</button>
+                    ))}
+                  </div>
 
-              <div className="space-y-3">
-                <div>
-                  <Label htmlFor="loves" className="text-xs">Foods you love</Label>
-                  <Textarea id="loves" value={loves} onChange={(e) => setLoves(e.target.value)}
-                    placeholder="e.g. salmon, chickpeas, sweet potato, paneer"
-                    className="rounded-xl mt-1 min-h-[60px]" />
-                  <p className="text-[11px] text-muted-foreground mt-1">Comma-separated. We'll lean toward these.</p>
+                  <Label className="text-xs">Spice tolerance</Label>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {SPICE_LEVELS.map((s) => (
+                      <button key={s} type="button" onClick={() => setSpice(s)}
+                        className={`text-xs px-3 py-1.5 rounded-full transition-smooth capitalize min-h-[32px] ${
+                          spice === s ? "bg-foreground text-background shadow-soft" : "bg-background text-foreground border border-border hover:bg-muted"
+                        }`}>{s.replace("-", " ")}</button>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="dislikes" className="text-xs">Foods you dislike</Label>
-                  <Textarea id="dislikes" value={dislikes} onChange={(e) => setDislikes(e.target.value)}
-                    placeholder="e.g. cilantro, mushrooms, tofu"
-                    className="rounded-xl mt-1 min-h-[60px]" />
-                  <p className="text-[11px] text-muted-foreground mt-1">Comma-separated. We'll avoid these.</p>
-                </div>
-                <div>
-                  <Label htmlFor="allergies" className="text-xs">Allergies</Label>
-                  <Textarea id="allergies" value={allergies} onChange={(e) => setAllergies(e.target.value)}
-                    placeholder="e.g. peanuts, shellfish"
-                    className="rounded-xl mt-1 min-h-[60px]" />
-                  <p className="text-[11px] text-destructive/80 mt-1">Strictly excluded from all suggestions.</p>
-                </div>
-              </div>
+              </details>
             </div>
 
-            <div className="pt-4 border-t border-border/50">
-              <div className="flex items-center justify-between gap-3 mb-2">
-                <Label className="text-sm font-semibold text-primary">Discovery cuisines</Label>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Filter on</span>
-                  <Switch checked={cuisineFilterOn} onCheckedChange={setCuisineFilterOn} />
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground mb-3">
-                Pantry, Stores, Deals, and Bulk-Buy will prioritize these cuisines. You can toggle the filter off anywhere to see everything.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {DISCOVERY_CUISINES.map((c) => {
-                  const on = discoveryCuisines.includes(c);
-                  return (
-                    <button key={c} type="button"
-                      onClick={() => setDiscoveryCuisines((p) => p.includes(c) ? p.filter((x) => x !== c) : [...p, c])}
-                      className={`text-xs px-3 py-1.5 rounded-full transition-smooth ${
-                        on ? "bg-primary text-primary-foreground shadow-soft" : "bg-secondary text-secondary-foreground hover:bg-muted"
-                      }`}>{CUISINE_LABEL[c]}</button>
-                  );
-                })}
-              </div>
-            </div>
 
             <div className="pt-2">
               <Button variant="hero" onClick={save} disabled={saving} className="rounded-xl">
