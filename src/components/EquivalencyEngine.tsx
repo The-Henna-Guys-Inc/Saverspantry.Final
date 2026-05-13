@@ -50,6 +50,7 @@ export const EquivalencyEngine = () => {
   const [profilePrefs, setProfilePrefs] = useState<any>(null);
   const [costOpen, setCostOpen] = useState(true);
   const [calOpen, setCalOpen] = useState(true);
+  const [bloodSugar, setBloodSugar] = useState(false);
 
   useEffect(() => {
     if (prefsLoading || cuisineTouched) return;
