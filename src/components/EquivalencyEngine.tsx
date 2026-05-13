@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, ArrowLeftRight, TrendingDown, DollarSign, Flame, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, ArrowLeftRight, TrendingDown, DollarSign, Flame, ChevronDown, ChevronUp, Activity, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SaveButton } from "./SaveButton";
 import { WatchlistButton } from "./WatchlistButton";
 import { AiFeedback } from "./AiFeedback";
@@ -22,6 +23,8 @@ type Swap = {
   savings_percent: number;
   notes: string;
   nutrient_coverage?: string[];
+  glycemic_impact?: "lower" | "similar" | "higher" | "unknown";
+  glycemic_tradeoff?: string;
 };
 type Result = {
   original: { name: string; protein_g: number; calories_kcal: number; estimated_cost_usd: number };
@@ -47,6 +50,7 @@ export const EquivalencyEngine = () => {
   const [profilePrefs, setProfilePrefs] = useState<any>(null);
   const [costOpen, setCostOpen] = useState(true);
   const [calOpen, setCalOpen] = useState(true);
+  const [bloodSugar, setBloodSugar] = useState(false);
 
   useEffect(() => {
     if (prefsLoading || cuisineTouched) return;
@@ -84,6 +88,7 @@ export const EquivalencyEngine = () => {
           food: q,
           dietary_prefs: restrictions.map((r) => r.toLowerCase()),
           cuisine: cuisine ?? undefined,
+          blood_sugar_friendly: bloodSugar,
           profile: profilePrefs ? {
             cuisines: cuisine ? [cuisine] : (profilePrefs.cuisines ?? []),
             spice: profilePrefs.spice ?? null,
@@ -132,6 +137,47 @@ export const EquivalencyEngine = () => {
             {r}
           </button>
         ))}
+      </div>
+
+      <div className="mt-3 p-3 rounded-2xl bg-card border border-border/50">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={bloodSugar}
+            onClick={() => setBloodSugar((v) => !v)}
+            className={`mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+              bloodSugar ? "bg-primary" : "bg-muted"
+            }`}
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-background shadow transition-transform ${
+                bloodSugar ? "translate-x-5" : "translate-x-0.5"
+              }`}
+            />
+          </button>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+              <Activity className="h-3.5 w-3.5 text-primary" />
+              Blood sugar friendly
+              <TooltipProvider delayDuration={150}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button type="button" className="text-muted-foreground hover:text-foreground" aria-label="About blood sugar filter">
+                      <Info className="h-3.5 w-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs text-xs">
+                    Glycemic estimates are approximate. Consult a healthcare provider for medical guidance on blood sugar management.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Lower glycemic alternatives for better blood sugar response
+            </p>
+          </div>
+        </label>
       </div>
 
       <div className="mt-3">
@@ -234,6 +280,28 @@ export const EquivalencyEngine = () => {
                 <span>{s.protein_g.toFixed(0)}g protein</span>
                 <span className="font-semibold text-foreground">${s.estimated_cost_usd.toFixed(2)}</span>
               </div>
+              {bloodSugar && s.glycemic_impact && s.glycemic_impact !== "unknown" && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {s.glycemic_impact === "lower" && (
+                    <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-primary font-semibold">
+                      Lower GI
+                    </span>
+                  )}
+                  {s.glycemic_impact === "similar" && (
+                    <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent/30 text-foreground font-semibold">
+                      Similar GI
+                    </span>
+                  )}
+                  {s.glycemic_impact === "higher" && (
+                    <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-destructive/15 text-destructive font-semibold">
+                      Higher GI
+                    </span>
+                  )}
+                  {s.glycemic_tradeoff && (
+                    <span className="text-xs text-muted-foreground">{s.glycemic_tradeoff}</span>
+                  )}
+                </div>
+              )}
               {s.nutrient_coverage && s.nutrient_coverage.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {s.nutrient_coverage.map((n, k) => (

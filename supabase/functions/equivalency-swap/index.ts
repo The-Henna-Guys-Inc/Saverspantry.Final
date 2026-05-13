@@ -59,8 +59,17 @@ const TOOL = {
                 description: "Key nutrients this swap intentionally covers (especially when replacing meat with plants). E.g. 'B12', 'iron', 'zinc', 'omega-3', 'complete protein'.",
                 items: { type: "string" },
               },
+              glycemic_impact: {
+                type: "string",
+                enum: ["lower", "similar", "higher", "unknown"],
+                description: "Estimated glycemic impact of this swap vs the original food. Only meaningful when blood_sugar_friendly mode is active; otherwise return 'unknown'.",
+              },
+              glycemic_tradeoff: {
+                type: "string",
+                description: "Short note when there is a glycemic tradeoff to flag (e.g. 'Cheaper, but similar glycemic impact'). Empty string if not relevant.",
+              },
             },
-            required: ["title", "items", "protein_g", "calories_kcal", "estimated_cost_usd", "savings_percent", "notes", "nutrient_coverage"],
+            required: ["title", "items", "protein_g", "calories_kcal", "estimated_cost_usd", "savings_percent", "notes", "nutrient_coverage", "glycemic_impact", "glycemic_tradeoff"],
             additionalProperties: false,
           },
         },
@@ -76,10 +85,10 @@ Deno.serve(async (req) => {
   const userId = await getUserIdFromAuth(req);
   const startedAt = Date.now();
   try {
-    const { food, dietary_prefs = [], profile = null, cuisine = null } = await req.json();
+    const { food, dietary_prefs = [], profile = null, cuisine = null, blood_sugar_friendly = false } = await req.json();
     if (!food) return new Response(JSON.stringify({ error: "Missing 'food'" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const cacheKey = await stableHash({ food: String(food).toLowerCase().trim(), dietary_prefs, profile, cuisine });
+    const cacheKey = await stableHash({ food: String(food).toLowerCase().trim(), dietary_prefs, profile, cuisine, blood_sugar_friendly: !!blood_sugar_friendly });
     const cached = await cacheGet(FN, cacheKey);
     if (cached) {
       logAiUsage({ userId, functionName: FN, model: MODEL, cached: true, latencyMs: Date.now() - startedAt });
@@ -96,7 +105,10 @@ Deno.serve(async (req) => {
       if (Array.isArray(profile.allergies) && profile.allergies.length) profileLines.push(`ALLERGIES — STRICTLY EXCLUDE: ${profile.allergies.join(", ")}.`);
     }
     const cuisineBlock = cuisine ? `\nLean swaps toward ${cuisine} cuisine when natural.` : "";
-    const profileBlock = (profileLines.length ? `\nUser food profile:\n${profileLines.join("\n")}` : "") + cuisineBlock;
+    const bloodSugarBlock = blood_sugar_friendly
+      ? "\nBLOOD SUGAR MODE: The user wants alternatives that are friendlier to blood sugar. Prioritize alternatives with lower glycemic index (GI) and/or lower glycemic load (GL) than the original. Favor options with more fiber, more protein, or healthier fats that moderate blood sugar response. Cheaper-alternative logic still applies — try to satisfy both. For each swap, set `glycemic_impact` to 'lower' (meaningfully better GI/GL than original), 'similar' (about the same), 'higher' (worse), or 'unknown' (insufficient info). If a cheaper alternative has similar or higher glycemic impact than the original, set `glycemic_tradeoff` to a short, transparent note like 'Cheaper, but similar glycemic impact'. Do not make medical claims."
+      : "\nBlood sugar mode is OFF — set `glycemic_impact` to 'unknown' and leave `glycemic_tradeoff` empty.";
+    const profileBlock = (profileLines.length ? `\nUser food profile:\n${profileLines.join("\n")}` : "") + cuisineBlock + bloodSugarBlock;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -114,7 +126,7 @@ Deno.serve(async (req) => {
             "- Omega-3: add a tablespoon of walnuts, flax, chia, or hemp seeds.",
             "- Calcium (if replacing dairy too): tahini, fortified plant milk, or leafy greens.",
             "Use cheap pantry add-ons (a tbsp of seeds, a handful of nuts, a fortified item) so savings are preserved. In `nutrient_coverage`, list the specific nutrients the add-ons restore. In `notes`, briefly explain WHY the add-on is there (e.g., 'walnuts add omega-3 that lentils lack').",
-            "Be practical and money-conscious, never moralizing. Always call return_swaps.",
+            "Be practical and money-conscious, never moralizing. Never make medical claims. Always call return_swaps.",
           ].join(" ") },
           { role: "user", content: `Find swaps for: ${food}\nDietary restrictions: ${prefs || "none"}${profileBlock}` },
         ],
