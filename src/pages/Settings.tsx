@@ -18,8 +18,10 @@ import { CUISINE_LABEL, mapLegacyCuisines, type CuisineTag } from "@/lib/cuisine
 import { Switch } from "@/components/ui/switch";
 
 const DISCOVERY_CUISINES: CuisineTag[] = [
-  "korean", "japanese", "chinese", "south_asian", "southeast_asian",
-  "middle_eastern", "mexican", "latin_american", "african", "mediterranean",
+  "american", "italian", "french", "mediterranean", "eastern_european",
+  "mexican", "latin_american", "caribbean",
+  "south_asian", "southeast_asian", "chinese", "japanese", "korean",
+  "middle_eastern", "african",
 ];
 
 const RESTRICTIONS = ["halal", "kosher", "vegetarian", "vegan", "gluten-free", "dairy-free", "nut-free"] as const;
