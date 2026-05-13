@@ -5,6 +5,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Loader2, ScanLine, Camera, Zap, ZapOff } from "lucide-react";
 import { toast } from "sonner";
+import { Capacitor } from "@capacitor/core";
+import {
+  BarcodeScanner as MLKitScanner,
+  BarcodeFormat as MLKitFormat,
+} from "@capacitor-mlkit/barcode-scanning";
+
+const isNative = Capacitor.isNativePlatform();
 
 type Props = {
   open: boolean;
