@@ -23,23 +23,23 @@ const Welcome = () => {
           a month on groceries
         </h1>
         <p className="mt-5 text-base sm:text-lg text-muted-foreground leading-relaxed">
-          Swap any food for a cheaper alternative with the same nutrition — no diet, no guesswork.
+          Swap ingredients to save money — same nutrition, your cuisine, no guesswork.
         </p>
       </div>
 
       <div className="w-full max-w-md space-y-3">
         <Button asChild variant="hero" size="lg" className="w-full h-14 rounded-2xl text-base">
-          <Link to="/auth">Create free account</Link>
-        </Button>
-        <Button asChild variant="outline" size="lg" className="w-full h-14 rounded-2xl text-base">
           <Link to="/demo">Try it — no account needed</Link>
         </Button>
-        <Link
-          to="/auth"
-          className="block text-center text-sm text-muted-foreground hover:text-foreground py-2 transition-smooth"
-        >
-          I have an account
-        </Link>
+        <Button asChild variant="outline" size="lg" className="w-full h-14 rounded-2xl text-base">
+          <Link to="/auth">Create free account</Link>
+        </Button>
+        <p className="text-center text-sm text-muted-foreground font-normal pt-1">
+          Already have an account?{" "}
+          <Link to="/auth" className="underline hover:text-foreground transition-smooth">
+            Sign in
+          </Link>
+        </p>
       </div>
     </main>
   );
