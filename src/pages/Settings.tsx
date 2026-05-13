@@ -300,6 +300,30 @@ const Settings = () => {
                   </div>
                 </div>
               </details>
+
+              <div className="space-y-3 mt-5">
+                <div>
+                  <Label htmlFor="loves" className="text-xs">Foods you love</Label>
+                  <Textarea id="loves" value={loves} onChange={(e) => setLoves(e.target.value)}
+                    placeholder="e.g. salmon, chickpeas, sweet potato, paneer"
+                    className="rounded-xl mt-1 min-h-[60px]" />
+                  <p className="text-[11px] text-muted-foreground mt-1">Comma-separated. We'll lean toward these.</p>
+                </div>
+                <div>
+                  <Label htmlFor="dislikes" className="text-xs">Foods you dislike</Label>
+                  <Textarea id="dislikes" value={dislikes} onChange={(e) => setDislikes(e.target.value)}
+                    placeholder="e.g. cilantro, mushrooms, tofu"
+                    className="rounded-xl mt-1 min-h-[60px]" />
+                  <p className="text-[11px] text-muted-foreground mt-1">Comma-separated. We'll avoid these.</p>
+                </div>
+                <div>
+                  <Label htmlFor="allergies" className="text-xs">Allergies</Label>
+                  <Textarea id="allergies" value={allergies} onChange={(e) => setAllergies(e.target.value)}
+                    placeholder="e.g. peanuts, shellfish"
+                    className="rounded-xl mt-1 min-h-[60px]" />
+                  <p className="text-[11px] text-destructive/80 mt-1">Strictly excluded from all suggestions.</p>
+                </div>
+              </div>
             </div>
 
 
