@@ -75,7 +75,7 @@ const Auth = () => {
     <main className="min-h-[100dvh] bg-gradient-warm flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-6">
-          <BrandMark to="/welcome" size="md" />
+          <BrandMark to="/welcome" size="md" showTagline />
         </div>
 
         <Card className="p-7 rounded-3xl shadow-glow border-border/50">
