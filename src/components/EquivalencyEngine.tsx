@@ -23,6 +23,8 @@ type Swap = {
   savings_percent: number;
   notes: string;
   nutrient_coverage?: string[];
+  glycemic_impact?: "lower" | "similar" | "higher" | "unknown";
+  glycemic_tradeoff?: string;
 };
 type Result = {
   original: { name: string; protein_g: number; calories_kcal: number; estimated_cost_usd: number };
