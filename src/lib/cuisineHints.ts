@@ -163,6 +163,11 @@ export const CUISINE_LABEL: Record<CuisineTag, string> = {
   latin_american: "Latin American",
   african: "African",
   mediterranean: "Mediterranean",
+  american: "American",
+  italian: "Italian",
+  french: "French",
+  caribbean: "Caribbean",
+  eastern_european: "Eastern European",
 };
 
 const RULES: Array<{ kw: string; cuisines: CuisineTag[] }> = [
