@@ -24,7 +24,6 @@ const Index = () => {
     );
   }
 
-  return <Navigate to="/welcome" replace />;
-};
+  return <Navigate to="/welcome" replace />;};
 
 export default Index;
