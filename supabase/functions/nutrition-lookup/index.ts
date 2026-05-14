@@ -292,20 +292,25 @@ Deno.serve(async (req) => {
           let amount = Number(c.estimated_amount) || 0;
           let source: "USDA" | "AI estimate" = "AI estimate";
           if (USDA_API_KEY && resolved) {
-            const tryQuery = async (q: string) => {
-              const sUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${USDA_API_KEY}&query=${encodeURIComponent(q)}&pageSize=3&dataType=Foundation,SR%20Legacy,Survey%20%28FNDDS%29`;
+            // Fatty-acid IDs aren't broken out in FNDDS — use Foundation+SR Legacy only for those.
+            const isFattyAcid = resolved.meta.ids.some((id) => id >= 1257 && id <= 1410);
+            const dataType = isFattyAcid
+              ? "Foundation,SR%20Legacy"
+              : "Foundation,SR%20Legacy,Survey%20%28FNDDS%29";
+            const tryQuery = async (q: string, useFilter = true) => {
+              const filter = useFilter ? `&dataType=${dataType}` : "";
+              const sUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${USDA_API_KEY}&query=${encodeURIComponent(q)}&pageSize=3${filter}`;
               const sRes = await fetch(sUrl);
               if (!sRes.ok) return null;
               const sJson = await sRes.json();
               return sJson?.foods?.[0] ?? null;
             };
             try {
-              // 1st attempt: full name; 2nd: simplified (first noun before any comma)
+              // 1st: full name; 2nd: simplified before comma; 3rd: simplified, no dataType filter
               let top = await tryQuery(c.food_name);
-              if (!top?.fdcId) {
-                const simple = String(c.food_name).split(/[,(]/)[0].trim();
-                if (simple && simple !== c.food_name) top = await tryQuery(simple);
-              }
+              const simple = String(c.food_name).split(/[,(]/)[0].trim();
+              if (!top?.fdcId && simple && simple !== c.food_name) top = await tryQuery(simple);
+              if (!top?.fdcId) top = await tryQuery(simple || c.food_name, false);
               if (top?.fdcId) {
                 const dRes = await fetch(`https://api.nal.usda.gov/fdc/v1/food/${top.fdcId}?api_key=${USDA_API_KEY}`);
                 if (dRes.ok) {
