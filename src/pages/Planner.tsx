@@ -54,7 +54,7 @@ const Planner = () => {
   const tabParam = searchParams.get("tab");
   const planTab = tabParam === "recipes" || tabParam === "library" || tabParam === "nutrition" ? tabParam : "planner";
   const setPlanTab = (v: string) => setSearchParams(v === "planner" ? {} : { tab: v });
-  const [householdSize, setHouseholdSize] = useState(2);
+  const [householdSize, setHouseholdSize] = useState("2");
   const [budget, setBudget] = useState<string>("");
   const [cuisine, setCuisine] = useState("");
   const [dietStyle, setDietStyle] = useState("balanced");
@@ -93,7 +93,7 @@ const Planner = () => {
         supabase.from("profiles").select("household_size, dietary_prefs, zip_code").eq("user_id", user.id).maybeSingle(),
         supabase.from("meal_plans").select("plan").eq("user_id", user.id).eq("week_start_date", weekStart).maybeSingle(),
       ]);
-      if (prof?.household_size) setHouseholdSize(prof.household_size);
+      if (prof?.household_size) setHouseholdSize(String(prof.household_size));
       if (prof?.zip_code) setZip(prof.zip_code);
       const prefs = (prof?.dietary_prefs ?? {}) as any;
       setProfilePrefs(prefs);
@@ -117,7 +117,7 @@ const Planner = () => {
     try {
       const { data, error } = await supabase.functions.invoke("meal-plan-generate", {
         body: {
-          household_size: householdSize,
+          household_size: Math.max(1, Number(householdSize) || 1),
           budget_usd: budget ? Number(budget) : undefined,
           cuisine_focus: cuisine || undefined,
           diet_style: dietStyle,
@@ -157,7 +157,7 @@ const Planner = () => {
         .from("pantry_items")
         .select("item, quantity, unit");
       const { data, error } = await supabase.functions.invoke("grocery-list-generate", {
-        body: { plan, household_size: householdSize, pantry: pantryRows ?? [] },
+        body: { plan, household_size: Math.max(1, Number(householdSize) || 1), pantry: pantryRows ?? [] },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -290,7 +290,8 @@ const Planner = () => {
             <div>
               <Label htmlFor="hh" className="text-xs">Household size</Label>
               <Input id="hh" type="number" min={1} max={12} value={householdSize}
-                onChange={e => setHouseholdSize(Math.max(1, Number(e.target.value) || 1))}
+                onChange={e => setHouseholdSize(e.target.value)}
+                onBlur={e => { const v = Number(e.target.value); if (!v || v < 1) setHouseholdSize("1"); }}
                 className="rounded-xl mt-1" />
             </div>
             <div>
@@ -376,7 +377,7 @@ const Planner = () => {
               <div className="flex items-center gap-4 flex-wrap">
                 <AiFeedback
                   feature="meal_plan"
-                  context={{ household_size: householdSize, diet_style: dietStyle, cuisine, restrictions, days: plan.days?.length }}
+                  context={{ household_size: Number(householdSize) || 1, diet_style: dietStyle, cuisine, restrictions, days: plan.days?.length }}
                 />
                 <div className="text-sm text-muted-foreground">
                   Est. total <span className="font-semibold text-primary">${plan.total_estimated_cost_usd?.toFixed(2)}</span>
@@ -418,7 +419,7 @@ const Planner = () => {
               <div className="flex items-center gap-4 flex-wrap">
                 <AiFeedback
                   feature="grocery_list"
-                  context={{ item_count: grocery!.items.length, household_size: householdSize }}
+                  context={{ item_count: grocery!.items.length, household_size: Number(householdSize) || 1 }}
                   className="print:hidden"
                 />
                 <div className="text-sm text-muted-foreground">
