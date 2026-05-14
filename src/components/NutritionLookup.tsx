@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, Sparkles, Search, TrendingUp } from "lucide-react";
+import { Loader2, Sparkles, Search, TrendingUp, Trophy, BadgeCheck } from "lucide-react";
 import { SaveButton } from "./SaveButton";
 
 type Nutrition = {
@@ -18,6 +18,22 @@ type Nutrition = {
   key_micros: { name: string; amount: number; unit: string; dv_percent?: number }[];
   notes: string;
   source?: string;
+};
+
+type RankingItem = {
+  food: string;
+  portion_label: string;
+  portion_grams: number;
+  amount: number;
+  unit: string;
+  source: "USDA" | "AI estimate";
+};
+type Ranking = {
+  query: string;
+  nutrient: string;
+  unit: string;
+  items: RankingItem[];
+  note: string;
 };
 
 // US-staple fallbacks shown when no community search history exists yet
