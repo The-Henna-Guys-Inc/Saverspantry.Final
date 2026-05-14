@@ -4,6 +4,44 @@ import type { Session, User } from "@supabase/supabase-js";
 
 const TAG = "[auth-debug]";
 
+const getOAuthCallbackDetails = () => {
+  try {
+    const url = new URL(window.location.href);
+    const hash = new URLSearchParams(url.hash.startsWith("#") ? url.hash.slice(1) : url.hash);
+
+    return {
+      url,
+      code: url.searchParams.get("code"),
+      error: url.searchParams.get("error") ?? hash.get("error"),
+      errorDescription:
+        url.searchParams.get("error_description") ?? hash.get("error_description"),
+      hasAccessToken: hash.has("access_token"),
+      hasRefreshToken: hash.has("refresh_token"),
+    };
+  } catch {
+    return {
+      url: null,
+      code: null,
+      error: null,
+      errorDescription: null,
+      hasAccessToken: false,
+      hasRefreshToken: false,
+    };
+  }
+};
+
+const stripOAuthParamsFromUrl = () => {
+  try {
+    const url = new URL(window.location.href);
+    ["code", "state", "error", "error_code", "error_description"].forEach((key) => {
+      url.searchParams.delete(key);
+    });
+    window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash ? "" : ""}`);
+  } catch (e) {
+    console.warn(TAG, "Failed to strip OAuth params from URL", e);
+  }
+};
+
 const clearInvalidLocalSession = async () => {
   console.warn(TAG, "clearInvalidLocalSession called");
   const { error } = await supabase.auth.signOut({ scope: "local" });
@@ -16,15 +54,20 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const callback = getOAuthCallbackDetails();
+
     // Log URL state on mount — OAuth callbacks land here with hash/code params
     try {
       console.log(TAG, "useAuth mount", {
         href: window.location.href,
         hash: window.location.hash,
         search: window.location.search,
-        hasCode: window.location.search.includes("code="),
-        hasAccessToken: window.location.hash.includes("access_token"),
-        hasError: window.location.hash.includes("error") || window.location.search.includes("error"),
+        hasCode: !!callback.code,
+        hasAccessToken: callback.hasAccessToken,
+        hasRefreshToken: callback.hasRefreshToken,
+        hasError: !!callback.error,
+        error: callback.error,
+        errorDescription: callback.errorDescription,
       });
     } catch {}
 
@@ -55,7 +98,30 @@ export function useAuth() {
         }, 0);
       }
     });
-    supabase.auth.getSession().then(async ({ data: { session: s }, error }) => {
+
+    (async () => {
+      if (callback.code) {
+        console.log(TAG, "OAuth code detected; exchanging for session", {
+          pathname: callback.url?.pathname,
+          search: callback.url?.search,
+          codeLength: callback.code.length,
+        });
+
+        const { data, error } = await supabase.auth.exchangeCodeForSession(callback.code);
+        console.log(TAG, "exchangeCodeForSession resolved", {
+          hasSession: !!data.session,
+          userId: data.session?.user?.id,
+          provider: data.session?.user?.app_metadata?.provider,
+          errorCode: (error as any)?.code,
+          errorMsg: error?.message,
+        });
+
+        if (!error) {
+          stripOAuthParamsFromUrl();
+        }
+      }
+
+      const { data: { session: s }, error } = await supabase.auth.getSession();
       console.log(TAG, "getSession resolved", {
         hasSession: !!s,
         userId: s?.user?.id,
@@ -74,7 +140,7 @@ export function useAuth() {
       setSession(s);
       setUser(s?.user ?? null);
       setLoading(false);
-    });
+    })();
     return () => subscription.unsubscribe();
   }, []);
 
