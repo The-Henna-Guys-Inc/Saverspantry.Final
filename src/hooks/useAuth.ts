@@ -2,9 +2,12 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 
+const TAG = "[auth-debug]";
+
 const clearInvalidLocalSession = async () => {
+  console.warn(TAG, "clearInvalidLocalSession called");
   const { error } = await supabase.auth.signOut({ scope: "local" });
-  if (error) console.warn("Failed to clear invalid local session", error);
+  if (error) console.warn(TAG, "Failed to clear invalid local session", error);
 };
 
 export function useAuth() {
@@ -13,8 +16,29 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Log URL state on mount — OAuth callbacks land here with hash/code params
+    try {
+      console.log(TAG, "useAuth mount", {
+        href: window.location.href,
+        hash: window.location.hash,
+        search: window.location.search,
+        hasCode: window.location.search.includes("code="),
+        hasAccessToken: window.location.hash.includes("access_token"),
+        hasError: window.location.hash.includes("error") || window.location.search.includes("error"),
+      });
+    } catch {}
+
     // Listener FIRST (per Lovable Cloud guidance), then getSession
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
+      console.log(TAG, "onAuthStateChange", {
+        event,
+        hasSession: !!s,
+        userId: s?.user?.id,
+        email: s?.user?.email,
+        provider: s?.user?.app_metadata?.provider,
+        expiresAt: s?.expires_at,
+        lastSignInAt: s?.user?.last_sign_in_at,
+      });
       setSession(s);
       setUser(s?.user ?? null);
       // Auto-cancel any pending deletion when the user signs back in
@@ -32,6 +56,13 @@ export function useAuth() {
       }
     });
     supabase.auth.getSession().then(async ({ data: { session: s }, error }) => {
+      console.log(TAG, "getSession resolved", {
+        hasSession: !!s,
+        userId: s?.user?.id,
+        provider: s?.user?.app_metadata?.provider,
+        errorCode: (error as any)?.code,
+        errorMsg: error?.message,
+      });
       if (error?.code === "refresh_token_not_found") {
         await clearInvalidLocalSession();
         setSession(null);

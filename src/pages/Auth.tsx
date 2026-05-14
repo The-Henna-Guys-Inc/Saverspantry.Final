@@ -105,17 +105,31 @@ const Auth = () => {
   };
 
   const handleOAuth = async (provider: "apple" | "google") => {
+    const TAG = "[auth-debug]";
+    console.log(TAG, "handleOAuth start", {
+      provider,
+      native: Capacitor.isNativePlatform(),
+      origin: window.location.origin,
+      href: window.location.href,
+    });
     setLoading(true);
     try {
       if (Capacitor.isNativePlatform()) {
         if (provider === "apple") await handleNativeApple();
         else await handleNativeGoogle();
+        console.log(TAG, "native sign-in completed", { provider });
         toast.success("Signed in!");
         navigate("/");
         return;
       }
       const result = await lovable.auth.signInWithOAuth(provider, {
         redirect_uri: window.location.origin,
+      });
+      console.log(TAG, "lovable.signInWithOAuth result", {
+        provider,
+        redirected: result.redirected,
+        hasError: !!result.error,
+        error: result.error,
       });
       if (result.error) {
         toast.error(`${provider === "apple" ? "Apple" : "Google"} sign-in failed`);
@@ -124,7 +138,7 @@ const Auth = () => {
       if (result.redirected) return;
       navigate("/");
     } catch (e: any) {
-      console.error(e);
+      console.error(TAG, "handleOAuth threw", e);
       toast.error(e?.message || `${provider} sign-in failed`);
     } finally {
       setLoading(false);

@@ -67,10 +67,22 @@ export const SessionEnforcer = () => {
       let reason: string | null = null;
       if (start && now - start > maxAgeMs) reason = "Session expired. Please sign in again.";
       else if (last && now - last > idleMs) reason = "Signed out due to inactivity.";
+      console.log("[auth-debug] SessionEnforcer check", {
+        userId: user.id,
+        provider: session.user.app_metadata?.provider,
+        startAgeMs: start ? now - start : null,
+        idleMs: last ? now - last : null,
+        maxAgeMs,
+        idleLimitMs: idleMs,
+        wouldSignOut: !!reason,
+        reason,
+      });
       if (reason) {
+        console.warn("[auth-debug] SessionEnforcer signing out:", reason);
         await supabase.auth.signOut();
         localStorage.removeItem(SESSION_START_KEY);
         localStorage.removeItem(LAST_ACTIVITY_KEY);
+        localStorage.removeItem(SESSION_MARKER_KEY);
         toast.info(reason);
       }
     };
