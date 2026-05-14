@@ -248,12 +248,15 @@ const Planner = () => {
         <p className="text-muted-foreground mb-6">Build your week, generate fresh recipes, and revisit what you've saved.</p>
 
         <Tabs value={planTab} onValueChange={setPlanTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-transparent p-0 mb-6 gap-1.5 sm:gap-2 h-auto">
+          <TabsList className="grid w-full grid-cols-4 bg-transparent p-0 mb-6 gap-1.5 sm:gap-2 h-auto">
             <TabsTrigger value="planner" className="w-full min-w-0 rounded-xl gap-1 sm:gap-2 px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth">
-              <Calendar className="h-4 w-4" />Meal planner
+              <Calendar className="h-4 w-4" /><span className="hidden sm:inline">Meal </span>planner
             </TabsTrigger>
             <TabsTrigger value="recipes" className="w-full min-w-0 rounded-xl gap-1 sm:gap-2 px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth">
               <ChefHat className="h-4 w-4" />Recipes
+            </TabsTrigger>
+            <TabsTrigger value="nutrition" className="w-full min-w-0 rounded-xl gap-1 sm:gap-2 px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth">
+              <Apple className="h-4 w-4" />Nutrition
             </TabsTrigger>
             <TabsTrigger value="library" className="w-full min-w-0 rounded-xl gap-1 sm:gap-2 px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth">
               <BookmarkCheck className="h-4 w-4" />Library
@@ -262,6 +265,10 @@ const Planner = () => {
 
           <TabsContent value="recipes" className="mt-0">
             <RecipeGenerator />
+          </TabsContent>
+
+          <TabsContent value="nutrition" className="mt-0">
+            <NutritionLookup />
           </TabsContent>
 
           <TabsContent value="library" className="mt-0">
