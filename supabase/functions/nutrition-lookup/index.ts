@@ -303,16 +303,26 @@ Deno.serve(async (req) => {
                     if (dRes.ok) {
                       const food = await dRes.json();
                       const factor = Math.max(1, Number(c.portion_grams) || 100) / 100;
-                      // Sum all relevant nutrient IDs (e.g. omega-3 = ALA+EPA+DHA), values are per 100g
-                      // USDA returns fats in g; if we want mg/µg we convert later
                       let per100 = 0;
-                      for (const id of resolved.meta.ids) per100 += getNutrient(food, id);
+                      const present: number[] = [];
+                      for (const id of resolved.meta.ids) {
+                        const v = getNutrient(food, id);
+                        if (v > 0) present.push(id);
+                        per100 += v;
+                      }
+                      console.log(`[verify] ${c.food_name} → fdcId ${top.fdcId} (${top.description}); per100=${per100} for ids=${resolved.meta.ids.join(",")} present=${present.join(",")}`);
                       if (per100 > 0) {
                         amount = per100 * factor;
                         source = "USDA";
                       }
+                    } else {
+                      console.warn(`[verify] detail fetch ${dRes.status} for ${top.fdcId}`);
                     }
+                  } else {
+                    console.warn(`[verify] no USDA hit for "${c.food_name}"`);
                   }
+                } else {
+                  console.warn(`[verify] search ${sRes.status} for "${c.food_name}"`);
                 }
               } catch (e: any) { console.warn("USDA verify failed for", c.food_name, e?.message); }
             }
