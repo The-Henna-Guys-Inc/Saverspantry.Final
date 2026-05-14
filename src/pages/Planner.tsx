@@ -16,6 +16,7 @@ import { AiFeedback } from "@/components/AiFeedback";
 import { detectItemCuisines, summarizeCuisines, CUISINE_LABEL } from "@/lib/cuisineHints";
 import { CuisinePrefHint } from "@/components/CuisinePrefHint";
 import { RecipeGenerator } from "@/components/RecipeGenerator";
+import { NutritionLookup } from "@/components/NutritionLookup";
 
 type Meal = { title: string; main_ingredients: string[]; estimated_cost_usd: number; time_minutes: number };
 type Day = { day: string; breakfast: Meal; lunch: Meal; dinner: Meal };
