@@ -57,6 +57,7 @@ export const NutritionLookup = () => {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Nutrition | null>(null);
+  const [ranking, setRanking] = useState<Ranking | null>(null);
   const [topSearches, setTopSearches] = useState<string[]>([]);
   const [usingFallback, setUsingFallback] = useState(true);
 
@@ -79,13 +80,15 @@ export const NutritionLookup = () => {
     if (!q.trim()) return;
     setLoading(true);
     setResult(null);
+    setRanking(null);
     try {
       const { data, error } = await supabase.functions.invoke("nutrition-lookup", {
         body: { query: q },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setResult(data.nutrition);
+      if (data?.ranking) setRanking(data.ranking as Ranking);
+      else setResult(data.nutrition);
       // Fire-and-forget log; ignore RLS failures for unauth users
       supabase
         .from("nutrition_search_events")
