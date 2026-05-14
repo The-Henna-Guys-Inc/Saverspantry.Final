@@ -36,7 +36,7 @@ const Settings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [displayName, setDisplayName] = useState("");
-  const [household, setHousehold] = useState(2);
+  const [household, setHousehold] = useState("2");
   const [zip, setZip] = useState("");
   const [dietStyle, setDietStyle] = useState<string>("balanced");
   const [restrictions, setRestrictions] = useState<string[]>([]);

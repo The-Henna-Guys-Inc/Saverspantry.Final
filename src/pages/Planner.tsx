@@ -54,7 +54,7 @@ const Planner = () => {
   const tabParam = searchParams.get("tab");
   const planTab = tabParam === "recipes" || tabParam === "library" || tabParam === "nutrition" ? tabParam : "planner";
   const setPlanTab = (v: string) => setSearchParams(v === "planner" ? {} : { tab: v });
-  const [householdSize, setHouseholdSize] = useState(2);
+  const [householdSize, setHouseholdSize] = useState("2");
   const [budget, setBudget] = useState<string>("");
   const [cuisine, setCuisine] = useState("");
   const [dietStyle, setDietStyle] = useState("balanced");
