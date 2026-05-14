@@ -313,9 +313,16 @@ Deno.serve(async (req) => {
                   const factor = Math.max(1, Number(c.portion_grams) || 100) / 100;
                   let per100 = 0;
                   for (const id of resolved.meta.ids) per100 += getNutrient(food, id);
-                  console.log(`[verify] ${c.food_name} → ${top.fdcId} (${top.description}); per100=${per100}`);
-                  if (per100 > 0) {
-                    amount = per100 * factor;
+                  const usdaAmt = per100 * factor;
+                  const aiAmt = Number(c.estimated_amount) || 0;
+                  // Sanity guard: if USDA is wildly off vs AI estimate (>3x or <1/3),
+                  // the search likely matched a different food (e.g. soybean → soybean oil).
+                  // In that case keep the AI estimate.
+                  const ratio = aiAmt > 0 ? usdaAmt / aiAmt : 1;
+                  const trustworthy = per100 > 0 && (aiAmt === 0 || (ratio >= 0.33 && ratio <= 3));
+                  console.log(`[verify] ${c.food_name} → ${top.fdcId} (${top.description}); usda=${usdaAmt.toFixed(2)} ai=${aiAmt} trust=${trustworthy}`);
+                  if (trustworthy) {
+                    amount = usdaAmt;
                     source = "USDA";
                   }
                 }
