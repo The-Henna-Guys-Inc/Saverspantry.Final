@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 
+const clearInvalidLocalSession = async () => {
+  const { error } = await supabase.auth.signOut({ scope: "local" });
+  if (error) console.warn("Failed to clear invalid local session", error);
+};
+
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -26,7 +31,15 @@ export function useAuth() {
         }, 0);
       }
     });
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: s }, error }) => {
+      if (error?.code === "refresh_token_not_found") {
+        await clearInvalidLocalSession();
+        setSession(null);
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
       setSession(s);
       setUser(s?.user ?? null);
       setLoading(false);
