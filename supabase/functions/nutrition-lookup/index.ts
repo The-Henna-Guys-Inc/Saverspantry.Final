@@ -112,6 +112,92 @@ const MICRO_DVS: Record<number, { name: string; unit: string; dv: number }> = {
   1178: { name: "Vitamin B12", unit: "µg", dv: 2.4 },
 };
 
+// Nutrient resolver for "top foods by nutrient" queries.
+// Maps a normalized nutrient key to one or more USDA FDC nutrient IDs (summed) + display unit.
+const NUTRIENT_MAP: Record<string, { label: string; ids: number[]; unit: string }> = {
+  "omega-3":     { label: "Omega-3 (ALA+EPA+DHA)", ids: [1404, 1278, 1272], unit: "g" },
+  "omega-6":     { label: "Omega-6 (LA+AA)",       ids: [1316, 1408],       unit: "g" },
+  "protein":     { label: "Protein",   ids: [1003], unit: "g" },
+  "fiber":       { label: "Fiber",     ids: [1079], unit: "g" },
+  "iron":        { label: "Iron",      ids: [1089], unit: "mg" },
+  "calcium":     { label: "Calcium",   ids: [1087], unit: "mg" },
+  "potassium":   { label: "Potassium", ids: [1092], unit: "mg" },
+  "magnesium":   { label: "Magnesium", ids: [1090], unit: "mg" },
+  "zinc":        { label: "Zinc",      ids: [1095], unit: "mg" },
+  "vitamin c":   { label: "Vitamin C", ids: [1162], unit: "mg" },
+  "vitamin d":   { label: "Vitamin D", ids: [1114], unit: "µg" },
+  "vitamin e":   { label: "Vitamin E", ids: [1109], unit: "mg" },
+  "vitamin k":   { label: "Vitamin K", ids: [1185], unit: "µg" },
+  "vitamin a":   { label: "Vitamin A", ids: [1106], unit: "µg" },
+  "vitamin b6":  { label: "Vitamin B6",ids: [1175], unit: "mg" },
+  "vitamin b12": { label: "Vitamin B12", ids: [1178], unit: "µg" },
+  "folate":      { label: "Folate",    ids: [1177], unit: "µg" },
+  "selenium":    { label: "Selenium",  ids: [1103], unit: "µg" },
+  "choline":     { label: "Choline",   ids: [1180], unit: "mg" },
+};
+
+function resolveNutrient(input: string): { key: string; meta: typeof NUTRIENT_MAP[string] } | null {
+  const q = input.toLowerCase().trim();
+  if (NUTRIENT_MAP[q]) return { key: q, meta: NUTRIENT_MAP[q] };
+  for (const [k, meta] of Object.entries(NUTRIENT_MAP)) {
+    if (q.includes(k) || k.includes(q)) return { key: k, meta };
+  }
+  return null;
+}
+
+// ----- Tool: classify the user's query -----
+const INTENT_TOOL = {
+  type: "function",
+  function: {
+    name: "classify_query",
+    description: "Decide if the user is asking for nutrition of ONE specific food/portion, or asking for a RANKING of foods highest in a nutrient.",
+    parameters: {
+      type: "object",
+      properties: {
+        intent: { type: "string", enum: ["single_food", "top_foods"] },
+        nutrient: { type: "string", description: "If intent=top_foods, the nutrient name in lowercase, e.g. 'omega-3', 'protein', 'iron', 'vitamin c'. Empty string otherwise." },
+      },
+      required: ["intent", "nutrient"],
+      additionalProperties: false,
+    },
+  },
+};
+
+// ----- Tool: ranked candidate foods for a nutrient -----
+const RANK_TOOL = {
+  type: "function",
+  function: {
+    name: "return_top_foods",
+    description: "Return 6 candidate whole foods that are well-known top dietary sources of the requested nutrient, with realistic single-serving portions in grams. Prefer accessible US-grocery foods. Use USDA-grade values.",
+    parameters: {
+      type: "object",
+      properties: {
+        nutrient_label: { type: "string" },
+        unit: { type: "string", description: "Display unit, e.g. 'g', 'mg', 'µg'." },
+        candidates: {
+          type: "array",
+          minItems: 6,
+          maxItems: 6,
+          items: {
+            type: "object",
+            properties: {
+              food_name:     { type: "string", description: "Clean food name suitable for USDA search, e.g. 'flax seeds, ground', 'salmon, atlantic, cooked', 'chia seeds'." },
+              portion_label: { type: "string", description: "Human-friendly serving, e.g. '1 tbsp (10g)', '3 oz (85g)'." },
+              portion_grams: { type: "number", description: "Total grams of the portion." },
+              estimated_amount: { type: "number", description: "Estimated nutrient amount in `unit` per the portion." },
+            },
+            required: ["food_name", "portion_label", "portion_grams", "estimated_amount"],
+            additionalProperties: false,
+          },
+        },
+      },
+      required: ["nutrient_label", "unit", "candidates"],
+      additionalProperties: false,
+    },
+  },
+};
+
+
 function getNutrient(food: any, id: number): number {
   const fns = food?.foodNutrients ?? [];
   const hit = fns.find((n: any) => (n?.nutrient?.id ?? n?.nutrientId) === id);
