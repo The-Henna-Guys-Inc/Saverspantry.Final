@@ -65,7 +65,7 @@ const Settings = () => {
       ]);
       if (data) {
         setDisplayName(data.display_name ?? "");
-        setHousehold(data.household_size ?? 2);
+        setHousehold(String(data.household_size ?? 2));
         setZip(data.zip_code ?? "");
         const prefs = (data.dietary_prefs ?? {}) as {
           style?: string; restrictions?: string[];
@@ -116,7 +116,7 @@ const Settings = () => {
       .from("profiles")
       .update({
         display_name: displayName.trim() || null,
-        household_size: Math.max(1, household),
+        household_size: Math.max(1, Number(household) || 1),
         zip_code: zip.trim() || null,
         dietary_prefs: {
           style: dietStyle,
@@ -181,7 +181,8 @@ const Settings = () => {
               <div>
                 <Label htmlFor="hh" className="text-xs">Household size</Label>
                 <Input id="hh" type="number" min={1} max={12} value={household}
-                  onChange={(e) => setHousehold(Math.max(1, Number(e.target.value) || 1))}
+                  onChange={(e) => setHousehold(e.target.value)}
+                  onBlur={(e) => { const v = Number(e.target.value); if (!v || v < 1) setHousehold("1"); }}
                   className="rounded-xl mt-1" />
               </div>
               <div>
