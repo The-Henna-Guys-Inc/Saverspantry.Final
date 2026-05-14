@@ -244,14 +244,118 @@ Deno.serve(async (req) => {
       });
     }
 
-    const cacheKey = await stableHash({ q: query.toLowerCase().trim(), v: "usda1" });
-    const cached = await cacheGet<{ nutrition: unknown }>(FN, cacheKey);
+    const cacheKey = await stableHash({ q: query.toLowerCase().trim(), v: "usda2" });
+    const cached = await cacheGet<{ nutrition?: unknown; ranking?: unknown }>(FN, cacheKey);
     if (cached) {
       logAiUsage({ userId, functionName: FN, model: MODEL, cached: true, latencyMs: Date.now() - startedAt });
       return new Response(JSON.stringify(cached), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const USDA_API_KEY = Deno.env.get("USDA_API_KEY");
+
+    // 0) Classify intent — single food lookup vs "top foods by nutrient" ranking
+    let intent: "single_food" | "top_foods" = "single_food";
+    let nutrientHint = "";
+    try {
+      const { args } = await callAI(
+        [
+          { role: "system", content: "Classify the user's nutrition query. 'top_foods' means they're asking which foods are highest/best/richest in a nutrient (e.g. 'foods with most omega-3', 'highest protein foods', 'best source of iron'). 'single_food' means they're asking nutrition facts for one food/portion. Always call classify_query." },
+          { role: "user", content: query },
+        ],
+        INTENT_TOOL,
+      );
+      intent = args?.intent === "top_foods" ? "top_foods" : "single_food";
+      nutrientHint = (args?.nutrient ?? "").toLowerCase().trim();
+    } catch (e: any) {
+      console.warn("intent classification failed:", e?.message);
+    }
+
+    // ===== TOP FOODS RANKING PATH =====
+    if (intent === "top_foods") {
+      const resolved = resolveNutrient(nutrientHint || query);
+      try {
+        const { args, usage } = await callAI(
+          [
+            { role: "system", content: `You list 6 whole foods that are well-established top dietary sources of the requested nutrient. Use realistic single-serving portions (e.g. 1 tbsp seeds ≈ 10g, 3 oz fish ≈ 85g, 1 cup cooked beans ≈ 170g). Use USDA-grade values for the estimated amount per portion. Display unit should be ${resolved?.meta.unit ?? "g/mg/µg as appropriate"}. Always call return_top_foods.` },
+            { role: "user", content: `Top foods highest in: ${nutrientHint || query}` },
+          ],
+          RANK_TOOL,
+        );
+        logAiUsage({ userId, functionName: FN + ":rank", model: MODEL, promptTokens: usage.prompt_tokens ?? 0, completionTokens: usage.completion_tokens ?? 0, latencyMs: Date.now() - startedAt });
+
+        const unit = resolved?.meta.unit ?? args.unit ?? "g";
+        const nutrientLabel = resolved?.meta.label ?? args.nutrient_label ?? nutrientHint;
+
+        // Verify each candidate against USDA when possible
+        const verified = await Promise.all(
+          (args.candidates as any[]).slice(0, 6).map(async (c) => {
+            let amount = Number(c.estimated_amount) || 0;
+            let source: "USDA" | "AI estimate" = "AI estimate";
+            if (USDA_API_KEY && resolved) {
+              try {
+                const sUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${USDA_API_KEY}&query=${encodeURIComponent(c.food_name)}&pageSize=3&dataType=Foundation,SR%20Legacy,Survey%20%28FNDDS%29`;
+                const sRes = await fetch(sUrl);
+                if (sRes.ok) {
+                  const sJson = await sRes.json();
+                  const top = sJson?.foods?.[0];
+                  if (top?.fdcId) {
+                    const dRes = await fetch(`https://api.nal.usda.gov/fdc/v1/food/${top.fdcId}?api_key=${USDA_API_KEY}`);
+                    if (dRes.ok) {
+                      const food = await dRes.json();
+                      const factor = Math.max(1, Number(c.portion_grams) || 100) / 100;
+                      // Sum all relevant nutrient IDs (e.g. omega-3 = ALA+EPA+DHA), values are per 100g
+                      // USDA returns fats in g; if we want mg/µg we convert later
+                      let per100 = 0;
+                      for (const id of resolved.meta.ids) per100 += getNutrient(food, id);
+                      if (per100 > 0) {
+                        amount = per100 * factor;
+                        source = "USDA";
+                      }
+                    }
+                  }
+                }
+              } catch (e: any) { console.warn("USDA verify failed for", c.food_name, e?.message); }
+            }
+            // Round sensibly per unit
+            const decimals = unit === "g" ? 2 : unit === "mg" ? 1 : 0;
+            return {
+              food: c.food_name,
+              portion_label: c.portion_label,
+              portion_grams: Number(c.portion_grams),
+              amount: Number(amount.toFixed(decimals)),
+              unit,
+              source,
+            };
+          }),
+        );
+
+        const ranked = verified
+          .filter((v) => v.amount > 0)
+          .sort((a, b) => b.amount - a.amount)
+          .slice(0, 3);
+
+        const ranking = {
+          query,
+          nutrient: nutrientLabel,
+          unit,
+          items: ranked,
+          note: ranked.some((r) => r.source === "USDA")
+            ? "Values verified against USDA FoodData Central where available."
+            : "Values are AI estimates — USDA verification was unavailable for these foods.",
+        };
+        const result = { ranking };
+        cachePut(FN, cacheKey, result, 24 * 30);
+        logAiUsage({ userId, functionName: FN + ":rank:done", model: MODEL, latencyMs: Date.now() - startedAt });
+        return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      } catch (e: any) {
+        const status = e?.status;
+        if (status === 429) return new Response(JSON.stringify({ error: "Rate limit hit — please try again in a moment." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        if (status === 402) return new Response(JSON.stringify({ error: "AI credits exhausted. Add credits in Lovable workspace settings." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        throw e;
+      }
+    }
+
+
 
     // 1) Parse user's free-text query into food name + grams
     let parsed: { food_name: string; serving_grams: number; portion_label: string };
