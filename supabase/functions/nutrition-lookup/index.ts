@@ -286,58 +286,54 @@ Deno.serve(async (req) => {
         const unit = resolved?.meta.unit ?? args.unit ?? "g";
         const nutrientLabel = resolved?.meta.label ?? args.nutrient_label ?? nutrientHint;
 
-        // Verify each candidate against USDA when possible
-        const verified = await Promise.all(
-          (args.candidates as any[]).slice(0, 6).map(async (c) => {
-            let amount = Number(c.estimated_amount) || 0;
-            let source: "USDA" | "AI estimate" = "AI estimate";
-            if (USDA_API_KEY && resolved) {
-              try {
-                const sUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${USDA_API_KEY}&query=${encodeURIComponent(c.food_name)}&pageSize=3&dataType=Foundation,SR%20Legacy,Survey%20%28FNDDS%29`;
-                const sRes = await fetch(sUrl);
-                if (sRes.ok) {
-                  const sJson = await sRes.json();
-                  const top = sJson?.foods?.[0];
-                  if (top?.fdcId) {
-                    const dRes = await fetch(`https://api.nal.usda.gov/fdc/v1/food/${top.fdcId}?api_key=${USDA_API_KEY}`);
-                    if (dRes.ok) {
-                      const food = await dRes.json();
-                      const factor = Math.max(1, Number(c.portion_grams) || 100) / 100;
-                      let per100 = 0;
-                      const present: number[] = [];
-                      for (const id of resolved.meta.ids) {
-                        const v = getNutrient(food, id);
-                        if (v > 0) present.push(id);
-                        per100 += v;
-                      }
-                      console.log(`[verify] ${c.food_name} → fdcId ${top.fdcId} (${top.description}); per100=${per100} for ids=${resolved.meta.ids.join(",")} present=${present.join(",")}`);
-                      if (per100 > 0) {
-                        amount = per100 * factor;
-                        source = "USDA";
-                      }
-                    } else {
-                      console.warn(`[verify] detail fetch ${dRes.status} for ${top.fdcId}`);
-                    }
-                  } else {
-                    console.warn(`[verify] no USDA hit for "${c.food_name}"`);
-                  }
-                } else {
-                  console.warn(`[verify] search ${sRes.status} for "${c.food_name}"`);
-                }
-              } catch (e: any) { console.warn("USDA verify failed for", c.food_name, e?.message); }
-            }
-            // Round sensibly per unit
-            const decimals = unit === "g" ? 2 : unit === "mg" ? 1 : 0;
-            return {
-              food: c.food_name,
-              portion_label: c.portion_label,
-              portion_grams: Number(c.portion_grams),
-              amount: Number(amount.toFixed(decimals)),
-              unit,
-              source,
+        // Verify each candidate against USDA — sequential to avoid USDA rate limits
+        const verified: any[] = [];
+        for (const c of (args.candidates as any[]).slice(0, 6)) {
+          let amount = Number(c.estimated_amount) || 0;
+          let source: "USDA" | "AI estimate" = "AI estimate";
+          if (USDA_API_KEY && resolved) {
+            const tryQuery = async (q: string) => {
+              const sUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${USDA_API_KEY}&query=${encodeURIComponent(q)}&pageSize=3&dataType=Foundation,SR%20Legacy,Survey%20%28FNDDS%29`;
+              const sRes = await fetch(sUrl);
+              if (!sRes.ok) return null;
+              const sJson = await sRes.json();
+              return sJson?.foods?.[0] ?? null;
             };
-          }),
-        );
+            try {
+              // 1st attempt: full name; 2nd: simplified (first noun before any comma)
+              let top = await tryQuery(c.food_name);
+              if (!top?.fdcId) {
+                const simple = String(c.food_name).split(/[,(]/)[0].trim();
+                if (simple && simple !== c.food_name) top = await tryQuery(simple);
+              }
+              if (top?.fdcId) {
+                const dRes = await fetch(`https://api.nal.usda.gov/fdc/v1/food/${top.fdcId}?api_key=${USDA_API_KEY}`);
+                if (dRes.ok) {
+                  const food = await dRes.json();
+                  const factor = Math.max(1, Number(c.portion_grams) || 100) / 100;
+                  let per100 = 0;
+                  for (const id of resolved.meta.ids) per100 += getNutrient(food, id);
+                  console.log(`[verify] ${c.food_name} → ${top.fdcId} (${top.description}); per100=${per100}`);
+                  if (per100 > 0) {
+                    amount = per100 * factor;
+                    source = "USDA";
+                  }
+                }
+              } else {
+                console.warn(`[verify] no USDA hit for "${c.food_name}"`);
+              }
+            } catch (e: any) { console.warn("USDA verify failed for", c.food_name, e?.message); }
+          }
+          const decimals = unit === "g" ? 2 : unit === "mg" ? 1 : 0;
+          verified.push({
+            food: c.food_name,
+            portion_label: c.portion_label,
+            portion_grams: Number(c.portion_grams),
+            amount: Number(amount.toFixed(decimals)),
+            unit,
+            source,
+          });
+        }
 
         const ranked = verified
           .filter((v) => v.amount > 0)
