@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Sparkles, ShoppingCart, RefreshCw, Calendar, Info, Copy, Share2, Printer, Tag, MapPin, ChefHat, BookmarkCheck, ArrowRight } from "lucide-react";
+import { Loader2, Sparkles, ShoppingCart, RefreshCw, Calendar, Info, Copy, Share2, Printer, Tag, MapPin, ChefHat, BookmarkCheck, ArrowRight, Apple } from "lucide-react";
 import { toast } from "sonner";
 import { SpecialtyStoreBanner } from "@/components/SpecialtyStoreBanner";
 import { AiFeedback } from "@/components/AiFeedback";
