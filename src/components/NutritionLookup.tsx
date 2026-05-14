@@ -117,7 +117,7 @@ export const NutritionLookup = () => {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Try: 1 cup cooked quinoa"
+            placeholder='Try "1 cup cooked quinoa" or "foods highest in omega-3"'
             className="h-14 pl-11 rounded-2xl bg-card border-border text-base shadow-soft"
           />
         </div>
