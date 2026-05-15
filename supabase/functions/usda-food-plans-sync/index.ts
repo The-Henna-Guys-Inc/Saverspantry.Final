@@ -16,25 +16,58 @@ const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
 const PLAN_KEYS = ['thrifty', 'low_cost', 'moderate_cost', 'liberal'] as const;
 
-// USDA FNS publishes monthly: "CostofFoodMonthlyReport<Month><Year>.pdf"
-// Files live under fns-prod.azureedge.us/sites/default/files/resource-files/
+// USDA FNS publishes monthly under fns.usda.gov/sites/default/files/resource-files/
+// Current pattern (2025+): cnpp-costfood-{tfp|3levels|ak-hi}-{month}{year}.pdf
+// "tfp" = Thrifty Food Plan; "3levels" = Low-Cost / Moderate-Cost / Liberal.
 function candidateUrls(date: Date): string[] {
-  const months = ['January','February','March','April','May','June',
-                  'July','August','September','October','November','December'];
+  const months = ['january','february','march','april','may','june',
+                  'july','august','september','october','november','december'];
+  const abbr = ['jan','feb','mar','apr','may','jun','jul','aug','sept','oct','nov','dec'];
   const m = months[date.getMonth()];
+  const a = abbr[date.getMonth()];
   const y = date.getFullYear();
+  const base = 'https://www.fns.usda.gov/sites/default/files/resource-files';
+  // 3levels first (covers 3 of 4 plans), then tfp. Try long + abbreviated month names.
   return [
-    `https://fns-prod.azureedge.us/sites/default/files/resource-files/CostofFoodMonthlyReport${m}${y}.pdf`,
-    `https://fns-prod.azureedge.us/sites/default/files/resource-files/CostofFoodMonthly-${m}${y}.pdf`,
-    `https://www.fns.usda.gov/sites/default/files/resource-files/CostofFoodMonthlyReport${m}${y}.pdf`,
+    `${base}/cnpp-costfood-3levels-${m}${y}.pdf`,
+    `${base}/cnpp-costfood-3levels-${a}${y}.pdf`,
+    `${base}/cnpp-costfood-tfp-${m}${y}.pdf`,
+    `${base}/cnpp-costfood-tfp-${a}${y}.pdf`,
   ];
+}
+
+const UA_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+  'Accept': 'application/pdf,application/octet-stream,*/*;q=0.8',
+  'Accept-Language': 'en-US,en;q=0.9',
+  'Referer': 'https://www.fns.usda.gov/research/cnpp/usda-food-plans/cost-food-monthly-reports',
+};
+
+// Infer report month from filename like "...march2026.pdf" / "...mar2026.pdf"
+function inferMonthFromUrl(url: string): Date {
+  const months = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+  const abbr = ['jan','feb','mar','apr','may','jun','jul','aug','sep','sept','oct','nov','dec'];
+  const lower = url.toLowerCase();
+  const yMatch = lower.match(/(20\d{2})/);
+  const year = yMatch ? parseInt(yMatch[1]) : new Date().getFullYear();
+  for (let i = 0; i < months.length; i++) {
+    if (lower.includes(months[i])) return new Date(year, i, 1);
+  }
+  for (let i = 0; i < abbr.length; i++) {
+    if (lower.includes(abbr[i])) {
+      const idx = abbr[i] === 'sept' ? 8 : (abbr[i] === 'sep' ? 8 : i);
+      return new Date(year, Math.min(idx, 11), 1);
+    }
+  }
+  return new Date();
 }
 
 async function findLatestPdf(override?: string): Promise<{ url: string; bytes: Uint8Array; reportMonth: Date } | null> {
   if (override) {
-    const r = await fetch(override);
+    const r = await fetch(override, { headers: UA_HEADERS });
+    console.log(`[usda-sync] override fetch ${override} -> ${r.status} ${r.headers.get('content-type')}`);
     if (!r.ok) return null;
-    return { url: override, bytes: new Uint8Array(await r.arrayBuffer()), reportMonth: new Date() };
+    return { url: override, bytes: new Uint8Array(await r.arrayBuffer()), reportMonth: inferMonthFromUrl(override) };
   }
   // Try current month, walk back up to 3 months
   const now = new Date();
@@ -42,7 +75,7 @@ async function findLatestPdf(override?: string): Promise<{ url: string; bytes: U
     const d = new Date(now.getFullYear(), now.getMonth() - back, 1);
     for (const url of candidateUrls(d)) {
       try {
-        const r = await fetch(url);
+        const r = await fetch(url, { headers: UA_HEADERS });
         if (r.ok && r.headers.get('content-type')?.includes('pdf')) {
           return { url, bytes: new Uint8Array(await r.arrayBuffer()), reportMonth: d };
         }
