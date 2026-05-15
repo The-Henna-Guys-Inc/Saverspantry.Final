@@ -38,7 +38,9 @@ function candidateUrls(date: Date): string[] {
 
 const UA_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
-  'Accept': 'application/pdf,*/*',
+  'Accept': 'application/pdf,application/octet-stream,*/*;q=0.8',
+  'Accept-Language': 'en-US,en;q=0.9',
+  'Referer': 'https://www.fns.usda.gov/research/cnpp/usda-food-plans/cost-food-monthly-reports',
 };
 
 // Infer report month from filename like "...march2026.pdf" / "...mar2026.pdf"
