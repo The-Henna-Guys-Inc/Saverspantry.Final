@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.ingest-promo-email]
 verify_jwt = false
+
+[functions.dev-test-promo-ingest]
+verify_jwt = false
