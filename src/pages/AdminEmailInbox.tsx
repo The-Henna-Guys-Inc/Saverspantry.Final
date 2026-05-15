@@ -136,12 +136,29 @@ const AdminEmailInbox = () => {
     setSelected(null);
   };
 
+  const [reprocessing, setReprocessing] = useState(false);
   const reprocess = async () => {
-    if (!selected?.matched_store_id) {
+    if (!selected) return;
+    if (!selected.matched_store_id) {
       toast.error("Assign a store first");
       return;
     }
-    toast.info("Reprocessing isn't wired up yet — coming next. For now, re-forward the email or use Upload flyer with the matched store.");
+    setReprocessing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-reprocess-flyer", {
+        body: { ingestion_id: selected.id },
+      });
+      if (error) throw error;
+      const r = data as { ok?: boolean; batches?: number; triggered?: number; error?: string };
+      if (!r?.ok) throw new Error(r?.error ?? "Reprocess failed");
+      toast.success(`Reprocessing ${r.triggered}/${r.batches} attachment${r.batches === 1 ? "" : "s"}…`);
+      setTimeout(load, 2000);
+      setSelected(null);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to reprocess");
+    } finally {
+      setReprocessing(false);
+    }
   };
 
   if (authLoading || checking) {
@@ -295,7 +312,9 @@ const AdminEmailInbox = () => {
                     )}
                   </div>
 
-                  <Button onClick={reprocess} variant="outline" size="sm" className="w-full rounded-xl">
+                  <Button onClick={reprocess} disabled={reprocessing} variant="outline" size="sm" className="w-full rounded-xl">
+                    {reprocessing && <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />}
+                    Reprocess
                     Reprocess
                   </Button>
                 </div>
