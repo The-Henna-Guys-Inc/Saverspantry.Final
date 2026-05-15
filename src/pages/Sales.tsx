@@ -244,7 +244,7 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
 
         <LocationHeader />
 
-        <LaunchAreaCard inArea={inLaunchArea} zipCode={zipCode} />
+        <LaunchAreaCard matchedCity={matchedCity} zipCode={zipCode} />
 
         <CuisineFilterBar
           cuisines={cuisines}
