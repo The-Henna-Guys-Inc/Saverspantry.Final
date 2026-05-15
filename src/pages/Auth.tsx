@@ -221,7 +221,7 @@ const Auth = () => {
     <main className="min-h-[100dvh] flex items-center justify-center p-6" style={{ background: CREAM }}>
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-6">
-          <BrandMark to="/welcome" size={isSignin ? "sm" : "md"} showTagline />
+          <BrandMark to="/welcome" size="lg" showTagline />
         </div>
 
         <div style={cardStyle}>
