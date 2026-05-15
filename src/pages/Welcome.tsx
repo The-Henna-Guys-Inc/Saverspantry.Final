@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { BrandMark } from "@/components/BrandMark";
+import { WaitlistDialog } from "@/components/WaitlistDialog";
 
 const CREAM = "#FAF5EC";
 const GREEN = "#1F5132";
@@ -86,6 +87,18 @@ const Welcome = () => {
             </Link>
           </p>
         </div>
+
+        <p className="text-center pt-2" style={{ color: MUTED, fontSize: 12 }}>
+          Now serving Chicagoland ·{" "}
+          <WaitlistDialog
+            source="landing_footer"
+            trigger={
+              <button type="button" className="underline hover:opacity-80" style={{ color: GREEN, fontWeight: 600 }}>
+                launching in more cities soon
+              </button>
+            }
+          />
+        </p>
       </div>
     </main>
   );
