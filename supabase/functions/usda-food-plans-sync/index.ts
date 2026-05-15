@@ -16,17 +16,23 @@ const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
 const PLAN_KEYS = ['thrifty', 'low_cost', 'moderate_cost', 'liberal'] as const;
 
-// USDA FNS publishes monthly: "CostofFoodMonthlyReport<Month><Year>.pdf"
-// Files live under fns-prod.azureedge.us/sites/default/files/resource-files/
+// USDA FNS publishes monthly under fns.usda.gov/sites/default/files/resource-files/
+// Current pattern (2025+): cnpp-costfood-{tfp|3levels|ak-hi}-{month}{year}.pdf
+// "tfp" = Thrifty Food Plan; "3levels" = Low-Cost / Moderate-Cost / Liberal.
 function candidateUrls(date: Date): string[] {
-  const months = ['January','February','March','April','May','June',
-                  'July','August','September','October','November','December'];
+  const months = ['january','february','march','april','may','june',
+                  'july','august','september','october','november','december'];
+  const abbr = ['jan','feb','mar','apr','may','jun','jul','aug','sept','oct','nov','dec'];
   const m = months[date.getMonth()];
+  const a = abbr[date.getMonth()];
   const y = date.getFullYear();
+  const base = 'https://www.fns.usda.gov/sites/default/files/resource-files';
+  // 3levels first (covers 3 of 4 plans), then tfp. Try long + abbreviated month names.
   return [
-    `https://fns-prod.azureedge.us/sites/default/files/resource-files/CostofFoodMonthlyReport${m}${y}.pdf`,
-    `https://fns-prod.azureedge.us/sites/default/files/resource-files/CostofFoodMonthly-${m}${y}.pdf`,
-    `https://www.fns.usda.gov/sites/default/files/resource-files/CostofFoodMonthlyReport${m}${y}.pdf`,
+    `${base}/cnpp-costfood-3levels-${m}${y}.pdf`,
+    `${base}/cnpp-costfood-3levels-${a}${y}.pdf`,
+    `${base}/cnpp-costfood-tfp-${m}${y}.pdf`,
+    `${base}/cnpp-costfood-tfp-${a}${y}.pdf`,
   ];
 }
 
