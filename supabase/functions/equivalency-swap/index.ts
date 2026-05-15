@@ -70,7 +70,7 @@ const TOOL = {
                 description: "Short note when there is a glycemic tradeoff to flag (e.g. 'Cheaper, but similar glycemic impact'). Empty string if not relevant.",
               },
             },
-            required: ["title", "items", "protein_g", "calories_kcal", "estimated_cost_usd", "savings_percent", "notes", "nutrient_coverage", "glycemic_impact", "glycemic_tradeoff"],
+            required: ["title", "creative_title", "items", "protein_g", "calories_kcal", "estimated_cost_usd", "savings_percent", "notes", "nutrient_coverage", "glycemic_impact", "glycemic_tradeoff"],
             additionalProperties: false,
           },
         },
