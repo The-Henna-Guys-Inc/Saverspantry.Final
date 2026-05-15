@@ -308,4 +308,150 @@ const AdminEmailInbox = () => {
   );
 };
 
+function ManualIngestCard({ onIngested }: { onIngested: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [from, setFrom] = useState("");
+  const [subject, setSubject] = useState("Weekly flyer test");
+  const [body, setBody] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
+  const [sending, setSending] = useState(false);
+
+  const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = Array.from(e.target.files ?? []);
+    setFiles((prev) => [...prev, ...picked].slice(0, 5));
+    e.target.value = "";
+  };
+
+  const removeFile = (i: number) => setFiles((prev) => prev.filter((_, idx) => idx !== i));
+
+  const fileToBase64 = (f: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => {
+        const s = String(r.result ?? "");
+        const i = s.indexOf(",");
+        resolve(i >= 0 ? s.slice(i + 1) : s);
+      };
+      r.onerror = () => reject(r.error);
+      r.readAsDataURL(f);
+    });
+
+  const submit = async () => {
+    if (!from.includes("@")) return toast.error("Enter a valid from address");
+    if (files.length === 0 && !body.trim()) return toast.error("Attach a flyer or add body text");
+    setSending(true);
+    try {
+      const attachments = await Promise.all(
+        files.map(async (f) => ({
+          filename: f.name,
+          contentType: f.type || "application/octet-stream",
+          content: await fileToBase64(f),
+        }))
+      );
+      const { data, error } = await supabase.functions.invoke("admin-manual-flyer-ingest", {
+        body: { from: from.trim(), subject, text: body, attachments },
+      });
+      if (error) throw error;
+      const r = data as { ok?: boolean; upstream_status?: number; upstream_response?: unknown };
+      if (!r?.ok) throw new Error(`Upstream ${r?.upstream_status}: ${JSON.stringify(r?.upstream_response)}`);
+      toast.success("Ingested. Check the inbox below in a few seconds.");
+      setFiles([]);
+      setBody("");
+      setOpen(false);
+      setTimeout(onIngested, 1500);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to ingest");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <Card className="p-4 rounded-2xl">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between text-left"
+      >
+        <div className="flex items-center gap-2">
+          <Send className="h-4 w-4 text-primary" />
+          <span className="font-medium">Manual flyer ingest</span>
+          <Badge variant="outline" className="text-xs">test</Badge>
+        </div>
+        <span className="text-xs text-muted-foreground">{open ? "Hide" : "Open"}</span>
+      </button>
+
+      {open && (
+        <div className="mt-4 space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Simulates a forwarded promo email. The pipeline matches a store from the <span className="font-mono">from</span> address (configure under Aliases) and runs flyer extraction on the attachments.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label className="text-xs">From address</Label>
+              <Input
+                value={from}
+                onChange={(e) => setFrom(e.target.value)}
+                placeholder="weeklyad@store.example"
+                className="mt-1.5 rounded-xl font-mono text-sm"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Subject</Label>
+              <Input
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                className="mt-1.5 rounded-xl"
+              />
+            </div>
+          </div>
+          <div>
+            <Label className="text-xs">Body (optional)</Label>
+            <Textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              placeholder="Anything from the email body — addresses or ZIPs help store matching."
+              className="mt-1.5 rounded-xl min-h-20"
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Flyer attachments (PDF or image, up to 5)</Label>
+            <div className="mt-1.5">
+              <label className="flex items-center justify-center gap-2 h-12 rounded-xl border border-dashed border-border cursor-pointer hover:bg-muted/40 text-sm">
+                <Paperclip className="h-4 w-4" />
+                Add files
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*,application/pdf"
+                  onChange={onPick}
+                  className="hidden"
+                />
+              </label>
+            </div>
+            {files.length > 0 && (
+              <ul className="mt-2 space-y-1">
+                {files.map((f, i) => (
+                  <li key={i} className="flex items-center gap-2 text-xs bg-muted/40 rounded-lg px-2 py-1.5">
+                    <Paperclip className="h-3 w-3 shrink-0" />
+                    <span className="truncate flex-1">{f.name}</span>
+                    <span className="text-muted-foreground shrink-0">{Math.round(f.size / 1024)} KB</span>
+                    <button onClick={() => removeFile(i)} className="text-muted-foreground hover:text-destructive">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <Button onClick={submit} disabled={sending} className="w-full rounded-xl h-11">
+            {sending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+            Send through pipeline
+          </Button>
+        </div>
+      )}
+    </Card>
+  );
+}
+
 export default AdminEmailInbox;
