@@ -22,7 +22,7 @@ import { LaunchAreaCard } from "@/components/LaunchAreaCard";
 import { UserSubmitDealDialog } from "@/components/UserSubmitDealDialog";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { distanceMiles, formatDistance } from "@/lib/distance";
-import { isInLaunchArea, LAUNCH_CITY } from "@/lib/launchArea";
+import { findLaunchCity, LAUNCH_CITIES } from "@/lib/launchArea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const PAGE_SIZE = 10;
@@ -71,7 +71,9 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
   const [sortMode, setSortMode] = useState<SortMode>("distance");
   const { cuisines, isFiltering, setEnabled } = useCuisinePrefs();
   const { location, zipCode, radiusMiles } = useUserLocation();
-  const inLaunchArea = isInLaunchArea(location);
+  const matchedCity = findLaunchCity(location);
+  const [viewCityId, setViewCityId] = useState<string>("auto");
+  const displayCity = viewCityId === "auto" ? matchedCity : (LAUNCH_CITIES.find(c => c.id === viewCityId) ?? null);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
@@ -203,12 +205,25 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
       <main className={embedded ? "" : "container max-w-4xl mx-auto px-6 py-10"}>
         <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
           <div>
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground mb-2">
-              🌱 Launching in {LAUNCH_CITY}
-            </span>
+            <div className="inline-flex items-center gap-2 mb-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground">
+                🌱 Now serving
+              </span>
+              <Select value={viewCityId} onValueChange={setViewCityId}>
+                <SelectTrigger className="h-7 rounded-full text-[11px] font-semibold uppercase tracking-wider w-auto px-3 bg-secondary/60 text-secondary-foreground border-secondary">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">All launch cities</SelectItem>
+                  {LAUNCH_CITIES.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <h1 className="text-3xl font-bold text-primary">Deals near you</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Hand-curated weekly from {LAUNCH_CITY} specialty grocers. Some verified by stores, some by the community — we never rank by paid placement.
+              Hand-curated weekly from {displayCity ? displayCity.name : "Illinois"} specialty grocers. Some verified by stores, some by the community — we never rank by paid placement.
             </p>
           </div>
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -229,7 +244,7 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
 
         <LocationHeader />
 
-        <LaunchAreaCard inArea={inLaunchArea} zipCode={zipCode} />
+        <LaunchAreaCard matchedCity={matchedCity} zipCode={zipCode} />
 
         <CuisineFilterBar
           cuisines={cuisines}
