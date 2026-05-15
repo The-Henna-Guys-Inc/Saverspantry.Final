@@ -32,6 +32,9 @@ type Result = {
   swaps: Swap[];
   price_source?: "estimate" | "kroger" | "mixed";
   price_store?: string | null;
+  region_state?: string | null;
+  region_multiplier?: number | null;
+  region_label?: string | null;
 };
 
 const EXAMPLES = ["200g chicken breast", "2 large eggs", "1 cup Greek yogurt", "150g salmon"];
@@ -263,6 +266,11 @@ export const EquivalencyEngine = () => {
                   : result.price_source === "mixed" && result.price_store
                   ? `Some live prices from ${result.price_store}, others estimated`
                   : "Estimated US grocery prices · varies by store & region"}
+                {result.region_multiplier && result.region_multiplier > 1 && (
+                  <span className="ml-1">
+                    · adjusted +{Math.round((result.region_multiplier - 1) * 100)}% for {result.region_label ?? result.region_state} grocery prices
+                  </span>
+                )}
               </div>
             </div>
             <div className="mt-3 flex justify-end">

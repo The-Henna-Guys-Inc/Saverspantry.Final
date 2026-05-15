@@ -137,6 +137,7 @@ export const MobileTabBar = () => {
                         ["/admin/deals", "Deals review"],
                         ["/admin/email-inbox", "Email inbox"],
                         ["/admin/email-aliases", "Email aliases"],
+                        ["/admin/usda-sync", "USDA sync"],
                       ].map(([to, label]) => (
                         <Button key={to} asChild variant="ghost" size="sm" className="justify-start rounded-lg h-10 text-xs" onClick={() => setMoreOpen(false)}>
                           <Link to={to}><Shield className="h-3.5 w-3.5 mr-1.5 shrink-0" />{label}</Link>

@@ -317,6 +317,59 @@ Deno.serve(async (req) => {
     parsed.price_source = priceSource;
     parsed.price_store = storeLabel;
 
+    // ----- Regional cost-of-living adjustment -----
+    // Inline so we don't need a shared module. Scale BOTH original and swap
+    // costs by the same factor so savings_percent stays identical.
+    const STATE_MULT: Record<string, { label: string; mult: number }> = {
+      HI: { label: "Hawaii", mult: 1.30 },
+      AK: { label: "Alaska", mult: 1.27 },
+      CA: { label: "California", mult: 1.13 },
+      NY: { label: "New York", mult: 1.13 },
+      MA: { label: "Massachusetts", mult: 1.10 },
+      DC: { label: "Washington, DC", mult: 1.10 },
+      WA: { label: "Washington", mult: 1.08 },
+      NJ: { label: "New Jersey", mult: 1.08 },
+      CT: { label: "Connecticut", mult: 1.08 },
+      OR: { label: "Oregon", mult: 1.06 },
+      VT: { label: "Vermont", mult: 1.05 },
+      MD: { label: "Maryland", mult: 1.05 },
+      RI: { label: "Rhode Island", mult: 1.05 },
+      NH: { label: "New Hampshire", mult: 1.04 },
+      CO: { label: "Colorado", mult: 1.04 },
+    };
+    const zip3Ranges: [number, number, string][] = [
+      [10, 27, "MA"], [28, 29, "RI"], [30, 38, "NH"], [50, 59, "VT"],
+      [60, 69, "CT"], [70, 89, "NJ"], [100, 149, "NY"], [200, 205, "DC"],
+      [206, 219, "MD"], [800, 816, "CO"], [900, 961, "CA"], [967, 968, "HI"],
+      [970, 979, "OR"], [980, 994, "WA"], [995, 999, "AK"],
+    ];
+    const stateFromZip = (z: string | null): string | null => {
+      if (!z || !/^\d{5}/.test(z)) return null;
+      const p = parseInt(z.slice(0, 3), 10);
+      for (const [lo, hi, st] of zip3Ranges) if (p >= lo && p <= hi) return st;
+      return null;
+    };
+    const regionState = stateFromZip(zip ? String(zip) : null);
+    const regionInfo = regionState ? STATE_MULT[regionState] : null;
+    if (regionInfo && regionInfo.mult > 1) {
+      const m = regionInfo.mult;
+      if (parsed.original?.estimated_cost_usd) {
+        parsed.original.estimated_cost_usd = Number((parsed.original.estimated_cost_usd * m).toFixed(2));
+      }
+      for (const swap of parsed.swaps ?? []) {
+        if (swap.estimated_cost_usd) {
+          swap.estimated_cost_usd = Number((swap.estimated_cost_usd * m).toFixed(2));
+        }
+      }
+      parsed.region_state = regionState;
+      parsed.region_label = regionInfo.label;
+      parsed.region_multiplier = m;
+    } else {
+      parsed.region_state = regionState;
+      parsed.region_label = null;
+      parsed.region_multiplier = 1;
+    }
+
     const usage = data?.usage ?? {};
     logAiUsage({
       userId, functionName: FN, model: MODEL,
