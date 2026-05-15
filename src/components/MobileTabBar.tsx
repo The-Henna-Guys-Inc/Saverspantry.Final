@@ -95,56 +95,64 @@ export const MobileTabBar = () => {
                 <span>More</span>
               </button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="rounded-t-3xl safe-bottom">
-              <SheetHeader>
+            <SheetContent
+              side="bottom"
+              className="rounded-t-3xl safe-bottom max-h-[85dvh] flex flex-col p-0"
+            >
+              <SheetHeader className="px-6 pt-6 pb-2 shrink-0">
                 <SheetTitle asChild>
-                  <div className="flex flex-col items-center text-center leading-tight">
-                    <span className="text-xl font-bold text-primary tracking-tight">
-                      Saver's <span className="text-accent">Pantry</span>
-                    </span>
-                    <span className="text-[11px] text-muted-foreground -mt-0.5">
-                      Eat well, Save more
-                    </span>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-col leading-tight text-left">
+                      <span className="text-lg font-bold text-primary tracking-tight">
+                        Saver's <span className="text-accent">Pantry</span>
+                      </span>
+                      <span className="text-[11px] text-muted-foreground">
+                        Eat well, Save more
+                      </span>
+                    </div>
+                    <NotificationBell />
                   </div>
                 </SheetTitle>
               </SheetHeader>
 
-              <div className="mt-4 flex items-center justify-end gap-3">
-                <NotificationBell />
-              </div>
+              <div className="flex-1 overflow-y-auto px-6 pb-6 pt-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button asChild variant="ghost" className="justify-start rounded-xl h-11" onClick={() => setMoreOpen(false)}>
+                    <Link to="/dashboard"><BarChart3 className="h-4 w-4 mr-2" />Stats</Link>
+                  </Button>
+                  <Button asChild variant="ghost" className="justify-start rounded-xl h-11" onClick={() => setMoreOpen(false)}>
+                    <Link to="/library"><BookmarkCheck className="h-4 w-4 mr-2" />Library</Link>
+                  </Button>
+                  <Button asChild variant="ghost" className="justify-start rounded-xl h-11 col-span-2" onClick={() => setMoreOpen(false)}>
+                    <Link to="/settings"><SettingsIcon className="h-4 w-4 mr-2" />Settings</Link>
+                  </Button>
+                </div>
 
-              <div className="mt-4 grid gap-2">
-                <Button asChild variant="ghost" className="justify-start rounded-xl h-12" onClick={() => setMoreOpen(false)}>
-                  <Link to="/dashboard"><BarChart3 className="h-4 w-4 mr-2" />Stats</Link>
-                </Button>
-                <Button asChild variant="ghost" className="justify-start rounded-xl h-12" onClick={() => setMoreOpen(false)}>
-                  <Link to="/library"><BookmarkCheck className="h-4 w-4 mr-2" />Library</Link>
-                </Button>
-                <Button asChild variant="ghost" className="justify-start rounded-xl h-12" onClick={() => setMoreOpen(false)}>
-                  <Link to="/settings"><SettingsIcon className="h-4 w-4 mr-2" />Settings</Link>
-                </Button>
                 {isAdmin && (
                   <>
-                    <div className="text-xs uppercase tracking-wider text-muted-foreground mt-2 px-2">Admin</div>
-                    {[
-                      ["/admin/analytics", "Analytics"],
-                      ["/admin/users", "Users"],
-                      ["/admin/support", "Support"],
-                      ["/admin/ai-usage", "AI usage"],
-                      ["/admin/alerts", "Alerts"],
-                      ["/admin/audit", "Audit log"],
-                      ["/admin/sessions", "Sessions"],
-                      ["/admin/deals", "Deals review"],
-                      ["/admin/email-inbox", "Email inbox"],
-                      ["/admin/email-aliases", "Email aliases"],
-                    ].map(([to, label]) => (
-                      <Button key={to} asChild variant="ghost" className="justify-start rounded-xl h-12" onClick={() => setMoreOpen(false)}>
-                        <Link to={to}><Shield className="h-4 w-4 mr-2" />{label}</Link>
-                      </Button>
-                    ))}
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground mt-4 mb-2 px-1">Admin</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        ["/admin/analytics", "Analytics"],
+                        ["/admin/users", "Users"],
+                        ["/admin/support", "Support"],
+                        ["/admin/ai-usage", "AI usage"],
+                        ["/admin/alerts", "Alerts"],
+                        ["/admin/audit", "Audit log"],
+                        ["/admin/sessions", "Sessions"],
+                        ["/admin/deals", "Deals review"],
+                        ["/admin/email-inbox", "Email inbox"],
+                        ["/admin/email-aliases", "Email aliases"],
+                      ].map(([to, label]) => (
+                        <Button key={to} asChild variant="ghost" size="sm" className="justify-start rounded-lg h-10 text-xs" onClick={() => setMoreOpen(false)}>
+                          <Link to={to}><Shield className="h-3.5 w-3.5 mr-1.5 shrink-0" />{label}</Link>
+                        </Button>
+                      ))}
+                    </div>
                   </>
                 )}
-                <Button onClick={signOut} variant="ghost" className="justify-start rounded-xl h-12 text-destructive">
+
+                <Button onClick={signOut} variant="ghost" className="w-full justify-start rounded-xl h-11 text-destructive mt-4">
                   <LogOut className="h-4 w-4 mr-2" />Sign out
                 </Button>
               </div>
