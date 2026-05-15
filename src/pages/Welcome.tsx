@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { BrandMark } from "@/components/BrandMark";
-import { WaitlistDialog } from "@/components/WaitlistDialog";
+
 
 const CREAM = "#FAF5EC";
 const GREEN = "#1F5132";
