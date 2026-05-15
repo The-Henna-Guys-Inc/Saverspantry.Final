@@ -77,11 +77,11 @@ const Welcome = () => {
             className="w-full rounded-2xl bg-white hover:bg-white/90"
             style={{ height: 56, fontSize: 16, fontWeight: 700, color: GREEN, borderColor: GREEN, borderWidth: 2 }}
           >
-            <Link to="/auth">Create free account</Link>
+            <Link to="/auth?mode=signup">Create free account</Link>
           </Button>
           <p className="text-center pt-1" style={{ color: MUTED, fontSize: 14 }}>
             Already have an account?{" "}
-            <Link to="/auth?mode=signin" className="underline hover:opacity-80" style={{ color: GREEN, fontWeight: 600 }}>
+            <Link to="/auth" className="underline hover:opacity-80" style={{ color: GREEN, fontWeight: 600 }}>
               Sign in
             </Link>
           </p>
