@@ -26,7 +26,7 @@ const SIGNUP_BENEFITS = [
 
 const Auth = () => {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"choose" | "email-signup" | "email-login">("choose");
+  const [mode, setMode] = useState<"choose" | "signin" | "email-signup" | "email-login">("choose");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
