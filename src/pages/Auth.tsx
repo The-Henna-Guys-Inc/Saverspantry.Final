@@ -26,9 +26,8 @@ const SIGNUP_BENEFITS = [
 
 const Auth = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const initialMode = searchParams.get("mode") === "signin" ? "signin" : "choose";
-  const [mode, setMode] = useState<"choose" | "signin" | "email-signup" | "email-login">(initialMode);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [mode, setMode] = useState<"choose" | "signin" | "email-signup" | "email-login">("choose");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -61,6 +60,14 @@ const Auth = () => {
     toast.success("Welcome back!");
     navigate("/");
   };
+
+  useEffect(() => {
+    const nextMode = searchParams.get("mode") === "signin" ? "signin" : "choose";
+    setMode((currentMode) => {
+      if (currentMode === "email-signup" || currentMode === "email-login") return currentMode;
+      return currentMode === nextMode ? currentMode : nextMode;
+    });
+  }, [searchParams]);
 
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
@@ -194,6 +201,11 @@ const Auth = () => {
     </Button>
   );
 
+  const switchTopLevelMode = (nextMode: "choose" | "signin") => {
+    setMode(nextMode);
+    setSearchParams(nextMode === "signin" ? { mode: "signin" } : {}, { replace: true });
+  };
+
   const cardStyle: React.CSSProperties = {
     background: "#FFFFFF",
     borderRadius: 20,
@@ -249,7 +261,7 @@ const Auth = () => {
               <div className="mt-5 flex items-center justify-between text-sm">
                 <button
                   type="button"
-                  onClick={() => setMode("signin")}
+                  onClick={() => switchTopLevelMode("signin")}
                   style={{ color: MUTED, minHeight: 44 }}
                   className="hover:opacity-80 transition-smooth"
                 >
@@ -281,7 +293,7 @@ const Auth = () => {
                 <p style={{ color: MUTED, fontSize: 13 }}>New to Saver's Pantry?</p>
                 <button
                   type="button"
-                  onClick={() => setMode("choose")}
+                  onClick={() => switchTopLevelMode("choose")}
                   className="mt-1 hover:opacity-80 transition-smooth"
                   style={{ color: GREEN, fontSize: 14, fontWeight: 600, minHeight: 44 }}
                 >
