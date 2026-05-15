@@ -59,3 +59,6 @@ verify_jwt = false
 
 [functions.dev-test-promo-ingest]
 verify_jwt = false
+
+[functions.admin-manual-flyer-ingest]
+verify_jwt = false
