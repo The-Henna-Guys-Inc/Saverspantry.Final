@@ -56,29 +56,74 @@ Deno.serve(async (req) => {
 
   let workingBatches = batches ?? [];
 
-  // Fallback: if no batches exist (e.g. email was needs_assignment originally),
-  // create them from the raw attachments in the promo-emails bucket.
+  // Fallback: if no batches exist, rebuild from storage. Try the attachments
+  // folder first, then fall back to the raw.json payload (which holds the
+  // original base64 attachments — useful when the original ingestion crashed
+  // before persisting individual attachment files).
   if (workingBatches.length === 0) {
-    const { data: files, error: lErr } = await admin.storage
+    type RawAtt = { name: string; bytes: Uint8Array; contentType: string };
+    const collected: RawAtt[] = [];
+
+    const { data: files } = await admin.storage
       .from("promo-emails")
       .list(`${ingestionId}/attachments`, { limit: 50 });
-    if (lErr) return json({ error: `list attachments failed: ${lErr.message}` }, 500);
-    if (!files || files.length === 0) {
-      return json({ error: "no attachments stored for this email" }, 400);
+
+    if (files && files.length > 0) {
+      for (const f of files) {
+        const ct = (f.metadata as any)?.mimetype ?? "application/octet-stream";
+        if (!/^(application\/pdf|image\/)/.test(ct)) continue;
+        const { data: dl } = await admin.storage
+          .from("promo-emails")
+          .download(`${ingestionId}/attachments/${f.name}`);
+        if (!dl) continue;
+        collected.push({ name: f.name, bytes: new Uint8Array(await dl.arrayBuffer()), contentType: ct });
+      }
     }
 
-    for (const f of files) {
-      const srcPath = `${ingestionId}/attachments/${f.name}`;
-      const flyerPath = `email/${ingestionId}/${f.name}`;
-      const ct = (f.metadata as any)?.mimetype ?? "application/octet-stream";
-      if (!/^(application\/pdf|image\/)/.test(ct)) continue;
+    if (collected.length === 0) {
+      // Try raw.json fallback
+      const { data: rawBlob } = await admin.storage
+        .from("promo-emails")
+        .download(`${ingestionId}/raw.json`);
+      if (!rawBlob) {
+        return json({ error: "no attachments stored for this email (and no raw.json found)" }, 400);
+      }
+      try {
+        const rawText = await rawBlob.text();
+        const payload = JSON.parse(rawText);
+        const data = payload?.data ?? payload;
+        const atts: any[] = Array.isArray(data?.attachments) ? data.attachments : [];
+        for (let i = 0; i < atts.length; i++) {
+          const a = atts[i];
+          const ct = String(a.contentType ?? a.content_type ?? "application/octet-stream");
+          if (!/^(application\/pdf|image\/)/.test(ct)) continue;
+          const raw = a.content ?? a.data ?? a.body;
+          if (typeof raw !== "string") continue;
+          let bytes: Uint8Array;
+          try {
+            const bin = atob(raw.replace(/\s+/g, ""));
+            bytes = new Uint8Array(bin.length);
+            for (let j = 0; j < bin.length; j++) bytes[j] = bin.charCodeAt(j);
+          } catch { continue; }
+          if (bytes.byteLength === 0) continue;
+          const fname = String(a.filename ?? a.name ?? `attachment-${i}`)
+            .replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 80);
+          collected.push({ name: `${i}-${fname}`, bytes, contentType: ct });
+        }
+      } catch (e) {
+        return json({ error: `could not parse raw.json: ${e instanceof Error ? e.message : String(e)}` }, 500);
+      }
+    }
 
-      // Copy from promo-emails -> flyer-uploads (where extract-flyer-deals reads)
-      const { data: dl, error: dlErr } = await admin.storage.from("promo-emails").download(srcPath);
-      if (dlErr || !dl) { console.error("download failed", dlErr); continue; }
+    if (collected.length === 0) {
+      return json({ error: "no usable attachments (PDF/image) found for this email" }, 400);
+    }
+
+    for (const att of collected) {
+      const flyerPath = `email/${ingestionId}/${att.name}`;
       const { error: upErr } = await admin.storage
         .from("flyer-uploads")
-        .upload(flyerPath, dl, { upsert: true, contentType: ct });
+        .upload(flyerPath, new Blob([att.bytes], { type: att.contentType }), { upsert: true, contentType: att.contentType });
       if (upErr) { console.error("upload failed", upErr); continue; }
 
       const { data: batch, error: insErr } = await admin
@@ -86,9 +131,9 @@ Deno.serve(async (req) => {
         .insert({
           store_id: ingestion.matched_store_id,
           admin_user_id: null,
-          original_filename: f.name.slice(0, 200),
+          original_filename: att.name.slice(0, 200),
           stored_file_url: flyerPath,
-          file_type: ct,
+          file_type: att.contentType,
           page_count: 1,
           extraction_status: "pending",
           source_email_id: ingestionId,
@@ -100,7 +145,7 @@ Deno.serve(async (req) => {
     }
 
     if (workingBatches.length === 0) {
-      return json({ error: "no usable attachments (PDF/image) found in storage" }, 400);
+      return json({ error: "found attachments but failed to stage them for extraction" }, 500);
     }
   }
 
