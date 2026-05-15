@@ -16,6 +16,7 @@ import { CuisinePrefHint } from "./CuisinePrefHint";
 
 type Swap = {
   title: string;
+  creative_title?: string;
   items: { food: string; portion: string }[];
   protein_g: number;
   calories_kcal: number;
