@@ -145,81 +145,146 @@ const Auth = () => {
     }
   };
 
+  const CREAM = "#FAF5EC";
+  const GREEN = "#1F5132";
+  const ESPRESSO = "#412402";
+  const MUTED = "#5F5E5A";
+  const CARD_BORDER = "rgba(31,81,50,0.12)";
+
+  const AppleBtn = (
+    <Button
+      type="button"
+      className="w-full rounded-xl bg-[#0A0A0A] text-white hover:bg-[#0A0A0A]/90"
+      style={{ height: 48, fontSize: 15, fontWeight: 600, paddingTop: 14, paddingBottom: 14 }}
+      onClick={() => handleOAuth("apple")}
+      disabled={loading}
+    >
+      <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.94-3.08.5-1.09-.45-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.5C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09M12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25"/></svg>
+      Continue with Apple
+    </Button>
+  );
+
+  const GoogleBtn = (
+    <Button
+      type="button"
+      variant="outline"
+      className="w-full rounded-xl bg-white hover:bg-white/90"
+      style={{ height: 48, fontSize: 15, fontWeight: 600, color: GREEN, borderColor: GREEN, borderWidth: 1, paddingTop: 14, paddingBottom: 14 }}
+      onClick={() => handleOAuth("google")}
+      disabled={loading}
+    >
+      <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continue with Google
+    </Button>
+  );
+
+  const EmailBtn = (target: "email-signup" | "email-login") => (
+    <Button
+      type="button"
+      variant="outline"
+      className="w-full rounded-xl bg-white hover:bg-white/90"
+      style={{ height: 48, fontSize: 15, fontWeight: 600, color: GREEN, borderColor: GREEN, borderWidth: 1, paddingTop: 14, paddingBottom: 14 }}
+      onClick={() => setMode(target)}
+      disabled={loading}
+    >
+      <Mail className="h-4 w-4 mr-2" />
+      Continue with email
+    </Button>
+  );
+
+  const cardStyle: React.CSSProperties = {
+    background: "#FFFFFF",
+    borderRadius: 20,
+    padding: 28,
+    border: `1px solid ${CARD_BORDER}`,
+    boxShadow: "0 4px 20px -8px rgba(31,81,50,0.18)",
+  };
+
+  const isSignin = mode === "signin";
+
   return (
-    <main className="min-h-[100dvh] bg-gradient-warm flex items-center justify-center p-6">
+    <main className="min-h-[100dvh] flex items-center justify-center p-6" style={{ background: CREAM }}>
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-6">
-          <BrandMark to="/welcome" size="md" showTagline />
+          <BrandMark to="/welcome" size={isSignin ? "sm" : "md"} showTagline />
         </div>
 
-        <Card className="p-7 rounded-3xl shadow-glow border-border/50">
+        <div style={cardStyle}>
           {mode === "choose" && (
             <>
-              <h1 className="text-2xl font-bold text-primary text-center">Create your free account</h1>
-              <p className="text-sm text-muted-foreground text-center mt-1">It takes about 10 seconds.</p>
+              <h1 className="text-center" style={{ color: GREEN, fontWeight: 700, fontSize: 22 }}>
+                Create your free account
+              </h1>
+              <p className="text-center mt-1" style={{ color: MUTED, fontSize: 14 }}>
+                It takes about 10 seconds — your savings sync across devices.
+              </p>
 
               <ul className="mt-5 space-y-3">
-                {BENEFITS.map((b) => {
+                {SIGNUP_BENEFITS.map((b) => {
                   const Icon = b.icon;
                   return (
                     <li key={b.text} className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-accent/20 flex items-center justify-center shrink-0">
-                        <Icon className="h-4 w-4 text-primary" />
+                      <div
+                        className="rounded-full flex items-center justify-center shrink-0"
+                        style={{ width: 44, height: 44, background: "rgba(182,90,56,0.12)" }}
+                      >
+                        <Icon className="h-5 w-5" style={{ color: "#B65A38" }} />
                       </div>
-                      <span className="text-sm text-foreground/85 pt-1">{b.text}</span>
+                      <span className="pt-2.5" style={{ color: ESPRESSO, fontSize: 14 }}>
+                        {b.text}
+                      </span>
                     </li>
                   );
                 })}
               </ul>
 
               <div className="mt-6 space-y-2.5">
-                <Button
-                  type="button"
-                  className="w-full h-12 rounded-2xl bg-foreground text-background hover:bg-foreground/90"
-                  onClick={() => handleOAuth("apple")}
-                  disabled={loading}
-                >
-                  <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.94-3.08.5-1.09-.45-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.5C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09M12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25"/></svg>
-                  Continue with Apple
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full h-12 rounded-2xl"
-                  onClick={() => handleOAuth("google")}
-                  disabled={loading}
-                >
-                  <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-                  Continue with Google
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full h-12 rounded-2xl"
-                  onClick={() => setMode("email-signup")}
-                  disabled={loading}
-                >
-                  <Mail className="h-4 w-4 mr-2" />
-                  Continue with email
-                </Button>
+                {AppleBtn}
+                {GoogleBtn}
+                {EmailBtn("email-signup")}
               </div>
 
               <div className="mt-5 flex items-center justify-between text-sm">
                 <button
                   type="button"
-                  onClick={() => setMode("email-login")}
-                  className="text-muted-foreground hover:text-foreground transition-smooth"
+                  onClick={() => setMode("signin")}
+                  style={{ color: MUTED, minHeight: 44 }}
+                  className="hover:opacity-80 transition-smooth"
                 >
                   I have an account
                 </button>
-                <Link
-                  to="/demo"
-                  className="text-muted-foreground hover:text-foreground transition-smooth"
-                >
+                <Link to="/demo" style={{ color: MUTED, minHeight: 44 }} className="flex items-center hover:opacity-80 transition-smooth">
                   Maybe later →
                 </Link>
+              </div>
+            </>
+          )}
+
+          {mode === "signin" && (
+            <>
+              <h1 className="text-center" style={{ color: GREEN, fontWeight: 700, fontSize: 22 }}>
+                Welcome back
+              </h1>
+              <p className="text-center mt-1" style={{ color: MUTED, fontSize: 14 }}>
+                Sign in to your savings
+              </p>
+
+              <div className="mt-6 space-y-2.5">
+                {AppleBtn}
+                {GoogleBtn}
+                {EmailBtn("email-login")}
+              </div>
+
+              <div className="mt-6 pt-5 text-center" style={{ borderTop: `1px solid ${CARD_BORDER}` }}>
+                <p style={{ color: MUTED, fontSize: 13 }}>New to Saver's Pantry?</p>
+                <button
+                  type="button"
+                  onClick={() => setMode("choose")}
+                  className="mt-1 hover:opacity-80 transition-smooth"
+                  style={{ color: GREEN, fontSize: 14, fontWeight: 600, minHeight: 44 }}
+                >
+                  Create a free account →
+                </button>
               </div>
             </>
           )}
@@ -229,19 +294,25 @@ const Auth = () => {
               <button
                 type="button"
                 onClick={() => setMode("choose")}
-                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-3"
+                className="flex items-center gap-1 mb-3 hover:opacity-80"
+                style={{ color: MUTED, fontSize: 14, minHeight: 44 }}
               >
                 <ArrowLeft className="h-3.5 w-3.5" /> Back
               </button>
-              <h2 className="text-xl font-bold text-primary">Create account with email</h2>
+              <h2 style={{ color: GREEN, fontWeight: 700, fontSize: 20 }}>Create account with email</h2>
               <div className="space-y-3 mt-4">
-                <Input placeholder="Display name (optional)" value={name} onChange={(e) => setName(e.target.value)} className="h-12 rounded-2xl" />
-                <Input placeholder="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 rounded-2xl" />
-                <Input placeholder="Password (min 8 chars)" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 rounded-2xl" />
-                <Button onClick={handleSignup} disabled={loading} variant="hero" className="w-full h-12 rounded-2xl">
+                <Input placeholder="Display name (optional)" value={name} onChange={(e) => setName(e.target.value)} className="h-12 rounded-xl" />
+                <Input placeholder="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 rounded-xl" />
+                <Input placeholder="Password (min 8 chars)" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 rounded-xl" />
+                <Button
+                  onClick={handleSignup}
+                  disabled={loading}
+                  className="w-full rounded-xl text-white hover:opacity-90"
+                  style={{ height: 48, background: GREEN, fontSize: 15, fontWeight: 600 }}
+                >
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create account"}
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">
+                <p className="text-center" style={{ color: MUTED, fontSize: 12 }}>
                   We'll email you a confirmation link.
                 </p>
               </div>
@@ -252,22 +323,36 @@ const Auth = () => {
             <>
               <button
                 type="button"
-                onClick={() => setMode("choose")}
-                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-3"
+                onClick={() => setMode("signin")}
+                className="flex items-center gap-1 mb-3 hover:opacity-80"
+                style={{ color: MUTED, fontSize: 14, minHeight: 44 }}
               >
                 <ArrowLeft className="h-3.5 w-3.5" /> Back
               </button>
-              <h2 className="text-xl font-bold text-primary">Log in</h2>
+              <h2 style={{ color: GREEN, fontWeight: 700, fontSize: 20 }}>Sign in with email</h2>
               <div className="space-y-3 mt-4">
-                <Input placeholder="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 rounded-2xl" />
-                <Input placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 rounded-2xl" />
-                <Button onClick={handleLogin} disabled={loading} variant="hero" className="w-full h-12 rounded-2xl">
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Log in"}
+                <Input placeholder="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 rounded-xl" />
+                <Input placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 rounded-xl" />
+                <Button
+                  onClick={handleLogin}
+                  disabled={loading}
+                  className="w-full rounded-xl text-white hover:opacity-90"
+                  style={{ height: 48, background: GREEN, fontSize: 15, fontWeight: 600 }}
+                >
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign in"}
                 </Button>
               </div>
             </>
           )}
-        </Card>
+        </div>
+
+        {isSignin && (
+          <div className="mt-5 text-center">
+            <Link to="/welcome" className="hover:opacity-80 inline-flex items-center" style={{ color: MUTED, fontSize: 13, minHeight: 44 }}>
+              ← Back to home
+            </Link>
+          </div>
+        )}
       </div>
     </main>
   );
