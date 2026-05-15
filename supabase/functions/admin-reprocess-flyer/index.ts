@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
     .update({ status: "processed" })
     .eq("id", ingestionId);
 
-  return json({ ok: true, batches: batches.length, triggered });
+  return json({ ok: true, batches: workingBatches.length, triggered });
 });
 
 async function safeJson(req: Request): Promise<any> {
