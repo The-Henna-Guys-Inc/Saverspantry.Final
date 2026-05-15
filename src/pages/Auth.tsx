@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { SignInWithApple, type SignInWithAppleOptions } from "@capacitor-community/apple-sign-in";
 import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
@@ -26,7 +26,9 @@ const SIGNUP_BENEFITS = [
 
 const Auth = () => {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"choose" | "signin" | "email-signup" | "email-login">("choose");
+  const [searchParams] = useSearchParams();
+  const initialMode = searchParams.get("mode") === "signin" ? "signin" : "choose";
+  const [mode, setMode] = useState<"choose" | "signin" | "email-signup" | "email-login">(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");

@@ -81,7 +81,7 @@ const Welcome = () => {
           </Button>
           <p className="text-center pt-1" style={{ color: MUTED, fontSize: 14 }}>
             Already have an account?{" "}
-            <Link to="/auth" className="underline hover:opacity-80" style={{ color: GREEN, fontWeight: 600 }}>
+            <Link to="/auth?mode=signin" className="underline hover:opacity-80" style={{ color: GREEN, fontWeight: 600 }}>
               Sign in
             </Link>
           </p>
