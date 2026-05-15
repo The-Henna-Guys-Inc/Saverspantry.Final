@@ -308,6 +308,42 @@ export type Database = {
         }
         Relationships: []
       }
+      city_waitlist: {
+        Row: {
+          city: string
+          created_at: string
+          email: string
+          id: string
+          notes: string | null
+          source: string
+          state: string
+          user_id: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          email: string
+          id?: string
+          notes?: string | null
+          source?: string
+          state: string
+          user_id?: string | null
+          zip_code?: string | null
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          email?: string
+          id?: string
+          notes?: string | null
+          source?: string
+          state?: string
+          user_id?: string | null
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
       data_export_requests: {
         Row: {
           completed_at: string | null
