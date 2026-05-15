@@ -37,6 +37,7 @@ const TOOL = {
             type: "object",
             properties: {
               title: { type: "string", description: "Short swap title, e.g. '1 cup lentils + 100g paneer'" },
+              creative_title: { type: "string", description: "A catchy, creative, unique 2–4 word dish name for this swap. Evocative and appetizing — NEVER just restate the ingredients (e.g., good: 'Hearth & Harvest Bowl', 'Lean Catch Plate', 'Omega Boost Stack'; bad: '1 lb tilapia + chia seeds'). No emojis. Title Case. Must be unique across the 3 swaps in this response." },
               items: {
                 type: "array",
                 items: {
@@ -69,7 +70,7 @@ const TOOL = {
                 description: "Short note when there is a glycemic tradeoff to flag (e.g. 'Cheaper, but similar glycemic impact'). Empty string if not relevant.",
               },
             },
-            required: ["title", "items", "protein_g", "calories_kcal", "estimated_cost_usd", "savings_percent", "notes", "nutrient_coverage", "glycemic_impact", "glycemic_tradeoff"],
+            required: ["title", "creative_title", "items", "protein_g", "calories_kcal", "estimated_cost_usd", "savings_percent", "notes", "nutrient_coverage", "glycemic_impact", "glycemic_tradeoff"],
             additionalProperties: false,
           },
         },
@@ -134,7 +135,7 @@ Deno.serve(async (req) => {
     if (!food) return new Response(JSON.stringify({ error: "Missing 'food'" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const weekKey = isoWeekKey();
-    const cacheKey = await stableHash({ food: String(food).toLowerCase().trim(), dietary_prefs, profile, cuisine, blood_sugar_friendly: !!blood_sugar_friendly, zip: zip ?? null, week: weekKey });
+    const cacheKey = await stableHash({ v: 2, food: String(food).toLowerCase().trim(), dietary_prefs, profile, cuisine, blood_sugar_friendly: !!blood_sugar_friendly, zip: zip ?? null, week: weekKey });
     const cached = await cacheGet(FN, cacheKey);
     if (cached) {
       logAiUsage({ userId, functionName: FN, model: MODEL, cached: true, latencyMs: Date.now() - startedAt });
@@ -222,6 +223,7 @@ Deno.serve(async (req) => {
             "- Omega-3: add a tablespoon of walnuts, flax, chia, or hemp seeds.",
             "- Calcium (if replacing dairy too): tahini, fortified plant milk, or leafy greens.",
             "Use cheap pantry add-ons (a tbsp of seeds, a handful of nuts, a fortified item) so savings are preserved. In `nutrient_coverage`, list the specific nutrients the add-ons restore. In `notes`, briefly explain WHY the add-on is there (e.g., 'walnuts add omega-3 that lentils lack').",
+            "CREATIVE TITLES: For each swap, invent a catchy, appetizing 2–4 word dish name in Title Case for `creative_title`. Make it evocative (e.g., 'Hearth & Harvest Bowl', 'Lean Catch Plate', 'Golden Lentil Skillet', 'Omega Boost Stack'). NEVER restate the ingredient list. All 3 swaps must have distinct creative titles. No emojis. The `title` field stays as the literal ingredient summary.",
             "Be practical and money-conscious, never moralizing. Never make medical claims. Always call return_swaps.",
           ].filter(Boolean).join("\n\n") },
           { role: "user", content: `Find swaps for: ${food}\nDietary restrictions: ${prefs || "none"}${profileBlock}` },

@@ -16,6 +16,7 @@ import { CuisinePrefHint } from "./CuisinePrefHint";
 
 type Swap = {
   title: string;
+  creative_title?: string;
   items: { food: string; portion: string }[];
   protein_g: number;
   calories_kcal: number;
@@ -275,7 +276,7 @@ export const EquivalencyEngine = () => {
           {result.swaps.map((s, i) => (
             <Card key={i} className="p-5 rounded-3xl shadow-soft hover:shadow-glow transition-smooth border-border/50">
               <div className="flex items-start justify-between gap-3 mb-3">
-                <h4 className="text-base font-semibold text-primary">{s.title}</h4>
+                <h4 className="text-base font-semibold text-primary">{s.creative_title?.trim() || s.title}</h4>
                 {s.savings_percent > 0 && (
                   <div className="flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-accent/20 text-foreground shrink-0">
                     <TrendingDown className="h-3 w-3" />
