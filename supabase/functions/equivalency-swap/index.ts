@@ -135,7 +135,7 @@ Deno.serve(async (req) => {
     if (!food) return new Response(JSON.stringify({ error: "Missing 'food'" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const weekKey = isoWeekKey();
-    const cacheKey = await stableHash({ food: String(food).toLowerCase().trim(), dietary_prefs, profile, cuisine, blood_sugar_friendly: !!blood_sugar_friendly, zip: zip ?? null, week: weekKey });
+    const cacheKey = await stableHash({ v: 2, food: String(food).toLowerCase().trim(), dietary_prefs, profile, cuisine, blood_sugar_friendly: !!blood_sugar_friendly, zip: zip ?? null, week: weekKey });
     const cached = await cacheGet(FN, cacheKey);
     if (cached) {
       logAiUsage({ userId, functionName: FN, model: MODEL, cached: true, latencyMs: Date.now() - startedAt });
