@@ -312,7 +312,9 @@ const AdminEmailInbox = () => {
                     )}
                   </div>
 
-                  <Button onClick={reprocess} variant="outline" size="sm" className="w-full rounded-xl">
+                  <Button onClick={reprocess} disabled={reprocessing} variant="outline" size="sm" className="w-full rounded-xl">
+                    {reprocessing && <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />}
+                    Reprocess
                     Reprocess
                   </Button>
                 </div>
