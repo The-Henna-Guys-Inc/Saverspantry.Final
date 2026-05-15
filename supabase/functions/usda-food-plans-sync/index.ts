@@ -30,11 +30,35 @@ function candidateUrls(date: Date): string[] {
   ];
 }
 
+const UA_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+  'Accept': 'application/pdf,*/*',
+};
+
+// Infer report month from filename like "...march2026.pdf" / "...mar2026.pdf"
+function inferMonthFromUrl(url: string): Date {
+  const months = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+  const abbr = ['jan','feb','mar','apr','may','jun','jul','aug','sep','sept','oct','nov','dec'];
+  const lower = url.toLowerCase();
+  const yMatch = lower.match(/(20\d{2})/);
+  const year = yMatch ? parseInt(yMatch[1]) : new Date().getFullYear();
+  for (let i = 0; i < months.length; i++) {
+    if (lower.includes(months[i])) return new Date(year, i, 1);
+  }
+  for (let i = 0; i < abbr.length; i++) {
+    if (lower.includes(abbr[i])) {
+      const idx = abbr[i] === 'sept' ? 8 : (abbr[i] === 'sep' ? 8 : i);
+      return new Date(year, Math.min(idx, 11), 1);
+    }
+  }
+  return new Date();
+}
+
 async function findLatestPdf(override?: string): Promise<{ url: string; bytes: Uint8Array; reportMonth: Date } | null> {
   if (override) {
-    const r = await fetch(override);
+    const r = await fetch(override, { headers: UA_HEADERS });
     if (!r.ok) return null;
-    return { url: override, bytes: new Uint8Array(await r.arrayBuffer()), reportMonth: new Date() };
+    return { url: override, bytes: new Uint8Array(await r.arrayBuffer()), reportMonth: inferMonthFromUrl(override) };
   }
   // Try current month, walk back up to 3 months
   const now = new Date();
@@ -42,7 +66,7 @@ async function findLatestPdf(override?: string): Promise<{ url: string; bytes: U
     const d = new Date(now.getFullYear(), now.getMonth() - back, 1);
     for (const url of candidateUrls(d)) {
       try {
-        const r = await fetch(url);
+        const r = await fetch(url, { headers: UA_HEADERS });
         if (r.ok && r.headers.get('content-type')?.includes('pdf')) {
           return { url, bytes: new Uint8Array(await r.arrayBuffer()), reportMonth: d };
         }
