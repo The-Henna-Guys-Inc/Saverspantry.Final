@@ -18,10 +18,10 @@ const schema = z.object({
   password: z.string().min(8, "Min 8 characters").max(72),
 });
 
-const BENEFITS = [
-  { icon: ArrowLeftRight, text: "Save your swaps and revisit them anytime" },
-  { icon: PiggyBank, text: "Track your monthly grocery savings automatically" },
-  { icon: ChefHat, text: "Unlock meal planning, pantry tracking & recipe AI" },
+const SIGNUP_BENEFITS = [
+  { icon: Bookmark, text: "Your swaps and recipes saved automatically" },
+  { icon: PiggyBank, text: "Monthly savings tracked in real time" },
+  { icon: Smartphone, text: "Access everything across phone and web" },
 ];
 
 const Auth = () => {
