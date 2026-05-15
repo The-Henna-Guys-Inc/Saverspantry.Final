@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { BrandMark } from "@/components/BrandMark";
 import { Settings as SettingsIcon, LogOut, BookmarkCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -30,16 +31,7 @@ export const Header = () => {
     <header className="sticky top-0 z-30 backdrop-blur-md bg-background/70 border-b border-border/40 safe-top">
       <div className="container max-w-6xl mx-auto px-4 sm:px-6 h-14 grid grid-cols-[1fr_auto_1fr] items-center">
         <div />
-        <Link to="/" className="flex items-center justify-center min-h-[44px]" aria-label="Saver's Pantry home">
-          <div className="flex flex-col leading-tight items-center text-center">
-            <span className="text-xl sm:text-2xl font-bold text-primary tracking-tight">
-              Saver's <span className="text-accent">Pantry</span>
-            </span>
-            <span className="text-[10px] sm:text-xs text-muted-foreground -mt-0.5">
-              Eat well, Save more
-            </span>
-          </div>
-        </Link>
+        <BrandMark to="/" size="md" showTagline />
 
         <div className="flex justify-end">
         {loading ? null : !user ? (
