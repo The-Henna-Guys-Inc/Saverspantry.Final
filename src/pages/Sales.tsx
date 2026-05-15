@@ -71,7 +71,9 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
   const [sortMode, setSortMode] = useState<SortMode>("distance");
   const { cuisines, isFiltering, setEnabled } = useCuisinePrefs();
   const { location, zipCode, radiusMiles } = useUserLocation();
-  const inLaunchArea = isInLaunchArea(location);
+  const matchedCity = findLaunchCity(location);
+  const [viewCityId, setViewCityId] = useState<string>("auto");
+  const displayCity = viewCityId === "auto" ? matchedCity : (LAUNCH_CITIES.find(c => c.id === viewCityId) ?? null);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
