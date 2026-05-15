@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
 
 
   let triggered = 0;
-  for (const b of batches) {
+  for (const b of workingBatches) {
     // Sync the batch to the currently-matched store (in case it was reassigned)
     // and reset status so extract-flyer-deals will pick it up cleanly.
     await admin
