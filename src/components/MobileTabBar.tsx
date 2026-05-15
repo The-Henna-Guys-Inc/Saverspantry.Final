@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/NotificationBell";
+import { BrandMark } from "@/components/BrandMark";
 
 import { toast } from "sonner";
 
@@ -102,14 +103,7 @@ export const MobileTabBar = () => {
               <SheetHeader className="px-6 pt-6 pb-2 shrink-0">
                 <SheetTitle asChild>
                   <div className="flex items-center justify-between gap-3">
-                    <div className="flex flex-col leading-tight text-left">
-                      <span className="text-lg font-bold text-primary tracking-tight">
-                        Saver's <span className="text-accent">Pantry</span>
-                      </span>
-                      <span className="text-[11px] text-muted-foreground">
-                        Eat well, Save more
-                      </span>
-                    </div>
+                    <BrandMark to="" size="lg" showTagline />
                     <NotificationBell />
                   </div>
                 </SheetTitle>
