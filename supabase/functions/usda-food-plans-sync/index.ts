@@ -65,6 +65,7 @@ function inferMonthFromUrl(url: string): Date {
 async function findLatestPdf(override?: string): Promise<{ url: string; bytes: Uint8Array; reportMonth: Date } | null> {
   if (override) {
     const r = await fetch(override, { headers: UA_HEADERS });
+    console.log(`[usda-sync] override fetch ${override} -> ${r.status} ${r.headers.get('content-type')}`);
     if (!r.ok) return null;
     return { url: override, bytes: new Uint8Array(await r.arrayBuffer()), reportMonth: inferMonthFromUrl(override) };
   }
