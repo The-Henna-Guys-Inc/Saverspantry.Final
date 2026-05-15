@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, ArrowLeftRight, PiggyBank, ChefHat, Mail, ArrowLeft } from "lucide-react";
+import { Loader2, Bookmark, PiggyBank, Smartphone, Mail, ArrowLeft } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { z } from "zod";
 
