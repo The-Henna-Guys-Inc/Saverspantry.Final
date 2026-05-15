@@ -182,6 +182,8 @@ const AdminEmailInbox = () => {
           </div>
         </Card>
 
+        <ManualIngestCard onIngested={load} />
+
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>
         ) : items.length === 0 ? (
