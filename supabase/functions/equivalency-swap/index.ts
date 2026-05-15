@@ -37,6 +37,7 @@ const TOOL = {
             type: "object",
             properties: {
               title: { type: "string", description: "Short swap title, e.g. '1 cup lentils + 100g paneer'" },
+              creative_title: { type: "string", description: "A catchy, creative, unique 2–4 word dish name for this swap. Evocative and appetizing — NEVER just restate the ingredients (e.g., good: 'Hearth & Harvest Bowl', 'Lean Catch Plate', 'Omega Boost Stack'; bad: '1 lb tilapia + chia seeds'). No emojis. Title Case. Must be unique across the 3 swaps in this response." },
               items: {
                 type: "array",
                 items: {
