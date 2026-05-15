@@ -58,14 +58,28 @@ const AdminEmailInbox = () => {
   const [reassigning, setReassigning] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (authLoading) return;
+    if (!user) {
+      setIsAdmin(false);
+      setChecking(false);
+      return;
+    }
+
+    let cancelled = false;
+
     (async () => {
       const { data } = await supabase.from("user_roles").select("role")
         .eq("user_id", user.id).eq("role", "admin").maybeSingle();
+
+      if (cancelled) return;
       setIsAdmin(!!data);
       setChecking(false);
     })();
-  }, [user]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, authLoading]);
 
   const load = async () => {
     setLoading(true);
