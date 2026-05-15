@@ -1538,6 +1538,81 @@ export type Database = {
         }
         Relationships: []
       }
+      usda_food_plans: {
+        Row: {
+          age_max: number | null
+          age_min: number | null
+          created_at: string
+          household_type: string
+          id: string
+          monthly_cost_usd: number
+          plan: string
+          report_month: string
+          sex: string | null
+          source_url: string | null
+          weekly_cost_usd: number | null
+        }
+        Insert: {
+          age_max?: number | null
+          age_min?: number | null
+          created_at?: string
+          household_type: string
+          id?: string
+          monthly_cost_usd: number
+          plan: string
+          report_month: string
+          sex?: string | null
+          source_url?: string | null
+          weekly_cost_usd?: number | null
+        }
+        Update: {
+          age_max?: number | null
+          age_min?: number | null
+          created_at?: string
+          household_type?: string
+          id?: string
+          monthly_cost_usd?: number
+          plan?: string
+          report_month?: string
+          sex?: string | null
+          source_url?: string | null
+          weekly_cost_usd?: number | null
+        }
+        Relationships: []
+      }
+      usda_sync_log: {
+        Row: {
+          error_message: string | null
+          id: string
+          ran_at: string
+          report_month: string | null
+          rows_imported: number | null
+          source_url: string | null
+          status: string
+          triggered_by: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          id?: string
+          ran_at?: string
+          report_month?: string | null
+          rows_imported?: number | null
+          source_url?: string | null
+          status: string
+          triggered_by?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          id?: string
+          ran_at?: string
+          report_month?: string | null
+          rows_imported?: number | null
+          source_url?: string | null
+          status?: string
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
       user_deal_submissions: {
         Row: {
           deal_observation_id: string | null
