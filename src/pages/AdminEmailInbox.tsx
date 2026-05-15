@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Mail, ShieldCheck, RefreshCw, Inbox, ExternalLink } from "lucide-react";
+import { Loader2, Mail, ShieldCheck, RefreshCw, Inbox, ExternalLink, Send, Paperclip, X } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
