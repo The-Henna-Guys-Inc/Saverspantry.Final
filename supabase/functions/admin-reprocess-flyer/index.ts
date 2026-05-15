@@ -53,9 +53,57 @@ Deno.serve(async (req) => {
     .select("id, stored_file_url, store_id")
     .eq("source_email_id", ingestionId);
   if (bErr) return json({ error: bErr.message }, 500);
-  if (!batches || batches.length === 0) {
-    return json({ error: "no attachments to reprocess for this email" }, 400);
+
+  let workingBatches = batches ?? [];
+
+  // Fallback: if no batches exist (e.g. email was needs_assignment originally),
+  // create them from the raw attachments in the promo-emails bucket.
+  if (workingBatches.length === 0) {
+    const { data: files, error: lErr } = await admin.storage
+      .from("promo-emails")
+      .list(`${ingestionId}/attachments`, { limit: 50 });
+    if (lErr) return json({ error: `list attachments failed: ${lErr.message}` }, 500);
+    if (!files || files.length === 0) {
+      return json({ error: "no attachments stored for this email" }, 400);
+    }
+
+    for (const f of files) {
+      const srcPath = `${ingestionId}/attachments/${f.name}`;
+      const flyerPath = `email/${ingestionId}/${f.name}`;
+      const ct = (f.metadata as any)?.mimetype ?? "application/octet-stream";
+      if (!/^(application\/pdf|image\/)/.test(ct)) continue;
+
+      // Copy from promo-emails -> flyer-uploads (where extract-flyer-deals reads)
+      const { data: dl, error: dlErr } = await admin.storage.from("promo-emails").download(srcPath);
+      if (dlErr || !dl) { console.error("download failed", dlErr); continue; }
+      const { error: upErr } = await admin.storage
+        .from("flyer-uploads")
+        .upload(flyerPath, dl, { upsert: true, contentType: ct });
+      if (upErr) { console.error("upload failed", upErr); continue; }
+
+      const { data: batch, error: insErr } = await admin
+        .from("flyer_extraction_batches")
+        .insert({
+          store_id: ingestion.matched_store_id,
+          admin_user_id: null,
+          original_filename: f.name.slice(0, 200),
+          stored_file_url: flyerPath,
+          file_type: ct,
+          page_count: 1,
+          extraction_status: "pending",
+          source_email_id: ingestionId,
+        })
+        .select("id, stored_file_url, store_id")
+        .maybeSingle();
+      if (insErr || !batch) { console.error("batch insert failed", insErr); continue; }
+      workingBatches.push(batch);
+    }
+
+    if (workingBatches.length === 0) {
+      return json({ error: "no usable attachments (PDF/image) found in storage" }, 400);
+    }
   }
+
 
   let triggered = 0;
   for (const b of batches) {
