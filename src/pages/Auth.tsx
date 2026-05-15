@@ -27,7 +27,7 @@ const SIGNUP_BENEFITS = [
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [mode, setMode] = useState<"choose" | "signin" | "email-signup" | "email-login">("choose");
+  const [mode, setMode] = useState<"choose" | "signin" | "email-signup" | "email-login">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -62,7 +62,8 @@ const Auth = () => {
   };
 
   useEffect(() => {
-    const nextMode = searchParams.get("mode") === "signin" ? "signin" : "choose";
+    const requestedMode = searchParams.get("mode");
+    const nextMode = requestedMode === "signup" ? "choose" : "signin";
     setMode((currentMode) => {
       if (currentMode === "email-signup" || currentMode === "email-login") return currentMode;
       return currentMode === nextMode ? currentMode : nextMode;
@@ -203,7 +204,7 @@ const Auth = () => {
 
   const switchTopLevelMode = (nextMode: "choose" | "signin") => {
     setMode(nextMode);
-    setSearchParams(nextMode === "signin" ? { mode: "signin" } : {}, { replace: true });
+    setSearchParams(nextMode === "signin" ? {} : { mode: "signup" }, { replace: true });
   };
 
   const cardStyle: React.CSSProperties = {
