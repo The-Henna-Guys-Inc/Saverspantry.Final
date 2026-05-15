@@ -223,6 +223,7 @@ Deno.serve(async (req) => {
             "- Omega-3: add a tablespoon of walnuts, flax, chia, or hemp seeds.",
             "- Calcium (if replacing dairy too): tahini, fortified plant milk, or leafy greens.",
             "Use cheap pantry add-ons (a tbsp of seeds, a handful of nuts, a fortified item) so savings are preserved. In `nutrient_coverage`, list the specific nutrients the add-ons restore. In `notes`, briefly explain WHY the add-on is there (e.g., 'walnuts add omega-3 that lentils lack').",
+            "CREATIVE TITLES: For each swap, invent a catchy, appetizing 2–4 word dish name in Title Case for `creative_title`. Make it evocative (e.g., 'Hearth & Harvest Bowl', 'Lean Catch Plate', 'Golden Lentil Skillet', 'Omega Boost Stack'). NEVER restate the ingredient list. All 3 swaps must have distinct creative titles. No emojis. The `title` field stays as the literal ingredient summary.",
             "Be practical and money-conscious, never moralizing. Never make medical claims. Always call return_swaps.",
           ].filter(Boolean).join("\n\n") },
           { role: "user", content: `Find swaps for: ${food}\nDietary restrictions: ${prefs || "none"}${profileBlock}` },
