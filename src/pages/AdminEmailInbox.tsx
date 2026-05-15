@@ -308,6 +308,9 @@ const AdminEmailInbox = () => {
   );
 };
 
+export default AdminEmailInbox;
+
+
 function ManualIngestCard({ onIngested }: { onIngested: () => void }) {
   const [open, setOpen] = useState(false);
   const [from, setFrom] = useState("");
