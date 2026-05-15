@@ -88,17 +88,6 @@ const Welcome = () => {
           </p>
         </div>
 
-        <p className="text-center pt-2" style={{ color: MUTED, fontSize: 12 }}>
-          Now serving Chicagoland ·{" "}
-          <WaitlistDialog
-            source="landing_footer"
-            trigger={
-              <button type="button" className="underline hover:opacity-80" style={{ color: GREEN, fontWeight: 600 }}>
-                launching in more cities soon
-              </button>
-            }
-          />
-        </p>
       </div>
     </main>
   );
