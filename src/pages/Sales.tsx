@@ -22,7 +22,7 @@ import { LaunchAreaCard } from "@/components/LaunchAreaCard";
 import { UserSubmitDealDialog } from "@/components/UserSubmitDealDialog";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { distanceMiles, formatDistance } from "@/lib/distance";
-import { isInLaunchArea, LAUNCH_CITY } from "@/lib/launchArea";
+import { findLaunchCity, LAUNCH_CITIES } from "@/lib/launchArea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const PAGE_SIZE = 10;
