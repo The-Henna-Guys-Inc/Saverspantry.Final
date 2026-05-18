@@ -134,7 +134,7 @@ export const NutritionLookup = () => {
       </form>
 
       {topSearches.length > 0 && (
-        <div className="mt-4">
+        <div className="mt-4 p-3 rounded-2xl bg-card border border-border-strong">
           <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
             <TrendingUp className="h-3 w-3" />
             {usingFallback ? "Popular US staples" : "Top 10 searched"}
