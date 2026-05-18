@@ -48,6 +48,53 @@ const USDA_ANCHOR_USD = 360;
 const FACTOR_MIN = 0.85;
 const FACTOR_MAX = 1.40;
 
+// ---------- Sanity clamps for per-unit prices ----------
+// Plausible 2025 US retail per-unit ranges, used as a last-line defense
+// against bad seed data or runaway adjustment factors slipping into the UI.
+// Ranges are intentionally generous (cover budget→premium specialty) so we
+// only clamp obviously broken numbers.
+type Range = { min: number; max: number };
+const UNIT_RANGES: Record<string, Range> = {
+  lb:      { min: 0.30, max: 60 },   // rice, beans, flour … truffle salt
+  oz:      { min: 0.10, max: 40 },   // spices, saffron-ish ceiling
+  "fl oz": { min: 0.05, max: 6 },    // oils, sauces, vinegars
+  L:       { min: 1.50, max: 80 },   // oils, sauces by liter
+  ml:      { min: 0.002, max: 0.10 },
+  g:       { min: 0.005, max: 1.50 },
+  kg:      { min: 1.00, max: 120 },
+  ct:      { min: 0.05, max: 8 },    // tortillas, eggs, packs
+  sheet:   { min: 0.05, max: 3 },    // nori
+  unit:    { min: 0.50, max: 60 },   // fallback
+};
+
+function parsePackUnit(label: string | null | undefined): { qty: number | null; unit: string } {
+  if (!label) return { qty: null, unit: "unit" };
+  const s = label.toLowerCase();
+  const m = s.match(/(\d+(?:\.\d+)?)\s*(fl\s?oz|oz|lb|lbs|pound|pounds|kg|g|gram|grams|ml|l|liter|liters|dozen|doz|ct|count|pack|pk|sheet|sheets)\b/);
+  if (!m) return { qty: null, unit: "unit" };
+  let qty = parseFloat(m[1]);
+  let unit = m[2].replace(/\s/g, "");
+  const map: Record<string, string> = {
+    lbs: "lb", pound: "lb", pounds: "lb",
+    gram: "g", grams: "g",
+    liter: "L", liters: "L", l: "L",
+    floz: "fl oz",
+    count: "ct", pack: "ct", pk: "ct",
+    sheets: "sheet",
+  };
+  if (unit === "dozen" || unit === "doz") { qty *= 12; unit = "ct"; }
+  unit = map[unit] ?? unit;
+  return { qty, unit };
+}
+
+function clampPrice(value: number, unit: string): { value: number; clamped: "low" | "high" | null } {
+  const r = UNIT_RANGES[unit] ?? UNIT_RANGES.unit;
+  if (!isFinite(value) || value <= 0) return { value: r.min, clamped: "low" };
+  if (value < r.min) return { value: r.min, clamped: "low" };
+  if (value > r.max) return { value: r.max, clamped: "high" };
+  return { value, clamped: null };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
