@@ -12,6 +12,26 @@ import { CUISINE_LABEL, type CuisineTag } from "@/lib/cuisineHints";
 import { toast } from "sonner";
 import { AiFeedback } from "@/components/AiFeedback";
 
+// Infer unit + pack quantity from a free-form pack-size label like
+// "10 lb bag", "5 kg sack", "32 fl oz bottle", "24 ct case".
+function parsePack(label: string | null | undefined): { qty: number | null; unit: string } {
+  if (!label) return { qty: null, unit: "unit" };
+  const s = label.toLowerCase();
+  const m = s.match(/(\d+(?:\.\d+)?)\s*(fl\s?oz|oz|lb|lbs|pound|pounds|kg|g|gram|grams|ml|l|liter|liters|ct|count|pack|pk)\b/);
+  if (!m) return { qty: null, unit: "unit" };
+  const qty = parseFloat(m[1]);
+  let unit = m[2].replace(/\s/g, "");
+  const map: Record<string, string> = {
+    lbs: "lb", pound: "lb", pounds: "lb",
+    gram: "g", grams: "g",
+    liter: "L", liters: "L", l: "L",
+    floz: "fl oz",
+    count: "ct", pack: "ct", pk: "ct",
+  };
+  unit = map[unit] ?? unit;
+  return { qty, unit };
+}
+
 type Rec = {
   id: string;
   food_name: string;
@@ -183,26 +203,41 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 mt-2 text-sm">
-                    <div>
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Pack</div>
-                      <div className="font-medium text-foreground">{r.bulk_pack_size}</div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Bulk vs typical (per unit)</div>
-                      <div className="font-medium text-foreground tabular-nums">
-                        ${Number(r.bulk_unit_price_usd).toFixed(2)} <span className="text-muted-foreground line-through">${Number(r.typical_unit_price_usd).toFixed(2)}</span>
+                  {(() => {
+                    const pk = parsePack(r.bulk_pack_size);
+                    const perUnit = `/${pk.unit}`;
+                    const packTotal = pk.qty ? pk.qty * Number(r.bulk_unit_price_usd) : null;
+                    return (
+                      <div className="grid grid-cols-2 gap-3 mt-2 text-sm">
+                        <div>
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Pack</div>
+                          <div className="font-medium text-foreground">{r.bulk_pack_size}</div>
+                          {packTotal != null && (
+                            <div className="text-[11px] text-muted-foreground tabular-nums mt-0.5">
+                              ≈ ${packTotal.toFixed(2)} total
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Bulk vs typical</div>
+                          <div className="font-medium text-foreground tabular-nums">
+                            ${Number(r.bulk_unit_price_usd).toFixed(2)}{perUnit}{" "}
+                            <span className="text-muted-foreground line-through">
+                              ${Number(r.typical_unit_price_usd).toFixed(2)}{perUnit}
+                            </span>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Save</div>
+                          <div className="font-semibold text-primary">{savedPct}%</div>
+                        </div>
+                        <div>
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Shelf life</div>
+                          <div className="font-medium text-foreground">{Math.round(r.shelf_life_days / 30)} mo</div>
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Save</div>
-                      <div className="font-semibold text-primary">{savedPct}%</div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Shelf life</div>
-                      <div className="font-medium text-foreground">{Math.round(r.shelf_life_days / 30)} mo</div>
-                    </div>
-                  </div>
+                    );
+                  })()}
 
                   {r.est_monthly_savings_usd > 0 && (
                     <div className="mt-3 text-xs text-primary font-medium">
