@@ -238,15 +238,6 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
                       </div>
                     );
                   })()}
-                    <div>
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Save</div>
-                      <div className="font-semibold text-primary">{savedPct}%</div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Shelf life</div>
-                      <div className="font-medium text-foreground">{Math.round(r.shelf_life_days / 30)} mo</div>
-                    </div>
-                  </div>
 
                   {r.est_monthly_savings_usd > 0 && (
                     <div className="mt-3 text-xs text-primary font-medium">
