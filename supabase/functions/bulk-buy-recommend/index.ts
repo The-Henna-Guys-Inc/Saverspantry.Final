@@ -207,8 +207,29 @@ Deno.serve(async (req) => {
 
       const baseTypical = Number(c.typical_unit_price_usd);
       const baseBulk = Number(c.bulk_unit_price_usd);
-      const adjTypical = round2(baseTypical * appliedFactor);
-      const adjBulk = round2(baseBulk * appliedFactor);
+
+      // Infer unit from the pack label so we can sanity-check per-unit prices.
+      const { unit: packUnit } = parsePackUnit(c.bulk_pack_size);
+
+      // 1) Clamp the raw seed prices to plausible per-unit ranges. Bad seed
+      //    data (e.g. $0.09/lb rice) gets pulled up to the floor before any
+      //    adjustment is applied.
+      const seedTypical = clampPrice(baseTypical, packUnit);
+      const seedBulk = clampPrice(baseBulk, packUnit);
+
+      // 2) Apply the USDA × regional factor, then clamp again so the final
+      //    displayed price can never exceed the realistic ceiling either.
+      const finalTypical = clampPrice(round2(seedTypical.value * appliedFactor), packUnit);
+      const finalBulk = clampPrice(round2(seedBulk.value * appliedFactor), packUnit);
+
+      // Ensure bulk is not more expensive than typical after clamping; if a
+      // ceiling collapse made them equal/inverted, nudge bulk down 10%.
+      let adjTypical = finalTypical.value;
+      let adjBulk = finalBulk.value;
+      if (adjBulk >= adjTypical) adjBulk = round2(adjTypical * 0.9);
+
+      const priceClamped =
+        !!(seedTypical.clamped || seedBulk.clamped || finalTypical.clamped || finalBulk.clamped);
 
       const monthlyUnits = usedQty > 0 ? (usedQty / 3) : householdSize * 1;
       const monthlySavings = Math.max(0, monthlyUnits * (adjTypical - adjBulk));
@@ -224,14 +245,29 @@ Deno.serve(async (req) => {
         Math.min(20, Number(c.est_savings_pct) / 5) +
         (cuisinePrefs.some((p) => (c.cuisine_tags ?? []).includes(p)) ? 15 : 0);
 
+      if (priceClamped) {
+        console.warn("[bulk-buy] price clamped", {
+          food: c.food_name,
+          unit: packUnit,
+          baseTypical, baseBulk,
+          adjTypical, adjBulk,
+          flags: {
+            seedTypical: seedTypical.clamped,
+            seedBulk: seedBulk.clamped,
+            finalTypical: finalTypical.clamped,
+            finalBulk: finalBulk.clamped,
+          },
+        });
+      }
+
       return {
         ...c,
-        // Overwrite the displayed prices with the adjusted figures so the UI
-        // doesn't need to know about the factor math.
         typical_unit_price_usd: adjTypical,
         bulk_unit_price_usd: adjBulk,
         base_typical_unit_price_usd: baseTypical,
         base_bulk_unit_price_usd: baseBulk,
+        price_clamped: priceClamped,
+        price_unit: packUnit,
         used_qty_90d: usedQty,
         on_sale: !!matchedSale,
         sale: matchedSale ?? null,
