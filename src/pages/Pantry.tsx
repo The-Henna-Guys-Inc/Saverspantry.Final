@@ -417,7 +417,7 @@ const Pantry = () => {
         )}
 
         {/* Manage locations */}
-        <Card className="p-5 rounded-2xl border-border/50 mb-6">
+        <Card className="p-5 rounded-2xl border-border-strong mb-6">
           <div className="text-xs uppercase tracking-wider text-accent mb-3">Your locations</div>
           <div className="flex flex-wrap gap-2 mb-3">
             {DEFAULT_LOCATIONS.map((l) => (
@@ -446,7 +446,7 @@ const Pantry = () => {
           </div>
         </Card>
 
-        <Card className="p-5 sm:p-6 rounded-3xl border-border/50 shadow-soft mb-6">
+        <Card className="p-5 sm:p-6 rounded-3xl border-border-strong shadow-soft mb-6">
           <Button
             variant="hero"
             size="lg"
@@ -466,7 +466,7 @@ const Pantry = () => {
             After a successful scan, you'll choose whether to add it to your pantry or remove one.
           </p>
 
-          <div className="mt-4 pt-4 border-t border-border/50">
+          <div className="mt-4 pt-4 border-t border-border-strong">
             <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Bulk add or remove</div>
             <div className="grid grid-cols-2 gap-2">
               <ReceiptScanner
@@ -494,7 +494,7 @@ const Pantry = () => {
         </Card>
 
         {showManual && (
-          <Card className="p-6 rounded-3xl border-border/50 shadow-soft mb-8">
+          <Card className="p-6 rounded-3xl border-border-strong shadow-soft mb-8">
             <div className="grid sm:grid-cols-2 lg:grid-cols-8 gap-3">
               <div className="lg:col-span-2">
                 <Label htmlFor="n" className="text-xs">Item</Label>
@@ -617,7 +617,7 @@ const Pantry = () => {
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : items.length === 0 ? (
-          <Card className="p-8 rounded-2xl border-border/50 text-center text-muted-foreground">
+          <Card className="p-8 rounded-2xl border-border-strong text-center text-muted-foreground">
             Your pantry is empty. Add a few staples to start.
           </Card>
         ) : (
@@ -642,13 +642,13 @@ const Pantry = () => {
               )}
             </div>
             {searchedItems.length === 0 ? (
-              <Card className="p-8 rounded-2xl border-border/50 text-center text-muted-foreground">
+              <Card className="p-8 rounded-2xl border-border-strong text-center text-muted-foreground">
                 No items match "{search}".
               </Card>
             ) : (
               <div className="card-masonry">
                 {Object.entries(grouped).map(([loc, list]) => (
-                  <Card key={loc} className="p-5 rounded-2xl border-border/50">
+                  <Card key={loc} className="p-5 rounded-2xl border-border-strong">
                     <div className="text-xs uppercase tracking-wider text-accent mb-3">{loc}</div>
                     <ul className="space-y-3">
                       {list.map((it) => {
@@ -753,7 +753,7 @@ const Pantry = () => {
         )}
 
         {otherItems.length > 0 && (
-          <Card className="p-4 rounded-2xl border-border/50 mt-4">
+          <Card className="p-4 rounded-2xl border-border-strong mt-4">
             <button
               onClick={() => setShowOther((v) => !v)}
               className="w-full text-left text-sm font-medium text-muted-foreground hover:text-primary flex items-center justify-between min-h-[44px]"

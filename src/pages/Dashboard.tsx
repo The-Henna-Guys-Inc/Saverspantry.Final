@@ -150,7 +150,7 @@ const Dashboard = () => {
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : stats.count === 0 ? (
-          <Card className="p-10 rounded-3xl border-border/50 text-center">
+          <Card className="p-10 rounded-3xl border-border-strong text-center">
             <div className="text-5xl mb-3">🌱</div>
             <h2 className="text-xl font-semibold text-primary mb-2">No savings yet</h2>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
@@ -161,17 +161,17 @@ const Dashboard = () => {
           <>
             {/* KPI cards */}
             <div className="grid sm:grid-cols-3 gap-4 mb-8">
-              <Card className="p-6 rounded-3xl bg-gradient-warm border-border/50 shadow-soft">
+              <Card className="p-6 rounded-3xl bg-gradient-warm border-border-strong shadow-soft">
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Lifetime saved</div>
                 <div className="text-3xl font-bold text-primary tabular-nums mt-1">${stats.lifetime.toFixed(2)}</div>
                 <div className="text-xs text-muted-foreground mt-1">across {stats.count} action{stats.count === 1 ? "" : "s"}</div>
               </Card>
-              <Card className="p-6 rounded-3xl border-border/50 shadow-soft">
+              <Card className="p-6 rounded-3xl border-border-strong shadow-soft">
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">This month</div>
                 <div className="text-3xl font-bold text-primary tabular-nums mt-1">${stats.thisMonth.toFixed(2)}</div>
                 <div className="text-xs text-muted-foreground mt-1">resets on the 1st</div>
               </Card>
-              <Card className="p-6 rounded-3xl border-border/50 shadow-soft">
+              <Card className="p-6 rounded-3xl border-border-strong shadow-soft">
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Weekly avg (12w)</div>
                 <div className="text-3xl font-bold text-primary tabular-nums mt-1">
                   ${(stats.weeks.reduce((s, w) => s + w.total, 0) / 12).toFixed(2)}
@@ -181,7 +181,7 @@ const Dashboard = () => {
             </div>
 
             {/* Trend chart */}
-            <Card className="p-6 rounded-3xl border-border/50 shadow-soft mb-8">
+            <Card className="p-6 rounded-3xl border-border-strong shadow-soft mb-8">
               <h2 className="text-sm font-semibold text-primary mb-4">Savings trend — last 12 weeks</h2>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
@@ -206,7 +206,7 @@ const Dashboard = () => {
 
             <div className="grid lg:grid-cols-2 gap-6">
               {/* By category */}
-              <Card className="p-6 rounded-3xl border-border/50 shadow-soft">
+              <Card className="p-6 rounded-3xl border-border-strong shadow-soft">
                 <h2 className="text-sm font-semibold text-primary mb-4">Where it's coming from</h2>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
@@ -244,7 +244,7 @@ const Dashboard = () => {
               </Card>
 
               {/* Top foods */}
-              <Card className="p-6 rounded-3xl border-border/50 shadow-soft">
+              <Card className="p-6 rounded-3xl border-border-strong shadow-soft">
                 <h2 className="text-sm font-semibold text-primary mb-4">Top foods you've saved on</h2>
                 {stats.topFoods.length === 0 ? (
                   <div className="text-sm text-muted-foreground py-8 text-center">No food-level data yet.</div>

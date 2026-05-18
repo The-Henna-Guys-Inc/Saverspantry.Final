@@ -42,7 +42,7 @@ const RecipeCard = ({ name, onPick }: { name: string; onPick: () => void }) => {
   return (
     <button
       onClick={onPick}
-      className="group text-left rounded-2xl overflow-hidden bg-card border border-border/50 shadow-soft hover:shadow-glow transition-smooth min-h-[44px]"
+      className="group text-left rounded-2xl overflow-hidden bg-card border border-border-strong shadow-soft hover:shadow-glow transition-smooth min-h-[44px]"
     >
       <div className="aspect-[4/3] bg-muted overflow-hidden">
         {img === undefined ? (
@@ -165,7 +165,7 @@ export const RecipeGenerator = () => {
 
   return (
     <div className="w-full max-w-3xl mx-auto">
-      <Card className="p-5 sm:p-6 rounded-3xl shadow-soft border-border/50 bg-card">
+      <Card className="p-5 sm:p-6 rounded-3xl shadow-soft border-border-strong bg-card">
         <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
           Ingredients you have
         </label>
@@ -300,7 +300,7 @@ export const RecipeGenerator = () => {
       )}
 
       {recipe && (
-        <Card className="mt-6 p-6 sm:p-8 rounded-3xl shadow-glow border-border/50 animate-fade-up">
+        <Card className="mt-6 p-6 sm:p-8 rounded-3xl shadow-glow border-border-strong animate-fade-up">
           <GeneratedRecipeImage title={recipe.title} cuisine={recipe.cuisine} />
           <div className="flex items-start justify-between gap-3">
             <div>

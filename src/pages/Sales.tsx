@@ -342,7 +342,7 @@ function SaleList({
         const meta = sourceMeta[s.source] ?? sourceMeta.user_submitted;
         const verified = s.confirmation_count >= 3;
         return (
-          <Card key={s.id} className="p-5 rounded-3xl shadow-soft border-border/50 hover:shadow-glow transition-smooth">
+          <Card key={s.id} className="p-5 rounded-3xl shadow-soft border-border-strong hover:shadow-glow transition-smooth">
             <div className="flex items-start justify-between gap-3 mb-2 flex-wrap">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -390,7 +390,7 @@ function SaleList({
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-3 pt-3 border-t border-border/50 flex-wrap">
+            <div className="flex items-center justify-between gap-3 pt-3 border-t border-border-strong flex-wrap">
               <div className="text-xs text-muted-foreground">
                 {s.pack_size && <span className="mr-3">{s.pack_size}</span>}
                 Ends {formatDistanceToNow(new Date(s.ends_at), { addSuffix: true })}
