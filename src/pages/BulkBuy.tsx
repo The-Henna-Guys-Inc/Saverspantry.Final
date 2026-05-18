@@ -31,6 +31,17 @@ type Rec = {
   reasons: string[];
 };
 
+type PricingAdj = {
+  applied_factor: number;
+  usda_factor: number;
+  usda_source: "usda" | "fallback_curated";
+  usda_report_month: string | null;
+  regional_multiplier: number;
+  regional_state: string | null;
+  regional_label: string | null;
+  fallback_used: boolean;
+} | null;
+
 const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
   const { user, loading: authLoading } = useAuth();
   const { cuisines, isFiltering, setEnabled } = useCuisinePrefs();
@@ -38,6 +49,7 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
   const [recs, setRecs] = useState<Rec[]>([]);
   const [total, setTotal] = useState(0);
   const [adding, setAdding] = useState<string | null>(null);
+  const [pricing, setPricing] = useState<PricingAdj>(null);
 
   const load = async () => {
     setLoading(true);
@@ -51,6 +63,7 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
     }
     setRecs((data?.recommendations ?? []) as Rec[]);
     setTotal(data?.total_monthly_savings_usd ?? 0);
+    setPricing((data?.pricing_adjustment ?? null) as PricingAdj);
     setLoading(false);
   };
 
@@ -125,6 +138,17 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
           )}
         </Card>
 
+        {pricing && (
+          <div className="text-[11px] text-muted-foreground mb-4 px-1 leading-relaxed">
+            Prices shown are per-unit estimates, adjusted ×{pricing.applied_factor.toFixed(2)}
+            {pricing.usda_source === "usda" && pricing.usda_report_month
+              ? ` using USDA Food Plans (${new Date(pricing.usda_report_month).toLocaleDateString(undefined, { month: "short", year: "numeric" })})`
+              : " using national curated baseline (USDA data unavailable — fallback)"}
+            {pricing.regional_label ? ` and ${pricing.regional_label} cost-of-living` : ""}.
+            Compare against the pack size before you buy.
+          </div>
+        )}
+
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : recs.length === 0 ? (
@@ -165,7 +189,7 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
                       <div className="font-medium text-foreground">{r.bulk_pack_size}</div>
                     </div>
                     <div>
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Bulk vs typical</div>
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Bulk vs typical (per unit)</div>
                       <div className="font-medium text-foreground tabular-nums">
                         ${Number(r.bulk_unit_price_usd).toFixed(2)} <span className="text-muted-foreground line-through">${Number(r.typical_unit_price_usd).toFixed(2)}</span>
                       </div>
