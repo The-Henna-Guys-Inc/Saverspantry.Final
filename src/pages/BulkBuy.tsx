@@ -189,7 +189,7 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
                       <div className="font-medium text-foreground">{r.bulk_pack_size}</div>
                     </div>
                     <div>
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Bulk vs typical</div>
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Bulk vs typical (per unit)</div>
                       <div className="font-medium text-foreground tabular-nums">
                         ${Number(r.bulk_unit_price_usd).toFixed(2)} <span className="text-muted-foreground line-through">${Number(r.typical_unit_price_usd).toFixed(2)}</span>
                       </div>
