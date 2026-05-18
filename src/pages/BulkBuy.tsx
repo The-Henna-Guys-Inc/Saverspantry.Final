@@ -12,6 +12,26 @@ import { CUISINE_LABEL, type CuisineTag } from "@/lib/cuisineHints";
 import { toast } from "sonner";
 import { AiFeedback } from "@/components/AiFeedback";
 
+// Infer unit + pack quantity from a free-form pack-size label like
+// "10 lb bag", "5 kg sack", "32 fl oz bottle", "24 ct case".
+function parsePack(label: string | null | undefined): { qty: number | null; unit: string } {
+  if (!label) return { qty: null, unit: "unit" };
+  const s = label.toLowerCase();
+  const m = s.match(/(\d+(?:\.\d+)?)\s*(fl\s?oz|oz|lb|lbs|pound|pounds|kg|g|gram|grams|ml|l|liter|liters|ct|count|pack|pk)\b/);
+  if (!m) return { qty: null, unit: "unit" };
+  const qty = parseFloat(m[1]);
+  let unit = m[2].replace(/\s/g, "");
+  const map: Record<string, string> = {
+    lbs: "lb", pound: "lb", pounds: "lb",
+    gram: "g", grams: "g",
+    liter: "L", liters: "L", l: "L",
+    floz: "fl oz",
+    count: "ct", pack: "ct", pk: "ct",
+  };
+  unit = map[unit] ?? unit;
+  return { qty, unit };
+}
+
 type Rec = {
   id: string;
   food_name: string;
