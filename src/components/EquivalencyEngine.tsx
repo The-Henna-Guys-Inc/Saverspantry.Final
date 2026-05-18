@@ -149,7 +149,7 @@ export const EquivalencyEngine = () => {
         ))}
       </div>
 
-      <div className="mt-3 p-3 rounded-2xl bg-card border border-border/50">
+      <div className="mt-3 p-3 rounded-2xl bg-card border border-border-strong">
         <label className="flex items-start gap-3 cursor-pointer">
           <button
             type="button"
@@ -243,7 +243,7 @@ export const EquivalencyEngine = () => {
 
       {result && (
         <div className="mt-6 space-y-4 animate-fade-up">
-          <Card className="p-5 rounded-3xl bg-gradient-warm border-border/50">
+          <Card className="p-5 rounded-3xl bg-gradient-warm border-border-strong">
             <div className="flex flex-col gap-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Original</div>
@@ -282,7 +282,7 @@ export const EquivalencyEngine = () => {
           </Card>
 
           {result.swaps.map((s, i) => (
-            <Card key={i} className="p-5 rounded-3xl shadow-soft hover:shadow-glow transition-smooth border-border/50">
+            <Card key={i} className="p-5 rounded-3xl shadow-soft hover:shadow-glow transition-smooth border-border-strong">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <h4 className="text-base font-semibold text-primary">{s.creative_title?.trim() || s.title}</h4>
                 {s.savings_percent > 0 && (
@@ -297,7 +297,7 @@ export const EquivalencyEngine = () => {
                   <li key={j}>• {it.portion} {it.food}</li>
                 ))}
               </ul>
-              <div className="flex flex-wrap gap-3 text-xs text-muted-foreground border-t border-border/50 pt-3">
+              <div className="flex flex-wrap gap-3 text-xs text-muted-foreground border-t border-border-strong pt-3">
                 <span>{Math.round(s.calories_kcal)} kcal</span>
                 <span>{s.protein_g.toFixed(0)}g protein</span>
                 <span className="font-semibold text-foreground">${s.estimated_cost_usd.toFixed(2)}</span>
@@ -360,7 +360,7 @@ export const EquivalencyEngine = () => {
                   <button
                     key={i}
                     onClick={() => { setFood(s.from); find(s.from); }}
-                    className="text-left p-3 rounded-2xl bg-card border border-border/50 hover:shadow-glow transition-smooth min-h-[44px]"
+                    className="text-left p-3 rounded-2xl bg-card border border-border-strong hover:shadow-glow transition-smooth min-h-[44px]"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 text-sm flex-wrap">
@@ -402,7 +402,7 @@ export const EquivalencyEngine = () => {
                   <button
                     key={i}
                     onClick={() => { setFood(s.from); find(s.from); }}
-                    className="text-left p-3 rounded-2xl bg-card border border-border/50 hover:shadow-glow transition-smooth min-h-[44px]"
+                    className="text-left p-3 rounded-2xl bg-card border border-border-strong hover:shadow-glow transition-smooth min-h-[44px]"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 text-sm flex-wrap">

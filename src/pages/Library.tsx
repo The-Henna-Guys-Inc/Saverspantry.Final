@@ -112,7 +112,7 @@ const Library = () => {
 
             <TabsContent value="recipes" className="space-y-3 m-0">
               {fRecipes.length === 0 ? <Empty icon={ChefHat} label="recipes" cta="/#recipe" /> : fRecipes.map(r => (
-                <Card key={r.id} className="p-5 rounded-2xl border-border/50 flex items-start justify-between gap-3">
+                <Card key={r.id} className="p-5 rounded-2xl border-border-strong flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="text-xs uppercase tracking-wider text-accent">{r.recipe?.cuisine}</div>
                     <h3 className="font-semibold text-primary">{r.recipe?.title}</h3>
@@ -139,7 +139,7 @@ const Library = () => {
 
             <TabsContent value="swaps" className="space-y-3 m-0">
               {fSwaps.length === 0 ? <Empty icon={ArrowLeftRight} label="swaps" cta="/#swap" /> : fSwaps.map(r => (
-                <Card key={r.id} className="p-5 rounded-2xl border-border/50 flex items-start justify-between gap-3">
+                <Card key={r.id} className="p-5 rounded-2xl border-border-strong flex items-start justify-between gap-3">
                   <div>
                     <div className="text-xs uppercase tracking-wider text-muted-foreground">Original</div>
                     <h3 className="font-semibold text-primary">{r.food}</h3>
@@ -152,7 +152,7 @@ const Library = () => {
 
             <TabsContent value="lookups" className="space-y-3 m-0">
               {fLookups.length === 0 ? <Empty icon={Sparkles} label="lookups" cta="/#lookup" /> : fLookups.map(r => (
-                <Card key={r.id} className="p-5 rounded-2xl border-border/50 flex items-start justify-between gap-3">
+                <Card key={r.id} className="p-5 rounded-2xl border-border-strong flex items-start justify-between gap-3">
                   <div>
                     <h3 className="font-semibold text-primary">{r.result?.food ?? r.query}</h3>
                     <div className="text-xs text-muted-foreground mt-1">

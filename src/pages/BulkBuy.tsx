@@ -177,7 +177,7 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : recs.length === 0 ? (
-          <Card className="p-8 rounded-2xl border-border/50 text-center text-muted-foreground">
+          <Card className="p-8 rounded-2xl border-border-strong text-center text-muted-foreground">
             No recommendations yet. {isFiltering ? "Try toggling \"Show everything\" or " : ""}
             <Link to="/settings" className="text-primary underline">add cuisines in Settings</Link>.
           </Card>
@@ -186,7 +186,7 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
             {recs.map((r) => {
               const savedPct = r.est_savings_pct;
               return (
-                <Card key={r.id} className="p-5 rounded-2xl border-border/50 flex flex-col">
+                <Card key={r.id} className="p-5 rounded-2xl border-border-strong flex flex-col">
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="min-w-0 flex-1">
                       <h3 className="font-semibold text-primary truncate">{r.food_name}</h3>

@@ -272,7 +272,7 @@ const Planner = () => {
           </TabsContent>
 
           <TabsContent value="library" className="mt-0">
-            <Card className="p-6 rounded-3xl border-border/50 text-center">
+            <Card className="p-6 rounded-3xl border-border-strong text-center">
               <BookmarkCheck className="h-8 w-8 text-primary mx-auto mb-3" />
               <h3 className="text-xl font-semibold text-primary mb-1">Your saved recipes & swaps</h3>
               <p className="text-sm text-muted-foreground mb-4">Open the full library to browse, search and re-use everything you've saved.</p>
@@ -285,7 +285,7 @@ const Planner = () => {
           <TabsContent value="planner" className="mt-0">
         <div className="text-xs uppercase tracking-wider text-accent mb-2">Week of {weekStart}</div>
 
-        <Card className="p-6 rounded-3xl border-border/50 shadow-soft mb-8">
+        <Card className="p-6 rounded-3xl border-border-strong shadow-soft mb-8">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <Label htmlFor="hh" className="text-xs">Household size</Label>
@@ -337,7 +337,7 @@ const Planner = () => {
             </div>
           </div>
           {queued.length > 0 && (
-            <div className="mt-5 p-3 rounded-xl bg-secondary/60 border border-border/50">
+            <div className="mt-5 p-3 rounded-xl bg-secondary/60 border border-border-strong">
               <div className="text-xs uppercase tracking-wider text-accent mb-2">
                 Recipes queued for next plan ({queued.length})
               </div>
@@ -386,7 +386,7 @@ const Planner = () => {
             </div>
             <div className="card-masonry card-masonry-3 mb-6">
               {plan.days.map((d) => (
-                <Card key={d.day} className="p-5 rounded-2xl border-border/50">
+                <Card key={d.day} className="p-5 rounded-2xl border-border-strong">
                   <div className="text-xs uppercase tracking-wider text-accent mb-3">{d.day}</div>
                   {(["breakfast", "lunch", "dinner"] as const).map(slot => (
                     <div key={slot} className="mb-3 last:mb-0">
@@ -401,7 +401,7 @@ const Planner = () => {
               ))}
             </div>
             {plan.budget_tip && (
-              <Card className="p-4 rounded-2xl bg-secondary border-border/50 text-sm text-foreground/80 mb-8">
+              <Card className="p-4 rounded-2xl bg-secondary border-border-strong text-sm text-foreground/80 mb-8">
                 💡 {plan.budget_tip}
               </Card>
             )}
@@ -466,7 +466,7 @@ const Planner = () => {
             )}
             <div className="card-masonry">
               {Object.entries(grouped).map(([cat, items]) => (
-                <Card key={cat} className="p-5 rounded-2xl border-border/50">
+                <Card key={cat} className="p-5 rounded-2xl border-border-strong">
                   <div className="text-xs uppercase tracking-wider text-accent mb-2">{cat}</div>
                   <ul className="space-y-1.5">
                     {items.map((it, i) => {

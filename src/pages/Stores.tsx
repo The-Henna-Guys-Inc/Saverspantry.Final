@@ -177,7 +177,7 @@ const Stores = ({ embedded = false }: { embedded?: boolean }) => {
           className="mb-4"
         />
 
-        <Card className="p-5 rounded-3xl border-border/50 shadow-soft mb-6">
+        <Card className="p-5 rounded-3xl border-border-strong shadow-soft mb-6">
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name or city" className="pl-9 rounded-xl" />
@@ -209,14 +209,14 @@ const Stores = ({ embedded = false }: { embedded?: boolean }) => {
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : filtered.length === 0 ? (
-          <Card className="p-8 rounded-2xl border-border/50 text-center text-muted-foreground">
+          <Card className="p-8 rounded-2xl border-border-strong text-center text-muted-foreground">
             No stores match. Try clearing filters — we're growing the catalog and live location search is coming next.
           </Card>
         ) : (
           <>
           <div className="card-masonry">
             {paginated.map((s) => (
-              <Card key={s.id} className="p-5 rounded-2xl border-border/50">
+              <Card key={s.id} className="p-5 rounded-2xl border-border-strong">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h3 className="font-semibold text-primary truncate">{s.name}</h3>

@@ -158,7 +158,7 @@ export const NutritionLookup = () => {
       )}
 
       {result && (
-        <Card className="mt-6 p-6 rounded-3xl shadow-glow border-border/50 animate-fade-up">
+        <Card className="mt-6 p-6 rounded-3xl shadow-glow border-border-strong animate-fade-up">
           <div className="flex items-start justify-between gap-3 mb-5">
             <div>
               <h3 className="text-xl font-semibold text-primary">{result.food}</h3>
@@ -213,7 +213,7 @@ export const NutritionLookup = () => {
       )}
 
       {ranking && (
-        <Card className="mt-6 p-6 rounded-3xl shadow-glow border-border/50 animate-fade-up">
+        <Card className="mt-6 p-6 rounded-3xl shadow-glow border-border-strong animate-fade-up">
           <div className="flex items-start justify-between gap-3 mb-4">
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-accent font-semibold">
