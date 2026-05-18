@@ -133,65 +133,35 @@ export const EquivalencyEngine = () => {
         </Button>
       </form>
 
-      <div className="flex flex-wrap gap-2 mt-3">
-        {RESTRICTIONS.map((r) => (
-          <button
-            key={r}
-            onClick={() => toggle(r)}
-            className={`text-xs px-3 py-1.5 rounded-full transition-smooth ${
-              restrictions.includes(r)
-                ? "bg-primary text-primary-foreground shadow-soft"
-                : "bg-accent/20 text-foreground hover:bg-accent/30"
-            }`}
-          >
-            {r}
-          </button>
-        ))}
+      <div className="mt-3 p-3 rounded-2xl bg-card border border-border-strong">
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
+          Dietary
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {RESTRICTIONS.map((r) => (
+            <button
+              key={r}
+              onClick={() => toggle(r)}
+              className={`text-xs px-3 py-1.5 rounded-full transition-smooth ${
+                restrictions.includes(r)
+                  ? "bg-primary text-primary-foreground shadow-soft"
+                  : "bg-accent/20 text-foreground hover:bg-accent/30"
+              }`}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="mt-3 p-3 rounded-2xl bg-card border border-border-strong">
         <label className="flex items-start gap-3 cursor-pointer">
-          <button
-            type="button"
-            role="switch"
-            aria-checked={bloodSugar}
-            onClick={() => setBloodSugar((v) => !v)}
-            className={`mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-              bloodSugar ? "bg-primary" : "bg-muted"
-            }`}
-          >
-            <span
-              className={`inline-block h-5 w-5 transform rounded-full bg-background shadow transition-transform ${
-                bloodSugar ? "translate-x-5" : "translate-x-0.5"
-              }`}
-            />
-          </button>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-              <Activity className="h-3.5 w-3.5 text-primary" />
-              Blood sugar friendly
-              <TooltipProvider delayDuration={150}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button type="button" className="text-muted-foreground hover:text-foreground" aria-label="About blood sugar filter">
-                      <Info className="h-3.5 w-3.5" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-xs text-xs">
-                    Glycemic estimates are approximate. Consult a healthcare provider for medical guidance on blood sugar management.
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Lower glycemic alternatives for better blood sugar response
-            </p>
-          </div>
+...
         </label>
       </div>
 
-      <div className="mt-3">
-        <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">
+      <div className="mt-3 p-3 rounded-2xl bg-card border border-border-strong">
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
           Cuisine <span className="normal-case text-muted-foreground/70">(optional)</span>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -232,13 +202,18 @@ export const EquivalencyEngine = () => {
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2 mt-3">
-        {EXAMPLES.map((s) => (
-          <button key={s} onClick={() => { setFood(s); find(s); }}
-            className="text-xs px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground hover:bg-muted transition-smooth">
-            {s}
-          </button>
-        ))}
+      <div className="mt-3 p-3 rounded-2xl bg-card border border-border-strong">
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
+          Try one of these
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {EXAMPLES.map((s) => (
+            <button key={s} onClick={() => { setFood(s); find(s); }}
+              className="text-xs px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground hover:bg-muted transition-smooth">
+              {s}
+            </button>
+          ))}
+        </div>
       </div>
 
       {result && (
