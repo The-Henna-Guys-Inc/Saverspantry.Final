@@ -31,6 +31,17 @@ type Rec = {
   reasons: string[];
 };
 
+type PricingAdj = {
+  applied_factor: number;
+  usda_factor: number;
+  usda_source: "usda" | "fallback_curated";
+  usda_report_month: string | null;
+  regional_multiplier: number;
+  regional_state: string | null;
+  regional_label: string | null;
+  fallback_used: boolean;
+} | null;
+
 const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
   const { user, loading: authLoading } = useAuth();
   const { cuisines, isFiltering, setEnabled } = useCuisinePrefs();
@@ -38,6 +49,7 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
   const [recs, setRecs] = useState<Rec[]>([]);
   const [total, setTotal] = useState(0);
   const [adding, setAdding] = useState<string | null>(null);
+  const [pricing, setPricing] = useState<PricingAdj>(null);
 
   const load = async () => {
     setLoading(true);
@@ -51,6 +63,7 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
     }
     setRecs((data?.recommendations ?? []) as Rec[]);
     setTotal(data?.total_monthly_savings_usd ?? 0);
+    setPricing((data?.pricing_adjustment ?? null) as PricingAdj);
     setLoading(false);
   };
 
