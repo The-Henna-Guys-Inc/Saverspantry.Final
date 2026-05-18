@@ -17,9 +17,9 @@ import { AiFeedback } from "@/components/AiFeedback";
 function parsePack(label: string | null | undefined): { qty: number | null; unit: string } {
   if (!label) return { qty: null, unit: "unit" };
   const s = label.toLowerCase();
-  const m = s.match(/(\d+(?:\.\d+)?)\s*(fl\s?oz|oz|lb|lbs|pound|pounds|kg|g|gram|grams|ml|l|liter|liters|ct|count|pack|pk)\b/);
+  const m = s.match(/(\d+(?:\.\d+)?)\s*(fl\s?oz|oz|lb|lbs|pound|pounds|kg|g|gram|grams|ml|l|liter|liters|dozen|doz|ct|count|pack|pk|sheet|sheets)\b/);
   if (!m) return { qty: null, unit: "unit" };
-  const qty = parseFloat(m[1]);
+  let qty = parseFloat(m[1]);
   let unit = m[2].replace(/\s/g, "");
   const map: Record<string, string> = {
     lbs: "lb", pound: "lb", pounds: "lb",
@@ -27,7 +27,12 @@ function parsePack(label: string | null | undefined): { qty: number | null; unit
     liter: "L", liters: "L", l: "L",
     floz: "fl oz",
     count: "ct", pack: "ct", pk: "ct",
+    sheets: "sheet",
   };
+  if (unit === "dozen" || unit === "doz") {
+    qty = qty * 12;
+    unit = "ct";
+  }
   unit = map[unit] ?? unit;
   return { qty, unit };
 }
