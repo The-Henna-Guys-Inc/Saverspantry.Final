@@ -60,7 +60,7 @@ export const MobileTabBar = () => {
   };
 
   const itemBase =
-    "flex flex-col items-center justify-center gap-0.5 py-2 px-1 min-h-[56px] text-[11px] font-medium transition-colors";
+    "flex flex-col items-center justify-center gap-1 py-2.5 px-1 min-h-[64px] text-xs font-medium transition-colors";
 
   return (
     <nav
@@ -80,7 +80,7 @@ export const MobileTabBar = () => {
                 )
               }
             >
-              <Icon className="h-5 w-5" aria-hidden="true" />
+              <Icon className="h-6 w-6" aria-hidden="true" />
               <span>{label}</span>
             </NavLink>
           </li>
@@ -92,7 +92,7 @@ export const MobileTabBar = () => {
                 className={cn(itemBase, "w-full text-muted-foreground hover:text-foreground")}
                 aria-label="More"
               >
-                <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
+                <MoreHorizontal className="h-6 w-6" aria-hidden="true" />
                 <span>More</span>
               </button>
             </SheetTrigger>
