@@ -138,6 +138,17 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
           )}
         </Card>
 
+        {pricing && (
+          <div className="text-[11px] text-muted-foreground mb-4 px-1 leading-relaxed">
+            Prices shown are per-unit estimates, adjusted ×{pricing.applied_factor.toFixed(2)}
+            {pricing.usda_source === "usda" && pricing.usda_report_month
+              ? ` using USDA Food Plans (${new Date(pricing.usda_report_month).toLocaleDateString(undefined, { month: "short", year: "numeric" })})`
+              : " using national curated baseline (USDA data unavailable — fallback)"}
+            {pricing.regional_label ? ` and ${pricing.regional_label} cost-of-living` : ""}.
+            Compare against the pack size before you buy.
+          </div>
+        )}
+
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : recs.length === 0 ? (
