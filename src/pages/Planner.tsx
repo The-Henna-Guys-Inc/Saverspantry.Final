@@ -9,13 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Sparkles, ShoppingCart, RefreshCw, Calendar, Info, Copy, Share2, Printer, Tag, MapPin, ChefHat, BookmarkCheck, ArrowRight } from "lucide-react";
+import { Loader2, Sparkles, ShoppingCart, RefreshCw, Calendar, Info, Copy, Share2, Printer, Tag, MapPin, ChefHat, BookmarkCheck, ArrowRight, Apple } from "lucide-react";
 import { toast } from "sonner";
 import { SpecialtyStoreBanner } from "@/components/SpecialtyStoreBanner";
 import { AiFeedback } from "@/components/AiFeedback";
 import { detectItemCuisines, summarizeCuisines, CUISINE_LABEL } from "@/lib/cuisineHints";
 import { CuisinePrefHint } from "@/components/CuisinePrefHint";
 import { RecipeGenerator } from "@/components/RecipeGenerator";
+import { NutritionLookup } from "@/components/NutritionLookup";
 
 type Meal = { title: string; main_ingredients: string[]; estimated_cost_usd: number; time_minutes: number };
 type Day = { day: string; breakfast: Meal; lunch: Meal; dinner: Meal };
@@ -51,9 +52,9 @@ const Planner = () => {
   const { user, loading: authLoading } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
-  const planTab = tabParam === "recipes" || tabParam === "library" ? tabParam : "planner";
+  const planTab = tabParam === "recipes" || tabParam === "library" || tabParam === "nutrition" ? tabParam : "planner";
   const setPlanTab = (v: string) => setSearchParams(v === "planner" ? {} : { tab: v });
-  const [householdSize, setHouseholdSize] = useState(2);
+  const [householdSize, setHouseholdSize] = useState("2");
   const [budget, setBudget] = useState<string>("");
   const [cuisine, setCuisine] = useState("");
   const [dietStyle, setDietStyle] = useState("balanced");
@@ -92,7 +93,7 @@ const Planner = () => {
         supabase.from("profiles").select("household_size, dietary_prefs, zip_code").eq("user_id", user.id).maybeSingle(),
         supabase.from("meal_plans").select("plan").eq("user_id", user.id).eq("week_start_date", weekStart).maybeSingle(),
       ]);
-      if (prof?.household_size) setHouseholdSize(prof.household_size);
+      if (prof?.household_size) setHouseholdSize(String(prof.household_size));
       if (prof?.zip_code) setZip(prof.zip_code);
       const prefs = (prof?.dietary_prefs ?? {}) as any;
       setProfilePrefs(prefs);
@@ -116,7 +117,7 @@ const Planner = () => {
     try {
       const { data, error } = await supabase.functions.invoke("meal-plan-generate", {
         body: {
-          household_size: householdSize,
+          household_size: Math.max(1, Number(householdSize) || 1),
           budget_usd: budget ? Number(budget) : undefined,
           cuisine_focus: cuisine || undefined,
           diet_style: dietStyle,
@@ -156,7 +157,7 @@ const Planner = () => {
         .from("pantry_items")
         .select("item, quantity, unit");
       const { data, error } = await supabase.functions.invoke("grocery-list-generate", {
-        body: { plan, household_size: householdSize, pantry: pantryRows ?? [] },
+        body: { plan, household_size: Math.max(1, Number(householdSize) || 1), pantry: pantryRows ?? [] },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -247,12 +248,15 @@ const Planner = () => {
         <p className="text-muted-foreground mb-6">Build your week, generate fresh recipes, and revisit what you've saved.</p>
 
         <Tabs value={planTab} onValueChange={setPlanTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-transparent p-0 mb-6 gap-1.5 sm:gap-2 h-auto">
+          <TabsList className="grid w-full grid-cols-4 bg-transparent p-0 mb-6 gap-1.5 sm:gap-2 h-auto">
             <TabsTrigger value="planner" className="w-full min-w-0 rounded-xl gap-1 sm:gap-2 px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth">
-              <Calendar className="h-4 w-4" />Meal planner
+              <Calendar className="h-4 w-4" /><span className="hidden sm:inline">Meal </span>Planner
             </TabsTrigger>
             <TabsTrigger value="recipes" className="w-full min-w-0 rounded-xl gap-1 sm:gap-2 px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth">
               <ChefHat className="h-4 w-4" />Recipes
+            </TabsTrigger>
+            <TabsTrigger value="nutrition" className="w-full min-w-0 rounded-xl gap-1 sm:gap-2 px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth">
+              <Apple className="h-4 w-4" />Nutrition
             </TabsTrigger>
             <TabsTrigger value="library" className="w-full min-w-0 rounded-xl gap-1 sm:gap-2 px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth">
               <BookmarkCheck className="h-4 w-4" />Library
@@ -263,8 +267,12 @@ const Planner = () => {
             <RecipeGenerator />
           </TabsContent>
 
+          <TabsContent value="nutrition" className="mt-0">
+            <NutritionLookup />
+          </TabsContent>
+
           <TabsContent value="library" className="mt-0">
-            <Card className="p-6 rounded-3xl border-border/50 text-center">
+            <Card className="p-6 rounded-3xl border-border-strong text-center">
               <BookmarkCheck className="h-8 w-8 text-primary mx-auto mb-3" />
               <h3 className="text-xl font-semibold text-primary mb-1">Your saved recipes & swaps</h3>
               <p className="text-sm text-muted-foreground mb-4">Open the full library to browse, search and re-use everything you've saved.</p>
@@ -277,12 +285,13 @@ const Planner = () => {
           <TabsContent value="planner" className="mt-0">
         <div className="text-xs uppercase tracking-wider text-accent mb-2">Week of {weekStart}</div>
 
-        <Card className="p-6 rounded-3xl border-border/50 shadow-soft mb-8">
+        <Card className="p-6 rounded-3xl border-border-strong shadow-soft mb-8">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <Label htmlFor="hh" className="text-xs">Household size</Label>
               <Input id="hh" type="number" min={1} max={12} value={householdSize}
-                onChange={e => setHouseholdSize(Math.max(1, Number(e.target.value) || 1))}
+                onChange={e => setHouseholdSize(e.target.value)}
+                onBlur={e => { const v = Number(e.target.value); if (!v || v < 1) setHouseholdSize("1"); }}
                 className="rounded-xl mt-1" />
             </div>
             <div>
@@ -328,7 +337,7 @@ const Planner = () => {
             </div>
           </div>
           {queued.length > 0 && (
-            <div className="mt-5 p-3 rounded-xl bg-secondary/60 border border-border/50">
+            <div className="mt-5 p-3 rounded-xl bg-secondary/60 border border-border-strong">
               <div className="text-xs uppercase tracking-wider text-accent mb-2">
                 Recipes queued for next plan ({queued.length})
               </div>
@@ -368,7 +377,7 @@ const Planner = () => {
               <div className="flex items-center gap-4 flex-wrap">
                 <AiFeedback
                   feature="meal_plan"
-                  context={{ household_size: householdSize, diet_style: dietStyle, cuisine, restrictions, days: plan.days?.length }}
+                  context={{ household_size: Number(householdSize) || 1, diet_style: dietStyle, cuisine, restrictions, days: plan.days?.length }}
                 />
                 <div className="text-sm text-muted-foreground">
                   Est. total <span className="font-semibold text-primary">${plan.total_estimated_cost_usd?.toFixed(2)}</span>
@@ -377,7 +386,7 @@ const Planner = () => {
             </div>
             <div className="card-masonry card-masonry-3 mb-6">
               {plan.days.map((d) => (
-                <Card key={d.day} className="p-5 rounded-2xl border-border/50">
+                <Card key={d.day} className="p-5 rounded-2xl border-border-strong">
                   <div className="text-xs uppercase tracking-wider text-accent mb-3">{d.day}</div>
                   {(["breakfast", "lunch", "dinner"] as const).map(slot => (
                     <div key={slot} className="mb-3 last:mb-0">
@@ -392,7 +401,7 @@ const Planner = () => {
               ))}
             </div>
             {plan.budget_tip && (
-              <Card className="p-4 rounded-2xl bg-secondary border-border/50 text-sm text-foreground/80 mb-8">
+              <Card className="p-4 rounded-2xl bg-secondary border-border-strong text-sm text-foreground/80 mb-8">
                 💡 {plan.budget_tip}
               </Card>
             )}
@@ -410,7 +419,7 @@ const Planner = () => {
               <div className="flex items-center gap-4 flex-wrap">
                 <AiFeedback
                   feature="grocery_list"
-                  context={{ item_count: grocery!.items.length, household_size: householdSize }}
+                  context={{ item_count: grocery!.items.length, household_size: Number(householdSize) || 1 }}
                   className="print:hidden"
                 />
                 <div className="text-sm text-muted-foreground">
@@ -457,7 +466,7 @@ const Planner = () => {
             )}
             <div className="card-masonry">
               {Object.entries(grouped).map(([cat, items]) => (
-                <Card key={cat} className="p-5 rounded-2xl border-border/50">
+                <Card key={cat} className="p-5 rounded-2xl border-border-strong">
                   <div className="text-xs uppercase tracking-wider text-accent mb-2">{cat}</div>
                   <ul className="space-y-1.5">
                     {items.map((it, i) => {

@@ -3,7 +3,8 @@
 
 export type CuisineTag =
   | "korean" | "japanese" | "chinese" | "south_asian" | "southeast_asian"
-  | "middle_eastern" | "mexican" | "latin_american" | "african" | "mediterranean";
+  | "middle_eastern" | "mexican" | "latin_american" | "african" | "mediterranean"
+  | "american" | "italian" | "french" | "caribbean" | "eastern_european";
 
 // Maps free-form / legacy cuisine names users may have saved into our CuisineTag taxonomy.
 export const LEGACY_CUISINE_MAP: Record<string, CuisineTag[]> = {
@@ -23,13 +24,13 @@ export const LEGACY_CUISINE_MAP: Record<string, CuisineTag[]> = {
   moroccan: ["middle_eastern", "african"],
   ethiopian: ["african"],
   nigerian: ["african"],
-  italian: ["mediterranean"],
+  italian: ["italian", "mediterranean"],
   greek: ["mediterranean"],
   spanish: ["mediterranean"],
   portuguese: ["mediterranean"],
-  french: ["mediterranean"],
+  french: ["french", "mediterranean"],
   mediterranean: ["mediterranean"],
-  polish: [],
+  polish: ["eastern_european"],
   serbian: ["mediterranean"],
   thai: ["southeast_asian"],
   vietnamese: ["southeast_asian"],
@@ -45,8 +46,8 @@ export const LEGACY_CUISINE_MAP: Record<string, CuisineTag[]> = {
   cuban: ["latin_american"],
   peruvian: ["latin_american"],
   brazilian: ["latin_american"],
-  caribbean: ["latin_american", "african"],
-  american: [],
+  caribbean: ["caribbean"],
+  american: ["american"],
 };
 
 export function mapLegacyCuisines(names: string[] | undefined | null): CuisineTag[] {
@@ -74,6 +75,11 @@ export const TAG_TO_DISPLAY_OPTIONS: Record<CuisineTag, string[]> = {
   latin_american: ["Mexican"],
   african: ["Mediterranean"],
   mediterranean: ["Mediterranean", "Italian"],
+  american: ["American"],
+  italian: ["Italian", "Mediterranean"],
+  french: ["French", "Mediterranean"],
+  caribbean: ["Caribbean", "Mexican"],
+  eastern_european: ["Polish", "Mediterranean"],
 };
 
 const normalizeCuisineName = (value: string) =>
@@ -157,6 +163,11 @@ export const CUISINE_LABEL: Record<CuisineTag, string> = {
   latin_american: "Latin American",
   african: "African",
   mediterranean: "Mediterranean",
+  american: "American",
+  italian: "Italian",
+  french: "French",
+  caribbean: "Caribbean",
+  eastern_european: "Eastern European",
 };
 
 const RULES: Array<{ kw: string; cuisines: CuisineTag[] }> = [

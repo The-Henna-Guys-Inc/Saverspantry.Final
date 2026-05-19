@@ -1,5 +1,6 @@
 project_id = "paajifqvwmoqttefxykw"
 
+
 [functions.nutrition-lookup]
 verify_jwt = false
 
@@ -55,4 +56,16 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.ingest-promo-email]
+verify_jwt = false
+
+[functions.dev-test-promo-ingest]
+verify_jwt = false
+
+[functions.admin-manual-flyer-ingest]
+verify_jwt = false
+
+[functions.admin-reprocess-flyer]
+verify_jwt = false
+
+[functions.usda-food-plans-sync]
 verify_jwt = false

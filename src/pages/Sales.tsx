@@ -18,9 +18,11 @@ import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
 import { detectItemCuisines } from "@/lib/cuisineHints";
 import { PagerBar } from "@/components/PagerBar";
 import { LocationHeader } from "@/components/LocationHeader";
+import { LaunchAreaCard } from "@/components/LaunchAreaCard";
 import { UserSubmitDealDialog } from "@/components/UserSubmitDealDialog";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { distanceMiles, formatDistance } from "@/lib/distance";
+import { findLaunchCity, LAUNCH_CITIES } from "@/lib/launchArea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const PAGE_SIZE = 10;
@@ -68,7 +70,10 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
   const [allPage, setAllPage] = useState(1);
   const [sortMode, setSortMode] = useState<SortMode>("distance");
   const { cuisines, isFiltering, setEnabled } = useCuisinePrefs();
-  const { location, radiusMiles } = useUserLocation();
+  const { location, zipCode, radiusMiles } = useUserLocation();
+  const matchedCity = findLaunchCity(location);
+  const [viewCityId, setViewCityId] = useState<string>("auto");
+  const displayCity = viewCityId === "auto" ? matchedCity : (LAUNCH_CITIES.find(c => c.id === viewCityId) ?? null);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
@@ -200,9 +205,25 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
       <main className={embedded ? "" : "container max-w-4xl mx-auto px-6 py-10"}>
         <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
           <div>
+            <div className="inline-flex items-center gap-2 mb-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground">
+                🌱 Now serving
+              </span>
+              <Select value={viewCityId} onValueChange={setViewCityId}>
+                <SelectTrigger className="h-7 rounded-full text-[11px] font-semibold uppercase tracking-wider w-auto px-3 bg-secondary/60 text-secondary-foreground border-secondary">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">All launch cities</SelectItem>
+                  {LAUNCH_CITIES.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <h1 className="text-3xl font-bold text-primary">Deals near you</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Some verified by stores, some by the community. We never rank by paid placement.
+              Hand-curated weekly from {displayCity ? displayCity.name : "Illinois"} specialty grocers. Some verified by stores, some by the community — we never rank by paid placement.
             </p>
           </div>
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -222,6 +243,8 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
         </div>
 
         <LocationHeader />
+
+        <LaunchAreaCard matchedCity={matchedCity} zipCode={zipCode} />
 
         <CuisineFilterBar
           cuisines={cuisines}
@@ -319,7 +342,7 @@ function SaleList({
         const meta = sourceMeta[s.source] ?? sourceMeta.user_submitted;
         const verified = s.confirmation_count >= 3;
         return (
-          <Card key={s.id} className="p-5 rounded-3xl shadow-soft border-border/50 hover:shadow-glow transition-smooth">
+          <Card key={s.id} className="p-5 rounded-3xl shadow-soft border-border-strong hover:shadow-glow transition-smooth">
             <div className="flex items-start justify-between gap-3 mb-2 flex-wrap">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -367,7 +390,7 @@ function SaleList({
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-3 pt-3 border-t border-border/50 flex-wrap">
+            <div className="flex items-center justify-between gap-3 pt-3 border-t border-border-strong flex-wrap">
               <div className="text-xs text-muted-foreground">
                 {s.pack_size && <span className="mr-3">{s.pack_size}</span>}
                 Ends {formatDistanceToNow(new Date(s.ends_at), { addSuffix: true })}

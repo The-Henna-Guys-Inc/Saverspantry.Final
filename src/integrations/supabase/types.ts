@@ -308,6 +308,42 @@ export type Database = {
         }
         Relationships: []
       }
+      city_waitlist: {
+        Row: {
+          city: string
+          created_at: string
+          email: string
+          id: string
+          notes: string | null
+          source: string
+          state: string
+          user_id: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          email: string
+          id?: string
+          notes?: string | null
+          source?: string
+          state: string
+          user_id?: string | null
+          zip_code?: string | null
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          email?: string
+          id?: string
+          notes?: string | null
+          source?: string
+          state?: string
+          user_id?: string | null
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
       data_export_requests: {
         Row: {
           completed_at: string | null
@@ -1499,6 +1535,81 @@ export type Database = {
           subject?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      usda_food_plans: {
+        Row: {
+          age_max: number | null
+          age_min: number | null
+          created_at: string
+          household_type: string
+          id: string
+          monthly_cost_usd: number
+          plan: string
+          report_month: string
+          sex: string | null
+          source_url: string | null
+          weekly_cost_usd: number | null
+        }
+        Insert: {
+          age_max?: number | null
+          age_min?: number | null
+          created_at?: string
+          household_type: string
+          id?: string
+          monthly_cost_usd: number
+          plan: string
+          report_month: string
+          sex?: string | null
+          source_url?: string | null
+          weekly_cost_usd?: number | null
+        }
+        Update: {
+          age_max?: number | null
+          age_min?: number | null
+          created_at?: string
+          household_type?: string
+          id?: string
+          monthly_cost_usd?: number
+          plan?: string
+          report_month?: string
+          sex?: string | null
+          source_url?: string | null
+          weekly_cost_usd?: number | null
+        }
+        Relationships: []
+      }
+      usda_sync_log: {
+        Row: {
+          error_message: string | null
+          id: string
+          ran_at: string
+          report_month: string | null
+          rows_imported: number | null
+          source_url: string | null
+          status: string
+          triggered_by: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          id?: string
+          ran_at?: string
+          report_month?: string | null
+          rows_imported?: number | null
+          source_url?: string | null
+          status: string
+          triggered_by?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          id?: string
+          ran_at?: string
+          report_month?: string | null
+          rows_imported?: number | null
+          source_url?: string | null
+          status?: string
+          triggered_by?: string | null
         }
         Relationships: []
       }

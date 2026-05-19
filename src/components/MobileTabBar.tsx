@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/NotificationBell";
+import { BrandMark } from "@/components/BrandMark";
 
 import { toast } from "sonner";
 
@@ -59,14 +60,14 @@ export const MobileTabBar = () => {
   };
 
   const itemBase =
-    "flex flex-col items-center justify-center gap-0.5 py-2 px-1 min-h-[56px] text-[11px] font-medium transition-colors";
+    "flex flex-col items-center justify-center gap-1 py-2.5 px-1 min-h-[64px] text-xs font-medium transition-colors";
 
   return (
     <nav
       aria-label="Primary"
       className="fixed bottom-0 inset-x-0 z-40 bg-background/90 backdrop-blur-md border-t border-border/60 safe-bottom"
     >
-      <ul className="grid grid-cols-6 max-w-2xl mx-auto">
+      <ul className="grid grid-cols-6 max-w-2xl mx-auto pb-3">
         {tabs.map(({ to, label, Icon, end }) => (
           <li key={to}>
             <NavLink
@@ -79,7 +80,7 @@ export const MobileTabBar = () => {
                 )
               }
             >
-              <Icon className="h-5 w-5" aria-hidden="true" />
+              <Icon className="h-6 w-6" aria-hidden="true" />
               <span>{label}</span>
             </NavLink>
           </li>
@@ -91,57 +92,62 @@ export const MobileTabBar = () => {
                 className={cn(itemBase, "w-full text-muted-foreground hover:text-foreground")}
                 aria-label="More"
               >
-                <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
+                <MoreHorizontal className="h-6 w-6" aria-hidden="true" />
                 <span>More</span>
               </button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="rounded-t-3xl safe-bottom">
-              <SheetHeader>
+            <SheetContent
+              side="bottom"
+              className="rounded-t-3xl safe-bottom max-h-[85dvh] flex flex-col p-0"
+            >
+              <SheetHeader className="px-6 pt-6 pb-2 shrink-0">
                 <SheetTitle asChild>
-                  <div className="flex flex-col items-center text-center leading-tight">
-                    <span className="text-xl font-bold text-primary tracking-tight">
-                      Saver's <span className="text-accent">Pantry</span>
-                    </span>
-                    <span className="text-[11px] text-muted-foreground -mt-0.5">
-                      Eat well, Save more
-                    </span>
+                  <div className="flex items-center justify-between gap-3">
+                    <BrandMark to="" size="lg" showTagline />
+                    <NotificationBell />
                   </div>
                 </SheetTitle>
               </SheetHeader>
 
-              <div className="mt-4 flex items-center justify-end gap-3">
-                <NotificationBell />
-              </div>
+              <div className="flex-1 overflow-y-auto px-6 pb-6 pt-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button asChild variant="ghost" className="justify-start rounded-xl h-11" onClick={() => setMoreOpen(false)}>
+                    <Link to="/dashboard"><BarChart3 className="h-4 w-4 mr-2" />Stats</Link>
+                  </Button>
+                  <Button asChild variant="ghost" className="justify-start rounded-xl h-11" onClick={() => setMoreOpen(false)}>
+                    <Link to="/library"><BookmarkCheck className="h-4 w-4 mr-2" />Library</Link>
+                  </Button>
+                  <Button asChild variant="ghost" className="justify-start rounded-xl h-11 col-span-2" onClick={() => setMoreOpen(false)}>
+                    <Link to="/settings"><SettingsIcon className="h-4 w-4 mr-2" />Settings</Link>
+                  </Button>
+                </div>
 
-              <div className="mt-4 grid gap-2">
-                <Button asChild variant="ghost" className="justify-start rounded-xl h-12" onClick={() => setMoreOpen(false)}>
-                  <Link to="/dashboard"><BarChart3 className="h-4 w-4 mr-2" />Stats</Link>
-                </Button>
-                <Button asChild variant="ghost" className="justify-start rounded-xl h-12" onClick={() => setMoreOpen(false)}>
-                  <Link to="/library"><BookmarkCheck className="h-4 w-4 mr-2" />Library</Link>
-                </Button>
-                <Button asChild variant="ghost" className="justify-start rounded-xl h-12" onClick={() => setMoreOpen(false)}>
-                  <Link to="/settings"><SettingsIcon className="h-4 w-4 mr-2" />Settings</Link>
-                </Button>
                 {isAdmin && (
                   <>
-                    <div className="text-xs uppercase tracking-wider text-muted-foreground mt-2 px-2">Admin</div>
-                    {[
-                      ["/admin/analytics", "Analytics"],
-                      ["/admin/users", "Users"],
-                      ["/admin/support", "Support"],
-                      ["/admin/ai-usage", "AI usage"],
-                      ["/admin/alerts", "Alerts"],
-                      ["/admin/audit", "Audit log"],
-                      ["/admin/sessions", "Sessions"],
-                    ].map(([to, label]) => (
-                      <Button key={to} asChild variant="ghost" className="justify-start rounded-xl h-12" onClick={() => setMoreOpen(false)}>
-                        <Link to={to}><Shield className="h-4 w-4 mr-2" />{label}</Link>
-                      </Button>
-                    ))}
+                    <div className="text-xs uppercase tracking-wider text-muted-foreground mt-4 mb-2 px-1">Admin</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        ["/admin/analytics", "Analytics"],
+                        ["/admin/users", "Users"],
+                        ["/admin/support", "Support"],
+                        ["/admin/ai-usage", "AI usage"],
+                        ["/admin/alerts", "Alerts"],
+                        ["/admin/audit", "Audit log"],
+                        ["/admin/sessions", "Sessions"],
+                        ["/admin/deals", "Deals review"],
+                        ["/admin/email-inbox", "Email inbox"],
+                        ["/admin/email-aliases", "Email aliases"],
+                        ["/admin/usda-sync", "USDA sync"],
+                      ].map(([to, label]) => (
+                        <Button key={to} asChild variant="ghost" size="sm" className="justify-start rounded-lg h-10 text-xs" onClick={() => setMoreOpen(false)}>
+                          <Link to={to}><Shield className="h-3.5 w-3.5 mr-1.5 shrink-0" />{label}</Link>
+                        </Button>
+                      ))}
+                    </div>
                   </>
                 )}
-                <Button onClick={signOut} variant="ghost" className="justify-start rounded-xl h-12 text-destructive">
+
+                <Button onClick={signOut} variant="ghost" className="w-full justify-start rounded-xl h-11 text-destructive mt-4">
                   <LogOut className="h-4 w-4 mr-2" />Sign out
                 </Button>
               </div>

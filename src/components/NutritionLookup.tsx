@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, Sparkles, Search, TrendingUp } from "lucide-react";
+import { Loader2, Sparkles, Search, TrendingUp, Trophy, BadgeCheck } from "lucide-react";
 import { SaveButton } from "./SaveButton";
 
 type Nutrition = {
@@ -18,6 +18,22 @@ type Nutrition = {
   key_micros: { name: string; amount: number; unit: string; dv_percent?: number }[];
   notes: string;
   source?: string;
+};
+
+type RankingItem = {
+  food: string;
+  portion_label: string;
+  portion_grams: number;
+  amount: number;
+  unit: string;
+  source: "USDA" | "AI estimate";
+};
+type Ranking = {
+  query: string;
+  nutrient: string;
+  unit: string;
+  items: RankingItem[];
+  note: string;
 };
 
 // US-staple fallbacks shown when no community search history exists yet
@@ -41,6 +57,7 @@ export const NutritionLookup = () => {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Nutrition | null>(null);
+  const [ranking, setRanking] = useState<Ranking | null>(null);
   const [topSearches, setTopSearches] = useState<string[]>([]);
   const [usingFallback, setUsingFallback] = useState(true);
 
@@ -63,13 +80,15 @@ export const NutritionLookup = () => {
     if (!q.trim()) return;
     setLoading(true);
     setResult(null);
+    setRanking(null);
     try {
       const { data, error } = await supabase.functions.invoke("nutrition-lookup", {
         body: { query: q },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setResult(data.nutrition);
+      if (data?.ranking) setRanking(data.ranking as Ranking);
+      else setResult(data.nutrition);
       // Fire-and-forget log; ignore RLS failures for unauth users
       supabase
         .from("nutrition_search_events")
@@ -98,7 +117,7 @@ export const NutritionLookup = () => {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Try: 1 cup cooked quinoa"
+            placeholder='Try "1 cup cooked quinoa" or "foods highest in omega-3"'
             className="h-14 pl-11 rounded-2xl bg-card border-border text-base shadow-soft"
           />
         </div>
@@ -115,7 +134,7 @@ export const NutritionLookup = () => {
       </form>
 
       {topSearches.length > 0 && (
-        <div className="mt-4">
+        <div className="mt-4 p-3 rounded-2xl bg-card border border-border-strong">
           <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
             <TrendingUp className="h-3 w-3" />
             {usingFallback ? "Popular US staples" : "Top 10 searched"}
@@ -139,7 +158,7 @@ export const NutritionLookup = () => {
       )}
 
       {result && (
-        <Card className="mt-6 p-6 rounded-3xl shadow-glow border-border/50 animate-fade-up">
+        <Card className="mt-6 p-6 rounded-3xl shadow-glow border-border-strong animate-fade-up">
           <div className="flex items-start justify-between gap-3 mb-5">
             <div>
               <h3 className="text-xl font-semibold text-primary">{result.food}</h3>
@@ -188,6 +207,60 @@ export const NutritionLookup = () => {
           {result.notes && (
             <p className="text-sm text-foreground/80 italic border-l-2 border-accent pl-3">
               {result.notes}
+            </p>
+          )}
+        </Card>
+      )}
+
+      {ranking && (
+        <Card className="mt-6 p-6 rounded-3xl shadow-glow border-border-strong animate-fade-up">
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-accent font-semibold">
+                <Trophy className="h-3.5 w-3.5" /> Top sources
+              </div>
+              <h3 className="text-xl font-semibold text-primary mt-1 truncate">
+                Highest in {ranking.nutrient}
+              </h3>
+              <p className="text-xs text-muted-foreground mt-1">{ranking.note}</p>
+            </div>
+            <SaveButton table="saved_lookups" payload={{ query, ranking }} />
+          </div>
+
+          <ol className="space-y-3">
+            {ranking.items.map((it, idx) => (
+              <li
+                key={it.food}
+                className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-warm border border-border/40"
+              >
+                <div className="h-9 w-9 shrink-0 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+                  {idx + 1}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-foreground capitalize truncate">{it.food}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
+                    <span>{it.portion_label}</span>
+                    {it.source === "USDA" && (
+                      <span className="inline-flex items-center gap-0.5 text-primary">
+                        <BadgeCheck className="h-3 w-3" /> USDA
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-lg font-bold text-primary tabular-nums">
+                    {it.amount}
+                    <span className="text-xs font-normal text-muted-foreground ml-0.5">{it.unit}</span>
+                  </div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">per serving</div>
+                </div>
+              </li>
+            ))}
+          </ol>
+
+          {ranking.items.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Couldn't verify any candidates. Try rephrasing the nutrient name.
             </p>
           )}
         </Card>

@@ -9,9 +9,18 @@ interface BrandMarkProps {
 }
 
 const sizeMap = {
-  sm: "text-base sm:text-lg",
-  md: "text-xl sm:text-2xl",
-  lg: "text-2xl sm:text-3xl",
+  sm: {
+    title: "text-lg sm:text-xl",
+    tagline: "text-[9px] sm:text-[10px]",
+  },
+  md: {
+    title: "text-xl sm:text-2xl",
+    tagline: "text-[10px] sm:text-[11px]",
+  },
+  lg: {
+    title: "text-2xl sm:text-3xl",
+    tagline: "text-[11px] sm:text-xs",
+  },
 };
 
 export const BrandMark = ({
@@ -21,12 +30,12 @@ export const BrandMark = ({
   className,
 }: BrandMarkProps) => {
   const content = (
-    <div className={cn("flex flex-col leading-tight", className)}>
-      <span className={cn("font-bold text-primary tracking-tight", sizeMap[size])}>
+    <div className={cn("inline-flex w-fit flex-col items-center justify-center leading-none", className)}>
+      <span className={cn("whitespace-nowrap font-bold text-primary tracking-tight", sizeMap[size].title)}>
         Saver's <span className="text-accent">Pantry</span>
       </span>
       {showTagline && (
-        <span className="text-[10px] sm:text-xs text-muted-foreground -mt-0.5 text-center">
+        <span className={cn("-mt-0.5 w-fit whitespace-nowrap text-center font-medium text-muted-foreground", sizeMap[size].tagline)}>
           Eat well, Save more
         </span>
       )}

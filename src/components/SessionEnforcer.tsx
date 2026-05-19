@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 const LAST_ACTIVITY_KEY = "tp_last_activity";
 const SESSION_START_KEY = "tp_session_start";
+const SESSION_MARKER_KEY = "tp_session_marker";
 
 export const SessionEnforcer = () => {
   const { user, session } = useAuth();
@@ -25,8 +26,19 @@ export const SessionEnforcer = () => {
     if (!session) {
       localStorage.removeItem(SESSION_START_KEY);
       localStorage.removeItem(LAST_ACTIVITY_KEY);
+      localStorage.removeItem(SESSION_MARKER_KEY);
       return;
     }
+    const marker = `${session.user.id}:${session.user.last_sign_in_at ?? ""}`;
+    const storedMarker = localStorage.getItem(SESSION_MARKER_KEY);
+
+    if (storedMarker !== marker) {
+      localStorage.setItem(SESSION_MARKER_KEY, marker);
+      localStorage.setItem(SESSION_START_KEY, String(Date.now()));
+      localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
+      return;
+    }
+
     if (!localStorage.getItem(SESSION_START_KEY)) {
       localStorage.setItem(SESSION_START_KEY, String(Date.now()));
     }
@@ -44,7 +56,7 @@ export const SessionEnforcer = () => {
 
   // Periodic check
   useEffect(() => {
-    if (!user) return;
+    if (!user || !session) return;
     const check = async () => {
       const start = parseInt(localStorage.getItem(SESSION_START_KEY) ?? "0");
       const last = parseInt(localStorage.getItem(LAST_ACTIVITY_KEY) ?? "0");
@@ -55,17 +67,29 @@ export const SessionEnforcer = () => {
       let reason: string | null = null;
       if (start && now - start > maxAgeMs) reason = "Session expired. Please sign in again.";
       else if (last && now - last > idleMs) reason = "Signed out due to inactivity.";
+      console.log("[auth-debug] SessionEnforcer check", {
+        userId: user.id,
+        provider: session.user.app_metadata?.provider,
+        startAgeMs: start ? now - start : null,
+        idleMs: last ? now - last : null,
+        maxAgeMs,
+        idleLimitMs: idleMs,
+        wouldSignOut: !!reason,
+        reason,
+      });
       if (reason) {
+        console.warn("[auth-debug] SessionEnforcer signing out:", reason);
         await supabase.auth.signOut();
         localStorage.removeItem(SESSION_START_KEY);
         localStorage.removeItem(LAST_ACTIVITY_KEY);
+        localStorage.removeItem(SESSION_MARKER_KEY);
         toast.info(reason);
       }
     };
     const id = setInterval(check, 30_000);
     check();
     return () => clearInterval(id);
-  }, [user]);
+  }, [user, session]);
 
   return null;
 };

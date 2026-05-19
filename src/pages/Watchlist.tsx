@@ -94,7 +94,7 @@ export default function Watchlist({ embedded = false }: { embedded?: boolean } =
           </p>
         </div>
 
-        <Card className="p-5 rounded-3xl shadow-soft border-border/50 mb-6">
+        <Card className="p-5 rounded-3xl shadow-soft border-border-strong mb-6">
           <form onSubmit={(e) => { e.preventDefault(); add(newItem); }} className="flex gap-2">
             <Input
               value={newItem}
@@ -132,7 +132,7 @@ export default function Watchlist({ embedded = false }: { embedded?: boolean } =
         ) : (
           <div className="space-y-3">
             {items.map((it) => (
-              <Card key={it.id} className="p-4 rounded-2xl border-border/50">
+              <Card key={it.id} className="p-4 rounded-2xl border-border-strong">
                 <div className="flex items-center justify-between gap-3 mb-3">
                   <div className="font-medium capitalize">{it.food_name}</div>
                   <Button size="icon" variant="ghost" className="h-8 w-8 rounded-xl text-muted-foreground" onClick={() => remove(it.id)}>

@@ -16,6 +16,7 @@ import { CuisinePrefHint } from "./CuisinePrefHint";
 
 type Swap = {
   title: string;
+  creative_title?: string;
   items: { food: string; portion: string }[];
   protein_g: number;
   calories_kcal: number;
@@ -29,6 +30,11 @@ type Swap = {
 type Result = {
   original: { name: string; protein_g: number; calories_kcal: number; estimated_cost_usd: number };
   swaps: Swap[];
+  price_source?: "estimate" | "kroger" | "mixed";
+  price_store?: string | null;
+  region_state?: string | null;
+  region_multiplier?: number | null;
+  region_label?: string | null;
 };
 
 const EXAMPLES = ["200g chicken breast", "2 large eggs", "1 cup Greek yogurt", "150g salmon"];
@@ -59,13 +65,16 @@ export const EquivalencyEngine = () => {
   }, [prefsLoading, prefCuisines, favoriteCuisines, cuisineTouched, cuisineOptions]);
   const pickCuisine = (next: string | null) => { setCuisineTouched(true); setCuisine(next); };
 
+  const [zipCode, setZipCode] = useState<string | null>(null);
+
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data } = await supabase.from("profiles").select("dietary_prefs").eq("user_id", user.id).maybeSingle();
+      const { data } = await supabase.from("profiles").select("dietary_prefs, zip_code").eq("user_id", user.id).maybeSingle();
       const prefs = (data?.dietary_prefs ?? {}) as any;
       setProfilePrefs(prefs);
+      setZipCode(data?.zip_code ?? null);
       if (Array.isArray(prefs.restrictions)) {
         const fromProfile = prefs.restrictions
           .map((r: string) => r.charAt(0).toUpperCase() + r.slice(1))
@@ -89,6 +98,7 @@ export const EquivalencyEngine = () => {
           dietary_prefs: restrictions.map((r) => r.toLowerCase()),
           cuisine: cuisine ?? undefined,
           blood_sugar_friendly: bloodSugar,
+          zip: zipCode ?? undefined,
           profile: profilePrefs ? {
             cuisines: cuisine ? [cuisine] : (profilePrefs.cuisines ?? []),
             spice: profilePrefs.spice ?? null,
@@ -123,65 +133,30 @@ export const EquivalencyEngine = () => {
         </Button>
       </form>
 
-      <div className="flex flex-wrap gap-2 mt-3">
-        {RESTRICTIONS.map((r) => (
-          <button
-            key={r}
-            onClick={() => toggle(r)}
-            className={`text-xs px-3 py-1.5 rounded-full transition-smooth ${
-              restrictions.includes(r)
-                ? "bg-primary text-primary-foreground shadow-soft"
-                : "bg-accent/20 text-foreground hover:bg-accent/30"
-            }`}
-          >
-            {r}
-          </button>
-        ))}
-      </div>
-
-      <div className="mt-3 p-3 rounded-2xl bg-card border border-border/50">
-        <label className="flex items-start gap-3 cursor-pointer">
-          <button
-            type="button"
-            role="switch"
-            aria-checked={bloodSugar}
-            onClick={() => setBloodSugar((v) => !v)}
-            className={`mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-              bloodSugar ? "bg-primary" : "bg-muted"
-            }`}
-          >
-            <span
-              className={`inline-block h-5 w-5 transform rounded-full bg-background shadow transition-transform ${
-                bloodSugar ? "translate-x-5" : "translate-x-0.5"
+      <div className="mt-3 p-3 rounded-2xl bg-card border border-border-strong">
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
+          Dietary
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {RESTRICTIONS.map((r) => (
+            <button
+              key={r}
+              onClick={() => toggle(r)}
+              className={`text-xs px-3 py-1.5 rounded-full transition-smooth ${
+                restrictions.includes(r)
+                  ? "bg-primary text-primary-foreground shadow-soft"
+                  : "bg-accent/20 text-foreground hover:bg-accent/30"
               }`}
-            />
-          </button>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-              <Activity className="h-3.5 w-3.5 text-primary" />
-              Blood sugar friendly
-              <TooltipProvider delayDuration={150}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button type="button" className="text-muted-foreground hover:text-foreground" aria-label="About blood sugar filter">
-                      <Info className="h-3.5 w-3.5" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-xs text-xs">
-                    Glycemic estimates are approximate. Consult a healthcare provider for medical guidance on blood sugar management.
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Lower glycemic alternatives for better blood sugar response
-            </p>
-          </div>
-        </label>
+            >
+              {r}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="mt-3">
-        <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">
+
+      <div className="mt-3 p-3 rounded-2xl bg-card border border-border-strong">
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
           Cuisine <span className="normal-case text-muted-foreground/70">(optional)</span>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -222,18 +197,23 @@ export const EquivalencyEngine = () => {
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2 mt-3">
-        {EXAMPLES.map((s) => (
-          <button key={s} onClick={() => { setFood(s); find(s); }}
-            className="text-xs px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground hover:bg-muted transition-smooth">
-            {s}
-          </button>
-        ))}
+      <div className="mt-3 p-3 rounded-2xl bg-card border border-border-strong">
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
+          Try one of these
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {EXAMPLES.map((s) => (
+            <button key={s} onClick={() => { setFood(s); find(s); }}
+              className="text-xs px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground hover:bg-muted transition-smooth">
+              {s}
+            </button>
+          ))}
+        </div>
       </div>
 
       {result && (
         <div className="mt-6 space-y-4 animate-fade-up">
-          <Card className="p-5 rounded-3xl bg-gradient-warm border-border/50">
+          <Card className="p-5 rounded-3xl bg-gradient-warm border-border-strong">
             <div className="flex flex-col gap-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Original</div>
@@ -250,6 +230,18 @@ export const EquivalencyEngine = () => {
                 <span aria-hidden>·</span>
                 <span className="font-semibold text-foreground">${result.original.estimated_cost_usd.toFixed(2)}</span>
               </div>
+              <div className="text-[11px] text-muted-foreground">
+                {result.price_source === "kroger" && result.price_store
+                  ? `Live prices from ${result.price_store}`
+                  : result.price_source === "mixed" && result.price_store
+                  ? `Some live prices from ${result.price_store}, others estimated`
+                  : "Estimated US grocery prices · varies by store & region"}
+                {result.region_multiplier && result.region_multiplier > 1 && (
+                  <span className="ml-1">
+                    · adjusted +{Math.round((result.region_multiplier - 1) * 100)}% for {result.region_label ?? result.region_state} grocery prices
+                  </span>
+                )}
+              </div>
             </div>
             <div className="mt-3 flex justify-end">
               <AiFeedback
@@ -260,9 +252,9 @@ export const EquivalencyEngine = () => {
           </Card>
 
           {result.swaps.map((s, i) => (
-            <Card key={i} className="p-5 rounded-3xl shadow-soft hover:shadow-glow transition-smooth border-border/50">
+            <Card key={i} className="p-5 rounded-3xl shadow-soft hover:shadow-glow transition-smooth border-border-strong">
               <div className="flex items-start justify-between gap-3 mb-3">
-                <h4 className="text-base font-semibold text-primary">{s.title}</h4>
+                <h4 className="text-base font-semibold text-primary">{s.creative_title?.trim() || s.title}</h4>
                 {s.savings_percent > 0 && (
                   <div className="flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-accent/20 text-foreground shrink-0">
                     <TrendingDown className="h-3 w-3" />
@@ -275,7 +267,7 @@ export const EquivalencyEngine = () => {
                   <li key={j}>• {it.portion} {it.food}</li>
                 ))}
               </ul>
-              <div className="flex flex-wrap gap-3 text-xs text-muted-foreground border-t border-border/50 pt-3">
+              <div className="flex flex-wrap gap-3 text-xs text-muted-foreground border-t border-border-strong pt-3">
                 <span>{Math.round(s.calories_kcal)} kcal</span>
                 <span>{s.protein_g.toFixed(0)}g protein</span>
                 <span className="font-semibold text-foreground">${s.estimated_cost_usd.toFixed(2)}</span>
@@ -338,7 +330,7 @@ export const EquivalencyEngine = () => {
                   <button
                     key={i}
                     onClick={() => { setFood(s.from); find(s.from); }}
-                    className="text-left p-3 rounded-2xl bg-card border border-border/50 hover:shadow-glow transition-smooth min-h-[44px]"
+                    className="text-left p-3 rounded-2xl bg-card border border-border-strong hover:shadow-glow transition-smooth min-h-[44px]"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 text-sm flex-wrap">
@@ -380,7 +372,7 @@ export const EquivalencyEngine = () => {
                   <button
                     key={i}
                     onClick={() => { setFood(s.from); find(s.from); }}
-                    className="text-left p-3 rounded-2xl bg-card border border-border/50 hover:shadow-glow transition-smooth min-h-[44px]"
+                    className="text-left p-3 rounded-2xl bg-card border border-border-strong hover:shadow-glow transition-smooth min-h-[44px]"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 text-sm flex-wrap">

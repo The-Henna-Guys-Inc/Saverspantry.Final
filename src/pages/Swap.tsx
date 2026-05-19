@@ -16,7 +16,7 @@ const Swap = () => {
         <div className="flex items-center gap-2 text-accent text-xs font-semibold uppercase tracking-widest mb-2">
           <Repeat className="h-3.5 w-3.5" /> Swap
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">Same nutrition. Less money.</h1>
+        <h1 className="text-2xl sm:text-4xl font-bold text-primary mb-2">Same nutrition. Less money.</h1>
         <p className="text-muted-foreground mb-6">
           Enter a food and we'll suggest cheaper alternatives that match the protein and calories.
         </p>
