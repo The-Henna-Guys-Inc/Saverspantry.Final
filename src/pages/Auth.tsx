@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
-import { SignInWithApple, type SignInWithAppleOptions } from "@capacitor-community/apple-sign-in";
+
 import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
