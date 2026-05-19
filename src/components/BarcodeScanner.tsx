@@ -70,6 +70,7 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
   const controlsRef = useRef<IScannerControls | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const nativeRafRef = useRef<number | null>(null);
+  const autoStartTriedRef = useRef(false);
   const stoppedRef = useRef(false);
   const onDetectedRef = useRef(onDetected);
   const onOpenChangeRef = useRef(onOpenChange);
@@ -79,6 +80,7 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
   const [status, setStatus] = useState<"needs-permission" | "requesting" | "scanning" | "looking-up" | "error">("needs-permission");
   const [errorMsg, setErrorMsg] = useState("");
   const [permanentlyDenied, setPermanentlyDenied] = useState(false);
+  const [cameraPermission, setCameraPermission] = useState<"unknown" | "prompt" | "granted" | "denied">("unknown");
   const [torchOn, setTorchOn] = useState(false);
   const [torchSupported, setTorchSupported] = useState(false);
 
@@ -114,9 +116,11 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
   useEffect(() => {
     if (!open) {
       stopAll();
+      autoStartTriedRef.current = false;
       setStatus("needs-permission");
       setErrorMsg("");
       setPermanentlyDenied(false);
+      setCameraPermission("unknown");
       setTorchOn(false);
       setTorchSupported(false);
       return;
@@ -167,8 +171,31 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
       try {
         // @ts-ignore
         const perm: PermissionStatus | undefined = await navigator.permissions?.query({ name: "camera" as PermissionName });
-        if (perm?.state === "denied") setPermanentlyDenied(true);
-      } catch { /* */ }
+        if (stoppedRef.current) return;
+
+        if (perm?.state === "granted") {
+          setCameraPermission("granted");
+          if (!autoStartTriedRef.current) {
+            autoStartTriedRef.current = true;
+            void requestCamera(true);
+          }
+          return;
+        }
+
+        if (perm?.state === "denied") {
+          setCameraPermission("denied");
+          setPermanentlyDenied(true);
+          setErrorMsg("Camera permission is blocked in your browser settings.");
+          setStatus("error");
+          return;
+        }
+
+        setCameraPermission("prompt");
+        setStatus("needs-permission");
+      } catch {
+        setCameraPermission("unknown");
+        setStatus("needs-permission");
+      }
     })();
   }, [open]);
 
@@ -186,7 +213,31 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
     onOpenChangeRef.current(false);
   };
 
-  const requestCamera = async () => {
+  const readWebCameraPermission = async () => {
+    try {
+      if (!navigator.permissions?.query) {
+        setCameraPermission("unknown");
+        return "unknown" as const;
+      }
+
+      const permission = await navigator.permissions.query({ name: "camera" as PermissionName });
+      const next =
+        permission.state === "granted"
+          ? "granted"
+          : permission.state === "denied"
+            ? "denied"
+            : "prompt";
+
+      setCameraPermission(next);
+      setPermanentlyDenied(next === "denied");
+      return next;
+    } catch {
+      setCameraPermission("unknown");
+      return "unknown" as const;
+    }
+  };
+
+  const requestCamera = async (isAutoStart = false) => {
     setStatus("requesting");
     setErrorMsg("");
     stoppedRef.current = false;
@@ -207,6 +258,13 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
         setErrorMsg(e?.message ?? "Native scanner failed.");
         setStatus("error");
       }
+      return;
+    }
+
+    const permissionState = await readWebCameraPermission();
+    if (permissionState === "denied") {
+      setErrorMsg("Camera permission is blocked in your browser settings.");
+      setStatus("error");
       return;
     }
 
@@ -235,9 +293,18 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
         });
       } catch (e2: any) {
         const name = e2?.name as string | undefined;
+        const latestPermission = await readWebCameraPermission();
+        if (isAutoStart && (name === "NotAllowedError" || name === "SecurityError") && latestPermission !== "denied") {
+          setStatus("needs-permission");
+          return;
+        }
         if (name === "NotAllowedError" || name === "SecurityError") {
-          setPermanentlyDenied(true);
-          setErrorMsg("Camera permission was blocked by the browser.");
+          setPermanentlyDenied(latestPermission === "denied");
+          setErrorMsg(
+            latestPermission === "denied"
+              ? "Camera permission was blocked by the browser."
+              : "Camera access did not start. Tap Start camera and allow access if prompted."
+          );
         } else if (name === "NotFoundError" || name === "OverconstrainedError") {
           setErrorMsg("No camera was found on this device.");
         } else if (name === "NotReadableError") {
@@ -251,6 +318,8 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
     }
 
     streamRef.current = stream;
+    setCameraPermission("granted");
+    setPermanentlyDenied(false);
     setStatus("scanning");
 
     // Probe torch support
@@ -260,8 +329,15 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
       if (caps.torch) setTorchSupported(true);
     } catch { /* */ }
 
-    await new Promise((r) => requestAnimationFrame(() => r(null)));
-    const video = videoRef.current;
+    // Wait for React to mount the <video> element. setStatus("scanning") above
+    // schedules a re-render; the ref is null until React commits. Poll a few
+    // frames instead of assuming one rAF is enough.
+    let video: HTMLVideoElement | null = null;
+    for (let i = 0; i < 30; i++) {
+      if (stoppedRef.current) return;
+      if (videoRef.current) { video = videoRef.current; break; }
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+    }
     if (!video) {
       stopAll();
       setErrorMsg("Scanner failed to initialize.");
@@ -368,11 +444,11 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
             <p className="text-xs text-muted-foreground max-w-xs mx-auto">
               Tap below — your browser will ask for camera permission. We only use it while this scanner is open.
             </p>
-            <Button onClick={requestCamera} disabled={status === "requesting"} variant="hero" size="sm" className="rounded-xl">
+            <Button onClick={() => void requestCamera()} disabled={status === "requesting"} variant="hero" size="sm" className="rounded-xl">
               {status === "requesting" ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /><span className="ml-2">Starting…</span></>
               ) : (
-                <><Camera className="h-4 w-4" /><span className="ml-2">Allow camera</span></>
+                <><Camera className="h-4 w-4" /><span className="ml-2">{cameraPermission === "granted" ? "Start camera" : "Allow camera"}</span></>
               )}
             </Button>
           </div>
@@ -389,38 +465,36 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
                 Your browser is blocking camera access. Tap the camera/lock icon in the address bar, set Camera to <strong>Allow</strong>, then try again.
               </div>
             )}
-            <Button onClick={requestCamera} variant="hero" size="sm" className="rounded-xl">
+            <Button onClick={() => void requestCamera()} variant="hero" size="sm" className="rounded-xl">
               <Camera className="h-4 w-4" /><span className="ml-2">Try again</span>
             </Button>
           </div>
         )}
 
-        {showVideo && (
-          <div className="relative rounded-xl overflow-hidden bg-black aspect-[3/4] sm:aspect-video w-full">
-            <video ref={videoRef} className="w-full h-full object-cover" muted playsInline autoPlay />
-            <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-              <div className="w-[88%] h-[28%] sm:w-3/4 sm:h-1/3 border-2 border-accent/80 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
-            </div>
-            {torchSupported && (
-              <button
-                type="button"
-                onClick={toggleTorch}
-                className="absolute top-3 right-3 h-10 w-10 rounded-full bg-black/60 text-white flex items-center justify-center backdrop-blur-sm active:scale-95 transition"
-                aria-label={torchOn ? "Turn flashlight off" : "Turn flashlight on"}
-              >
-                {torchOn ? <ZapOff className="h-5 w-5" /> : <Zap className="h-5 w-5" />}
-              </button>
-            )}
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-white/90 text-xs bg-black/50 rounded-full px-3 py-1 backdrop-blur-sm">
-              Fill the box with the barcode • hold ~10cm away
-            </div>
-            {status === "looking-up" && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-sm gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" /> Looking up product…
-              </div>
-            )}
+        <div className={showVideo ? "relative rounded-xl overflow-hidden bg-black aspect-[3/4] sm:aspect-video w-full" : "hidden"}>
+          <video ref={videoRef} className="w-full h-full object-cover" muted playsInline autoPlay />
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+            <div className="w-[88%] h-[28%] sm:w-3/4 sm:h-1/3 border-2 border-accent/80 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
           </div>
-        )}
+          {torchSupported && (
+            <button
+              type="button"
+              onClick={toggleTorch}
+              className="absolute top-3 right-3 h-10 w-10 rounded-full bg-black/60 text-white flex items-center justify-center backdrop-blur-sm active:scale-95 transition"
+              aria-label={torchOn ? "Turn flashlight off" : "Turn flashlight on"}
+            >
+              {torchOn ? <ZapOff className="h-5 w-5" /> : <Zap className="h-5 w-5" />}
+            </button>
+          )}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-white/90 text-xs bg-black/50 rounded-full px-3 py-1 backdrop-blur-sm">
+            Fill the box with the barcode • hold ~10cm away
+          </div>
+          {status === "looking-up" && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-sm gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" /> Looking up product…
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
