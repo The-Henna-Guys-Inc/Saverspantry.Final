@@ -70,6 +70,7 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
   const controlsRef = useRef<IScannerControls | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const nativeRafRef = useRef<number | null>(null);
+  const autoStartTriedRef = useRef(false);
   const stoppedRef = useRef(false);
   const onDetectedRef = useRef(onDetected);
   const onOpenChangeRef = useRef(onOpenChange);
@@ -79,6 +80,7 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
   const [status, setStatus] = useState<"needs-permission" | "requesting" | "scanning" | "looking-up" | "error">("needs-permission");
   const [errorMsg, setErrorMsg] = useState("");
   const [permanentlyDenied, setPermanentlyDenied] = useState(false);
+  const [cameraPermission, setCameraPermission] = useState<"unknown" | "prompt" | "granted" | "denied">("unknown");
   const [torchOn, setTorchOn] = useState(false);
   const [torchSupported, setTorchSupported] = useState(false);
 
@@ -114,9 +116,11 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
   useEffect(() => {
     if (!open) {
       stopAll();
+      autoStartTriedRef.current = false;
       setStatus("needs-permission");
       setErrorMsg("");
       setPermanentlyDenied(false);
+      setCameraPermission("unknown");
       setTorchOn(false);
       setTorchSupported(false);
       return;
@@ -167,8 +171,31 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
       try {
         // @ts-ignore
         const perm: PermissionStatus | undefined = await navigator.permissions?.query({ name: "camera" as PermissionName });
-        if (perm?.state === "denied") setPermanentlyDenied(true);
-      } catch { /* */ }
+        if (stoppedRef.current) return;
+
+        if (perm?.state === "granted") {
+          setCameraPermission("granted");
+          if (!autoStartTriedRef.current) {
+            autoStartTriedRef.current = true;
+            void requestCamera(true);
+          }
+          return;
+        }
+
+        if (perm?.state === "denied") {
+          setCameraPermission("denied");
+          setPermanentlyDenied(true);
+          setErrorMsg("Camera permission is blocked in your browser settings.");
+          setStatus("error");
+          return;
+        }
+
+        setCameraPermission("prompt");
+        setStatus("needs-permission");
+      } catch {
+        setCameraPermission("unknown");
+        setStatus("needs-permission");
+      }
     })();
   }, [open]);
 
@@ -186,7 +213,31 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
     onOpenChangeRef.current(false);
   };
 
-  const requestCamera = async () => {
+  const readWebCameraPermission = async () => {
+    try {
+      if (!navigator.permissions?.query) {
+        setCameraPermission("unknown");
+        return "unknown" as const;
+      }
+
+      const permission = await navigator.permissions.query({ name: "camera" as PermissionName });
+      const next =
+        permission.state === "granted"
+          ? "granted"
+          : permission.state === "denied"
+            ? "denied"
+            : "prompt";
+
+      setCameraPermission(next);
+      setPermanentlyDenied(next === "denied");
+      return next;
+    } catch {
+      setCameraPermission("unknown");
+      return "unknown" as const;
+    }
+  };
+
+  const requestCamera = async (isAutoStart = false) => {
     setStatus("requesting");
     setErrorMsg("");
     stoppedRef.current = false;
@@ -207,6 +258,13 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
         setErrorMsg(e?.message ?? "Native scanner failed.");
         setStatus("error");
       }
+      return;
+    }
+
+    const permissionState = await readWebCameraPermission();
+    if (permissionState === "denied") {
+      setErrorMsg("Camera permission is blocked in your browser settings.");
+      setStatus("error");
       return;
     }
 
@@ -235,9 +293,18 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
         });
       } catch (e2: any) {
         const name = e2?.name as string | undefined;
+        const latestPermission = await readWebCameraPermission();
+        if (isAutoStart && (name === "NotAllowedError" || name === "SecurityError") && latestPermission !== "denied") {
+          setStatus("needs-permission");
+          return;
+        }
         if (name === "NotAllowedError" || name === "SecurityError") {
-          setPermanentlyDenied(true);
-          setErrorMsg("Camera permission was blocked by the browser.");
+          setPermanentlyDenied(latestPermission === "denied");
+          setErrorMsg(
+            latestPermission === "denied"
+              ? "Camera permission was blocked by the browser."
+              : "Camera access did not start. Tap Start camera and allow access if prompted."
+          );
         } else if (name === "NotFoundError" || name === "OverconstrainedError") {
           setErrorMsg("No camera was found on this device.");
         } else if (name === "NotReadableError") {
@@ -251,6 +318,8 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
     }
 
     streamRef.current = stream;
+    setCameraPermission("granted");
+    setPermanentlyDenied(false);
     setStatus("scanning");
 
     // Probe torch support
@@ -375,11 +444,11 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
             <p className="text-xs text-muted-foreground max-w-xs mx-auto">
               Tap below — your browser will ask for camera permission. We only use it while this scanner is open.
             </p>
-            <Button onClick={requestCamera} disabled={status === "requesting"} variant="hero" size="sm" className="rounded-xl">
+            <Button onClick={() => void requestCamera()} disabled={status === "requesting"} variant="hero" size="sm" className="rounded-xl">
               {status === "requesting" ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /><span className="ml-2">Starting…</span></>
               ) : (
-                <><Camera className="h-4 w-4" /><span className="ml-2">Allow camera</span></>
+                <><Camera className="h-4 w-4" /><span className="ml-2">{cameraPermission === "granted" ? "Start camera" : "Allow camera"}</span></>
               )}
             </Button>
           </div>
@@ -396,7 +465,7 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
                 Your browser is blocking camera access. Tap the camera/lock icon in the address bar, set Camera to <strong>Allow</strong>, then try again.
               </div>
             )}
-            <Button onClick={requestCamera} variant="hero" size="sm" className="rounded-xl">
+            <Button onClick={() => void requestCamera()} variant="hero" size="sm" className="rounded-xl">
               <Camera className="h-4 w-4" /><span className="ml-2">Try again</span>
             </Button>
           </div>
