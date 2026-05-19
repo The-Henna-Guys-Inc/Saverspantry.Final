@@ -21,7 +21,7 @@ const cardStyle: React.CSSProperties = {
 
 const PERKS = [
   { icon: "🍳", text: "Cuisine-aware recipes" },
-  { icon: "📋", text: "Weekly meal plans + smart grocery lists" },
+  { icon: "📋", text: "Meal plans + grocery lists" },
   { icon: "🏪", text: "Curated deals at grocers near you" },
   { icon: "📦", text: "Pantry tracking with bulk-buy savings" },
 ];
