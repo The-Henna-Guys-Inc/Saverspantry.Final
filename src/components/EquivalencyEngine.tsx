@@ -154,11 +154,6 @@ export const EquivalencyEngine = () => {
         </div>
       </div>
 
-      <div className="mt-3 p-3 rounded-2xl bg-card border border-border-strong">
-        <label className="flex items-start gap-3 cursor-pointer">
-...
-        </label>
-      </div>
 
       <div className="mt-3 p-3 rounded-2xl bg-card border border-border-strong">
         <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
