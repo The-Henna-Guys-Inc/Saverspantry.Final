@@ -68,48 +68,15 @@ const Auth = () => {
     });
   }, [searchParams]);
 
-  useEffect(() => {
-    if (Capacitor.isNativePlatform()) {
-      try {
-        GoogleAuth.initialize({
-          clientId: "", // iOS uses Info.plist GIDClientID; web client id optional here
-          scopes: ["profile", "email"],
-          grantOfflineAccess: false,
-        });
-      } catch (e) {
-        console.warn("GoogleAuth init failed", e);
-      }
-    }
-  }, []);
-
-  const handleNativeGoogle = async () => {
-    const user = await GoogleAuth.signIn();
-    const idToken = user.authentication?.idToken;
-    if (!idToken) throw new Error("No Google id token");
-    const { error } = await supabase.auth.signInWithIdToken({
-      provider: "google",
-      token: idToken,
-    });
-    if (error) throw error;
-  };
-
   const handleOAuth = async (provider: "google" | "apple" = "google") => {
     const TAG = "[auth-debug]";
     console.log(TAG, "handleOAuth start", {
       provider,
-      native: Capacitor.isNativePlatform(),
       origin: window.location.origin,
       href: window.location.href,
     });
     setLoading(true);
     try {
-      if (provider === "google" && Capacitor.isNativePlatform()) {
-        await handleNativeGoogle();
-        console.log(TAG, "native sign-in completed");
-        toast.success("Signed in!");
-        navigate("/");
-        return;
-      }
       const result = await lovable.auth.signInWithOAuth(provider, {
         redirect_uri: window.location.origin,
       });
