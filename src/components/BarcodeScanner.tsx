@@ -260,8 +260,15 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
       if (caps.torch) setTorchSupported(true);
     } catch { /* */ }
 
-    await new Promise((r) => requestAnimationFrame(() => r(null)));
-    const video = videoRef.current;
+    // Wait for React to mount the <video> element. setStatus("scanning") above
+    // schedules a re-render; the ref is null until React commits. Poll a few
+    // frames instead of assuming one rAF is enough.
+    let video: HTMLVideoElement | null = null;
+    for (let i = 0; i < 30; i++) {
+      if (stoppedRef.current) return;
+      if (videoRef.current) { video = videoRef.current; break; }
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+    }
     if (!video) {
       stopAll();
       setErrorMsg("Scanner failed to initialize.");
@@ -395,32 +402,30 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
           </div>
         )}
 
-        {showVideo && (
-          <div className="relative rounded-xl overflow-hidden bg-black aspect-[3/4] sm:aspect-video w-full">
-            <video ref={videoRef} className="w-full h-full object-cover" muted playsInline autoPlay />
-            <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-              <div className="w-[88%] h-[28%] sm:w-3/4 sm:h-1/3 border-2 border-accent/80 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
-            </div>
-            {torchSupported && (
-              <button
-                type="button"
-                onClick={toggleTorch}
-                className="absolute top-3 right-3 h-10 w-10 rounded-full bg-black/60 text-white flex items-center justify-center backdrop-blur-sm active:scale-95 transition"
-                aria-label={torchOn ? "Turn flashlight off" : "Turn flashlight on"}
-              >
-                {torchOn ? <ZapOff className="h-5 w-5" /> : <Zap className="h-5 w-5" />}
-              </button>
-            )}
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-white/90 text-xs bg-black/50 rounded-full px-3 py-1 backdrop-blur-sm">
-              Fill the box with the barcode • hold ~10cm away
-            </div>
-            {status === "looking-up" && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-sm gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" /> Looking up product…
-              </div>
-            )}
+        <div className={showVideo ? "relative rounded-xl overflow-hidden bg-black aspect-[3/4] sm:aspect-video w-full" : "hidden"}>
+          <video ref={videoRef} className="w-full h-full object-cover" muted playsInline autoPlay />
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+            <div className="w-[88%] h-[28%] sm:w-3/4 sm:h-1/3 border-2 border-accent/80 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
           </div>
-        )}
+          {torchSupported && (
+            <button
+              type="button"
+              onClick={toggleTorch}
+              className="absolute top-3 right-3 h-10 w-10 rounded-full bg-black/60 text-white flex items-center justify-center backdrop-blur-sm active:scale-95 transition"
+              aria-label={torchOn ? "Turn flashlight off" : "Turn flashlight on"}
+            >
+              {torchOn ? <ZapOff className="h-5 w-5" /> : <Zap className="h-5 w-5" />}
+            </button>
+          )}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-white/90 text-xs bg-black/50 rounded-full px-3 py-1 backdrop-blur-sm">
+            Fill the box with the barcode • hold ~10cm away
+          </div>
+          {status === "looking-up" && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-sm gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" /> Looking up product…
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
