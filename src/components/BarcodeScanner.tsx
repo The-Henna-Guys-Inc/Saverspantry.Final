@@ -116,9 +116,11 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
   useEffect(() => {
     if (!open) {
       stopAll();
+      autoStartTriedRef.current = false;
       setStatus("needs-permission");
       setErrorMsg("");
       setPermanentlyDenied(false);
+      setCameraPermission("unknown");
       setTorchOn(false);
       setTorchSupported(false);
       return;
@@ -169,8 +171,31 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
       try {
         // @ts-ignore
         const perm: PermissionStatus | undefined = await navigator.permissions?.query({ name: "camera" as PermissionName });
-        if (perm?.state === "denied") setPermanentlyDenied(true);
-      } catch { /* */ }
+        if (stoppedRef.current) return;
+
+        if (perm?.state === "granted") {
+          setCameraPermission("granted");
+          if (!autoStartTriedRef.current) {
+            autoStartTriedRef.current = true;
+            void requestCamera(true);
+          }
+          return;
+        }
+
+        if (perm?.state === "denied") {
+          setCameraPermission("denied");
+          setPermanentlyDenied(true);
+          setErrorMsg("Camera permission is blocked in your browser settings.");
+          setStatus("error");
+          return;
+        }
+
+        setCameraPermission("prompt");
+        setStatus("needs-permission");
+      } catch {
+        setCameraPermission("unknown");
+        setStatus("needs-permission");
+      }
     })();
   }, [open]);
 
@@ -419,11 +444,11 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
             <p className="text-xs text-muted-foreground max-w-xs mx-auto">
               Tap below — your browser will ask for camera permission. We only use it while this scanner is open.
             </p>
-            <Button onClick={requestCamera} disabled={status === "requesting"} variant="hero" size="sm" className="rounded-xl">
+            <Button onClick={() => void requestCamera()} disabled={status === "requesting"} variant="hero" size="sm" className="rounded-xl">
               {status === "requesting" ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /><span className="ml-2">Starting…</span></>
               ) : (
-                <><Camera className="h-4 w-4" /><span className="ml-2">Allow camera</span></>
+                <><Camera className="h-4 w-4" /><span className="ml-2">{cameraPermission === "granted" ? "Start camera" : "Allow camera"}</span></>
               )}
             </Button>
           </div>
@@ -440,7 +465,7 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
                 Your browser is blocking camera access. Tap the camera/lock icon in the address bar, set Camera to <strong>Allow</strong>, then try again.
               </div>
             )}
-            <Button onClick={requestCamera} variant="hero" size="sm" className="rounded-xl">
+            <Button onClick={() => void requestCamera()} variant="hero" size="sm" className="rounded-xl">
               <Camera className="h-4 w-4" /><span className="ml-2">Try again</span>
             </Button>
           </div>
