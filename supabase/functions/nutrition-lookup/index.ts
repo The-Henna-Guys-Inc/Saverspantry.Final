@@ -368,7 +368,7 @@ Deno.serve(async (req) => {
       } catch (e: any) {
         const status = e?.status;
         if (status === 429) return new Response(JSON.stringify({ error: "Rate limit hit — please try again in a moment." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        if (status === 402) return new Response(JSON.stringify({ error: "AI credits exhausted. Add credits in Lovable workspace settings." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        if (status === 402) return new Response(JSON.stringify({ error: "AI credits exhausted. Please try again later." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         throw e;
       }
     }
@@ -477,7 +477,7 @@ Deno.serve(async (req) => {
       } catch (e: any) {
         const status = e?.status;
         if (status === 429) return new Response(JSON.stringify({ error: "Rate limit hit — please try again in a moment." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        if (status === 402) return new Response(JSON.stringify({ error: "AI credits exhausted. Add credits in Lovable workspace settings." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        if (status === 402) return new Response(JSON.stringify({ error: "AI credits exhausted. Please try again later." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         throw e;
       }
     }
