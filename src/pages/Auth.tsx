@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
-import { SignInWithApple, type SignInWithAppleOptions } from "@capacitor-community/apple-sign-in";
+
 import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
@@ -84,25 +84,6 @@ const Auth = () => {
     }
   }, []);
 
-  const handleNativeApple = async () => {
-    const options: SignInWithAppleOptions = {
-      clientId: "app.lovable.841c1cf5f5ea487c9e434f04dbb8c808", // bundle id for native iOS
-      redirectURI: window.location.origin,
-      scopes: "email name",
-      state: Math.random().toString(36).slice(2),
-      nonce: Math.random().toString(36).slice(2),
-    };
-    const res = await SignInWithApple.authorize(options);
-    const idToken = res.response?.identityToken;
-    if (!idToken) throw new Error("No Apple identity token");
-    const { error } = await supabase.auth.signInWithIdToken({
-      provider: "apple",
-      token: idToken,
-      nonce: options.nonce,
-    });
-    if (error) throw error;
-  };
-
   const handleNativeGoogle = async () => {
     const user = await GoogleAuth.signIn();
     const idToken = user.authentication?.idToken;
@@ -114,10 +95,9 @@ const Auth = () => {
     if (error) throw error;
   };
 
-  const handleOAuth = async (provider: "apple" | "google") => {
+  const handleOAuth = async () => {
     const TAG = "[auth-debug]";
     console.log(TAG, "handleOAuth start", {
-      provider,
       native: Capacitor.isNativePlatform(),
       origin: window.location.origin,
       href: window.location.href,
@@ -125,31 +105,29 @@ const Auth = () => {
     setLoading(true);
     try {
       if (Capacitor.isNativePlatform()) {
-        if (provider === "apple") await handleNativeApple();
-        else await handleNativeGoogle();
-        console.log(TAG, "native sign-in completed", { provider });
+        await handleNativeGoogle();
+        console.log(TAG, "native sign-in completed");
         toast.success("Signed in!");
         navigate("/");
         return;
       }
-      const result = await lovable.auth.signInWithOAuth(provider, {
+      const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
       console.log(TAG, "lovable.signInWithOAuth result", {
-        provider,
         redirected: result.redirected,
         hasError: !!result.error,
         error: result.error,
       });
       if (result.error) {
-        toast.error(`${provider === "apple" ? "Apple" : "Google"} sign-in failed`);
+        toast.error("Google sign-in failed");
         return;
       }
       if (result.redirected) return;
       navigate("/");
     } catch (e: any) {
       console.error(TAG, "handleOAuth threw", e);
-      toast.error(e?.message || `${provider} sign-in failed`);
+      toast.error(e?.message || "Google sign-in failed");
     } finally {
       setLoading(false);
     }
@@ -161,26 +139,13 @@ const Auth = () => {
   const MUTED = "#5F5E5A";
   const CARD_BORDER = "rgba(31,81,50,0.12)";
 
-  const AppleBtn = (
-    <Button
-      type="button"
-      className="w-full rounded-xl bg-[#0A0A0A] text-white hover:bg-[#0A0A0A]/90"
-      style={{ height: 48, fontSize: 15, fontWeight: 600, paddingTop: 14, paddingBottom: 14 }}
-      onClick={() => handleOAuth("apple")}
-      disabled={loading}
-    >
-      <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.94-3.08.5-1.09-.45-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.5C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09M12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25"/></svg>
-      Continue with Apple
-    </Button>
-  );
-
   const GoogleBtn = (
     <Button
       type="button"
       variant="outline"
       className="w-full rounded-xl bg-white hover:bg-white/90"
       style={{ height: 48, fontSize: 15, fontWeight: 600, color: GREEN, borderColor: GREEN, borderWidth: 1, paddingTop: 14, paddingBottom: 14 }}
-      onClick={() => handleOAuth("google")}
+      onClick={() => handleOAuth()}
       disabled={loading}
     >
       <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
@@ -254,7 +219,6 @@ const Auth = () => {
               </ul>
 
               <div className="mt-6 space-y-2.5">
-                {AppleBtn}
                 {GoogleBtn}
                 {EmailBtn("email-signup")}
               </div>
@@ -285,7 +249,6 @@ const Auth = () => {
               </p>
 
               <div className="mt-6 space-y-2.5">
-                {AppleBtn}
                 {GoogleBtn}
                 {EmailBtn("email-login")}
               </div>
