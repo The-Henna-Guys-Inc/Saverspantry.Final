@@ -249,7 +249,6 @@ const Auth = () => {
               </p>
 
               <div className="mt-6 space-y-2.5">
-                {AppleBtn}
                 {GoogleBtn}
                 {EmailBtn("email-login")}
               </div>
