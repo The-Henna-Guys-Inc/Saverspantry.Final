@@ -84,25 +84,6 @@ const Auth = () => {
     }
   }, []);
 
-  const handleNativeApple = async () => {
-    const options: SignInWithAppleOptions = {
-      clientId: "app.lovable.841c1cf5f5ea487c9e434f04dbb8c808", // bundle id for native iOS
-      redirectURI: window.location.origin,
-      scopes: "email name",
-      state: Math.random().toString(36).slice(2),
-      nonce: Math.random().toString(36).slice(2),
-    };
-    const res = await SignInWithApple.authorize(options);
-    const idToken = res.response?.identityToken;
-    if (!idToken) throw new Error("No Apple identity token");
-    const { error } = await supabase.auth.signInWithIdToken({
-      provider: "apple",
-      token: idToken,
-      nonce: options.nonce,
-    });
-    if (error) throw error;
-  };
-
   const handleNativeGoogle = async () => {
     const user = await GoogleAuth.signIn();
     const idToken = user.authentication?.idToken;
