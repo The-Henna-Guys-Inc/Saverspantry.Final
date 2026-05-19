@@ -139,19 +139,6 @@ const Auth = () => {
   const MUTED = "#5F5E5A";
   const CARD_BORDER = "rgba(31,81,50,0.12)";
 
-  const AppleBtn = (
-    <Button
-      type="button"
-      className="w-full rounded-xl bg-[#0A0A0A] text-white hover:bg-[#0A0A0A]/90"
-      style={{ height: 48, fontSize: 15, fontWeight: 600, paddingTop: 14, paddingBottom: 14 }}
-      onClick={() => handleOAuth("apple")}
-      disabled={loading}
-    >
-      <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.94-3.08.5-1.09-.45-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.5C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09M12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25"/></svg>
-      Continue with Apple
-    </Button>
-  );
-
   const GoogleBtn = (
     <Button
       type="button"
