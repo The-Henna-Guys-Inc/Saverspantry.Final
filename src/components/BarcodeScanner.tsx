@@ -260,8 +260,15 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
       if (caps.torch) setTorchSupported(true);
     } catch { /* */ }
 
-    await new Promise((r) => requestAnimationFrame(() => r(null)));
-    const video = videoRef.current;
+    // Wait for React to mount the <video> element. setStatus("scanning") above
+    // schedules a re-render; the ref is null until React commits. Poll a few
+    // frames instead of assuming one rAF is enough.
+    let video: HTMLVideoElement | null = null;
+    for (let i = 0; i < 30; i++) {
+      if (stoppedRef.current) return;
+      if (videoRef.current) { video = videoRef.current; break; }
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+    }
     if (!video) {
       stopAll();
       setErrorMsg("Scanner failed to initialize.");
