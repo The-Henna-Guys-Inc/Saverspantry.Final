@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
-import { Capacitor } from "@capacitor/core";
-import { Browser } from "@capacitor/browser";
 
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
@@ -12,7 +10,6 @@ import { toast } from "sonner";
 import { Loader2, Bookmark, PiggyBank, Smartphone, Mail, ArrowLeft } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { z } from "zod";
-import { createNativeOAuthUrl, WEB_OAUTH_ORIGIN } from "@/lib/nativeAuth";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email").max(255),
@@ -77,23 +74,11 @@ const Auth = () => {
       provider,
       origin: window.location.origin,
       href: window.location.href,
-      native: Capacitor.isNativePlatform(),
     });
     setLoading(true);
     try {
-      if (Capacitor.isNativePlatform()) {
-        const authUrl = createNativeOAuthUrl(provider);
-        console.log(TAG, "opening native browser oauth", {
-          provider,
-          authUrl,
-          redirectUri: "com.saverspantry.app://auth",
-        });
-        await Browser.open({ url: authUrl });
-        return;
-      }
-
       const result = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: `${WEB_OAUTH_ORIGIN}/auth`,
+        redirect_uri: window.location.origin,
       });
       console.log(TAG, "lovable.signInWithOAuth result", {
         redirected: result.redirected,
