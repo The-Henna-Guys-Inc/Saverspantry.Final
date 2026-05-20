@@ -1,6 +1,17 @@
 import { createRoot } from "react-dom/client";
+import { App as CapacitorApp } from "@capacitor/app";
+import { Browser } from "@capacitor/browser";
+import { Capacitor } from "@capacitor/core";
+import { supabase } from "@/integrations/supabase/client";
 import App from "./App.tsx";
 import "./index.css";
+import {
+  clearNativeOAuthState,
+  hasExpectedNativeOAuthState,
+  readOAuthErrorFromUrl,
+  readOAuthTokensFromUrl,
+  readReturnedOAuthState,
+} from "@/lib/nativeAuth";
 
 // Aggressively evict any previously-registered service worker BEFORE the
 // app mounts. A prior SW shipped a broken fetch handler that crashed on
@@ -30,6 +41,50 @@ if ("serviceWorker" in navigator) {
       // ignore
     }
   })();
+}
+
+if (Capacitor.isNativePlatform()) {
+  void CapacitorApp.addListener("appUrlOpen", async ({ url }) => {
+    if (!url?.startsWith("com.saverspantry.app://auth")) return;
+
+    try {
+      const callbackUrl = new URL(url);
+      const returnedState = readReturnedOAuthState(callbackUrl);
+
+      if (!hasExpectedNativeOAuthState(returnedState)) {
+        console.warn("[auth-debug] Native OAuth state mismatch", { url });
+        clearNativeOAuthState();
+        await Browser.close();
+        return;
+      }
+
+      const { error, errorDescription } = readOAuthErrorFromUrl(callbackUrl);
+      if (error) {
+        console.warn("[auth-debug] Native OAuth returned error", {
+          error,
+          errorDescription,
+          url,
+        });
+        clearNativeOAuthState();
+        await Browser.close();
+        return;
+      }
+
+      const { access_token, refresh_token } = readOAuthTokensFromUrl(callbackUrl);
+      if (access_token && refresh_token) {
+        console.log("[auth-debug] Native OAuth tokens received; setting session");
+        await supabase.auth.setSession({ access_token, refresh_token });
+      } else {
+        console.warn("[auth-debug] Native OAuth callback missing tokens", { url });
+      }
+    } catch (error) {
+      console.error("[auth-debug] Failed handling native OAuth callback", error);
+    } finally {
+      clearNativeOAuthState();
+      await Browser.close();
+      window.location.assign("/");
+    }
+  });
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
