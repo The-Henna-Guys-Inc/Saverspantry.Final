@@ -54,11 +54,15 @@ const Welcome = () => {
           <p style={{ color: MUTED, fontSize: 12, fontWeight: 700, letterSpacing: 1.2 }}>
             FREE ACCOUNT PERKS
           </p>
-          <ul className="mt-3 space-y-2.5">
+          <ul className="mt-3 grid grid-cols-1 gap-2">
             {PERKS.map((p) => (
-              <li key={p.text} className="flex items-start gap-3" style={{ color: ESPRESSO, fontSize: 15 }}>
-                <span aria-hidden className="text-xl leading-none shrink-0">{p.icon}</span>
-                <span>{p.text}</span>
+              <li
+                key={p.text}
+                className="flex items-center gap-3 rounded-xl px-3 py-2.5"
+                style={{ background: "rgba(31,81,50,0.04)", color: ESPRESSO, fontSize: 15, fontWeight: 500 }}
+              >
+                <span aria-hidden className="text-xl leading-none shrink-0 w-6 text-center">{p.icon}</span>
+                <span className="leading-snug">{p.text}</span>
               </li>
             ))}
           </ul>
