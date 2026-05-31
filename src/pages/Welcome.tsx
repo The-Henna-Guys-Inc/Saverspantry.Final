@@ -20,10 +20,10 @@ const cardStyle: React.CSSProperties = {
 };
 
 const PERKS = [
-  { icon: "🍳", text: "Cuisine-aware recipes" },
-  { icon: "📋", text: "Meal plans + grocery lists" },
-  { icon: "🏪", text: "Curated deals at grocers near you" },
-  { icon: "📦", text: "Pantry tracking with bulk-buy savings" },
+  { icon: "🍳", text: "Recipes for your cuisine" },
+  { icon: "📋", text: "Meal plans & grocery lists" },
+  { icon: "🏪", text: "Deals at nearby grocers" },
+  { icon: "📦", text: "Pantry & bulk-buy savings" },
 ];
 
 const Welcome = () => {
