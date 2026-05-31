@@ -1,8 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
-import { Capacitor } from "@capacitor/core";
-
-import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
