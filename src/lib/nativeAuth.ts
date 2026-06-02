@@ -46,18 +46,19 @@ export async function nativeSignIn(provider: "google" | "apple") {
   const { SocialLogin } = await import("@capgo/capacitor-social-login");
 
   const rawNonce = randomNonce();
-  const googleNonce = provider === "google" ? await sha256Hex(rawNonce) : rawNonce;
+  const nativeNonce = await sha256Hex(rawNonce);
 
-  // Google Sign-In on iOS expects the SHA-256 digest of the raw nonce and puts
-  // that digest in the id_token. Supabase expects the original raw nonce and
-  // hashes it once during verification. We also force an interactive Google
+  // Native iOS Google and Apple sign-in both place the SHA-256 digest of the
+  // nonce in the id_token. The backend still expects the original raw nonce
+  // and hashes it once during verification, so we send the digest to iOS and
+  // the raw value to signInWithIdToken(). Google also forces an interactive
   // prompt so iOS doesn't restore an older cached token with a stale nonce.
   const loginRes = await SocialLogin.login({
     provider,
     options:
       provider === "google"
-        ? { scopes: ["email", "profile"], nonce: googleNonce, forcePrompt: true }
-        : { scopes: ["email", "name"], nonce: rawNonce },
+        ? { scopes: ["email", "profile"], nonce: nativeNonce, forcePrompt: true }
+        : { scopes: ["email", "name"], nonce: nativeNonce },
   } as any);
 
   const idToken: string | null | undefined = (loginRes as any)?.result?.idToken;
