@@ -10,8 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "postinstall": "node scripts/patch-apple-signin-spm.cjs"
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@capacitor-mlkit/barcode-scanning": "^8.1.0",
