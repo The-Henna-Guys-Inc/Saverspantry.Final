@@ -7,7 +7,18 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>ThriftPantry</string>
+        <string>Saver's Pantry</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.358460982851-k8dg8hi3urmidh5v86eku6cbcuqtca5o</string>
+			</array>
+		</dict>
+	</array>
+	<key>GIDClientID</key>
+	<string>358460982851-k8dg8hi3urmidh5v86eku6cbcuqtca5o.apps.googleusercontent.com</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

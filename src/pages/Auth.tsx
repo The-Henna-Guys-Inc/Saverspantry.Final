@@ -76,6 +76,14 @@ const Auth = () => {
     });
     setLoading(true);
     try {
+      const { isNativeAuthAvailable, nativeSignIn } = await import("@/lib/nativeAuth");
+      if (isNativeAuthAvailable()) {
+        console.log(TAG, "using native sign-in", { provider });
+        await nativeSignIn(provider);
+        navigate("/");
+        return;
+      }
+
       const result = await lovable.auth.signInWithOAuth(provider, {
         redirect_uri: window.location.origin,
       });
