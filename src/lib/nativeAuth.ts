@@ -29,14 +29,6 @@ function randomNonce(bytes = 16) {
   return Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function sha256Hex(value: string) {
-  const data = new TextEncoder().encode(value);
-  const hash = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hash), (b) =>
-    b.toString(16).padStart(2, "0"),
-  ).join("");
-}
-
 export function isNativeAuthAvailable() {
   return Capacitor.isNativePlatform();
 }
@@ -46,21 +38,18 @@ export async function nativeSignIn(provider: "google" | "apple") {
   const { SocialLogin } = await import("@capgo/capacitor-social-login");
 
   const rawNonce = randomNonce();
-  const hashedNonce = await sha256Hex(rawNonce);
 
-  // Both Google (via GoogleSignIn SDK) and Apple (AuthenticationServices) hash
-  // the nonce internally before it ends up in the id_token. Pass the RAW nonce
-  // so it isn't double-hashed, and also pass raw to Supabase which hashes once
-  // and compares against the token's nonce claim.
+  // Pass the raw nonce so the native SDK can mint an id_token tied to this
+  // request, then pass the same raw nonce to Supabase for verification.
+  // Google on iOS can otherwise restore a previous sign-in and return an older
+  // token with a stale nonce, so we force an interactive prompt there.
   const loginRes = await SocialLogin.login({
     provider,
     options:
       provider === "google"
-        ? { scopes: ["email", "profile"], nonce: rawNonce }
+        ? { scopes: ["email", "profile"], nonce: rawNonce, forcePrompt: true }
         : { scopes: ["email", "name"], nonce: rawNonce },
   } as any);
-
-
 
   const idToken: string | null | undefined = (loginRes as any)?.result?.idToken;
   if (!idToken) {
