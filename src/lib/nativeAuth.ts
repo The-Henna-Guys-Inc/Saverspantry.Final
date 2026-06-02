@@ -48,13 +48,18 @@ export async function nativeSignIn(provider: "google" | "apple") {
   const rawNonce = randomNonce();
   const hashedNonce = await sha256Hex(rawNonce);
 
+  // Google does NOT hash the nonce — pass the hashed value so the id_token's
+  // nonce claim equals SHA256(rawNonce), which is what Supabase compares against.
+  // Apple's AuthenticationServices framework hashes the nonce internally before
+  // signing — pass the RAW nonce so it isn't double-hashed.
   const loginRes = await SocialLogin.login({
     provider,
     options:
       provider === "google"
         ? { scopes: ["email", "profile"], nonce: hashedNonce }
-        : { scopes: ["email", "name"], nonce: hashedNonce },
+        : { scopes: ["email", "name"], nonce: rawNonce },
   } as any);
+
 
   const idToken: string | null | undefined = (loginRes as any)?.result?.idToken;
   if (!idToken) {
