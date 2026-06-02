@@ -2,8 +2,18 @@ import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 
 // iOS Google OAuth client (from Google Cloud → iOS client)
+// Used by the native SDK to perform the on-device sign-in.
 const IOS_GOOGLE_CLIENT_ID =
   "358460982851-k8dg8hi3urmidh5v86eku6cbcuqtca5o.apps.googleusercontent.com";
+
+// Web Google OAuth client (from Google Cloud → Web application client)
+// This MUST match the Google Client ID configured in Lovable Cloud.
+// Passing it as the iOS "server client ID" makes Google issue an id_token
+// whose `aud` is the web client — which is what Supabase verifies.
+// Without this, native iOS tokens have aud=iOS client and Supabase rejects
+// them whenever Lovable Cloud is configured with the web client ID.
+const WEB_GOOGLE_CLIENT_ID =
+  "358460982851-2g4ofgnu64ig59l5pgvcokc31bbgnaiv.apps.googleusercontent.com";
 
 let initPromise: Promise<void> | null = null;
 
@@ -12,7 +22,10 @@ async function ensureInit() {
   initPromise = (async () => {
     const { SocialLogin } = await import("@capgo/capacitor-social-login");
     await SocialLogin.initialize({
-      google: { iOSClientId: IOS_GOOGLE_CLIENT_ID },
+      google: {
+        iOSClientId: IOS_GOOGLE_CLIENT_ID,
+        iOSServerClientId: WEB_GOOGLE_CLIENT_ID,
+      },
       // Apple on iOS uses the system AuthenticationServices framework — no clientId required.
       apple: {},
     });
@@ -22,6 +35,7 @@ async function ensureInit() {
   });
   return initPromise;
 }
+
 
 function randomNonce(bytes = 16) {
   const arr = new Uint8Array(bytes);
