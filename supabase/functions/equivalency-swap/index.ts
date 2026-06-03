@@ -129,6 +129,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const authHeader = req.headers.get("Authorization");
   const userId = await getUserIdFromAuth(req);
+  if (!userId) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   const startedAt = Date.now();
   try {
     const { food, dietary_prefs = [], profile = null, cuisine = null, blood_sugar_friendly = false, zip = null } = await req.json();
