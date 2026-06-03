@@ -2,11 +2,61 @@
 // Strategy: 1) try schema.org/Recipe JSON-LD (fast, deterministic, free).
 //           2) fall back to AI extraction from cleaned HTML body text.
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { requireUserId, unauthorized } from "../_shared/userAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Block private/loopback/link-local IP ranges to prevent SSRF.
+function isPrivateIp(ip: string): boolean {
+  // IPv4
+  const m = ip.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+  if (m) {
+    const [a, b] = [Number(m[1]), Number(m[2])];
+    if (a === 10) return true;
+    if (a === 127) return true;
+    if (a === 169 && b === 254) return true; // link-local incl. AWS metadata
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 0) return true;
+    if (a >= 224) return true; // multicast / reserved
+    return false;
+  }
+  // IPv6: block loopback, link-local, unique-local, mapped-private
+  const lower = ip.toLowerCase();
+  if (lower === "::1" || lower === "::") return true;
+  if (lower.startsWith("fe80:") || lower.startsWith("fc") || lower.startsWith("fd")) return true;
+  if (lower.startsWith("::ffff:")) {
+    return isPrivateIp(lower.slice(7));
+  }
+  return false;
+}
+
+async function isHostnameSafe(hostname: string): Promise<boolean> {
+  // Reject IP literals to private ranges directly
+  if (/^[\d.]+$/.test(hostname) || hostname.includes(":")) {
+    return !isPrivateIp(hostname);
+  }
+  // Reject obvious internal names
+  const lower = hostname.toLowerCase();
+  if (lower === "localhost" || lower.endsWith(".localhost") || lower.endsWith(".local") || lower.endsWith(".internal")) {
+    return false;
+  }
+  try {
+    const records = await Promise.all([
+      Deno.resolveDns(hostname, "A").catch(() => [] as string[]),
+      Deno.resolveDns(hostname, "AAAA").catch(() => [] as string[]),
+    ]);
+    const ips = records.flat();
+    if (ips.length === 0) return false;
+    return ips.every((ip) => !isPrivateIp(ip));
+  } catch {
+    return false;
+  }
+}
+
 
 const TOOL = {
   type: "function",
