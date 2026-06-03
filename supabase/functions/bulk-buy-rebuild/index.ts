@@ -2,6 +2,7 @@
 // Looks at sales with high savings_pct and a pack_size hint, groups by food_name,
 // and upserts derived candidates that aren't already curated.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { checkCronAuth } from "../_shared/cronAuth.ts";
 
 // Lightweight cuisine detector (mirrors src/lib/cuisineHints.ts core rules).
 const RULES: Array<{ kw: string; tags: string[] }> = [
