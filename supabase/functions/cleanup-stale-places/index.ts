@@ -3,14 +3,17 @@
 // 2. Delete specialty_stores rows sourced from Google Places older than 30 days.
 // 3. Delete places_search_cache rows older than 30 days so they re-fetch.
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { checkCronAuth } from "../_shared/cronAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
 };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const unauth = await checkCronAuth(req);
+  if (unauth) return unauth;
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
