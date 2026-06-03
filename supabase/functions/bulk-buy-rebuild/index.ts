@@ -32,7 +32,7 @@ const PACK_RE = /(\d+(?:\.\d+)?)\s*(lb|lbs|pound|kg|oz|g|ct|count|pack)/i;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-  const unauth = checkCronAuth(req);
+  const unauth = await checkCronAuth(req);
   if (unauth) return unauth;
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,

@@ -39,7 +39,7 @@ async function record(
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  const unauth = checkCronAuth(req);
+  const unauth = await checkCronAuth(req);
   if (unauth) return unauth;
 
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
