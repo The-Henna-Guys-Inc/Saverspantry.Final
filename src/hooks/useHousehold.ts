@@ -154,9 +154,7 @@ export function useHousehold() {
     if (!user) throw new Error("Not signed in");
     const trimmed = code.trim().toUpperCase();
     const { data: invite, error: lookupErr } = await supabase
-      .from("household_invites")
-      .select("id, household_id, expires_at, accepted_at")
-      .eq("code", trimmed)
+      .rpc("get_invite_by_code", { _code: trimmed })
       .maybeSingle();
     if (lookupErr) throw lookupErr;
     if (!invite) throw new Error("Invite not found");
