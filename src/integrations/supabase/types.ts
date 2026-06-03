@@ -1748,6 +1748,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_invite_by_code: {
+        Args: { _code: string }
+        Returns: {
+          accepted_at: string
+          expires_at: string
+          household_id: string
+          id: string
+        }[]
+      }
+      get_session_timeout_settings: {
+        Args: never
+        Returns: {
+          idle_timeout_minutes: number
+          session_max_hours: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
