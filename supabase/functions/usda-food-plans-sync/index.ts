@@ -8,6 +8,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { Resend } from 'npm:resend@4.0.1';
+import { checkCronAuth } from '../_shared/cronAuth.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -165,6 +166,8 @@ async function notifyAdmins(supabase: any, subject: string, html: string) {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  const unauth = checkCronAuth(req);
+  if (unauth) return unauth;
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
   let override: string | undefined;
