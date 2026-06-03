@@ -1748,6 +1748,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _cron_secret_header: { Args: never; Returns: Json }
       get_invite_by_code: {
         Args: { _code: string }
         Returns: {
@@ -1797,6 +1798,7 @@ export type Database = {
           query: string
         }[]
       }
+      verify_cron_secret: { Args: { _secret: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "household_owner" | "household_member"
