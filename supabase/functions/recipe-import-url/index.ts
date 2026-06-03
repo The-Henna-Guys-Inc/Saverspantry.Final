@@ -198,6 +198,8 @@ function htmlToText(html: string): string {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const userId = await requireUserId(req);
+  if (!userId) return unauthorized(corsHeaders);
   try {
     const { url } = await req.json();
     if (!url || typeof url !== "string") {
@@ -210,10 +212,18 @@ Deno.serve(async (req) => {
     if (!["http:", "https:"].includes(parsed.protocol)) {
       return new Response(JSON.stringify({ error: "Only http/https URLs allowed" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    if (!(await isHostnameSafe(parsed.hostname))) {
+      return new Response(JSON.stringify({ error: "URL host is not allowed" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
     const html = await fetch(parsed.toString(), {
       headers: { "User-Agent": "Mozilla/5.0 SaversPantryBot/1.0" },
-    }).then((r) => r.ok ? r.text() : Promise.reject(new Error(`Fetch ${r.status}`)));
+      redirect: "error",
+      signal: controller.signal,
+    }).then((r) => r.ok ? r.text() : Promise.reject(new Error(`Fetch ${r.status}`)))
+      .finally(() => clearTimeout(timeout));
 
     // 1) JSON-LD path
     const ld = tryJsonLd(html);
