@@ -13,7 +13,7 @@ const IOS_GOOGLE_CLIENT_ID =
 // Without this, native iOS tokens have aud=iOS client and Supabase rejects
 // them whenever Lovable Cloud is configured with the web client ID.
 const WEB_GOOGLE_CLIENT_ID =
-  "358460982851-2g4ofgnu64ig59l5pgvcokc31bbgnaiv.apps.googleusercontent.com";
+  "358460982851-2a78s8md20rb65efh00cjvv58i7gvl1c.apps.googleusercontent.com";
 
 let initPromise: Promise<void> | null = null;
 
