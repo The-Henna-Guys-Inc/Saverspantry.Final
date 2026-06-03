@@ -16,23 +16,23 @@ Deno.serve(async (req) => {
   const url = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const webhookSecret = Deno.env.get("RESEND_WEBHOOK_SECRET");
+  if (!webhookSecret) {
+    console.error("ingest-promo-email: RESEND_WEBHOOK_SECRET not configured — refusing request");
+    return json({ error: "webhook secret not configured" }, 500);
+  }
   const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
 
   const rawBody = await req.text();
 
   // Verify Svix signature (Resend uses Svix for webhook signing).
-  if (webhookSecret) {
-    const svixId = req.headers.get("svix-id");
-    const svixTs = req.headers.get("svix-timestamp");
-    const svixSig = req.headers.get("svix-signature");
-    if (!svixId || !svixTs || !svixSig) {
-      return json({ error: "missing signature headers" }, 401);
-    }
-    const ok = await verifySvix(webhookSecret, svixId, svixTs, rawBody, svixSig);
-    if (!ok) return json({ error: "invalid signature" }, 401);
-  } else {
-    console.warn("ingest-promo-email: RESEND_WEBHOOK_SECRET not set — accepting unsigned requests (dev only)");
+  const svixId = req.headers.get("svix-id");
+  const svixTs = req.headers.get("svix-timestamp");
+  const svixSig = req.headers.get("svix-signature");
+  if (!svixId || !svixTs || !svixSig) {
+    return json({ error: "missing signature headers" }, 401);
   }
+  const ok = await verifySvix(webhookSecret, svixId, svixTs, rawBody, svixSig);
+  if (!ok) return json({ error: "invalid signature" }, 401);
 
   let payload: any;
   try { payload = JSON.parse(rawBody); } catch { return json({ error: "invalid json" }, 400); }
