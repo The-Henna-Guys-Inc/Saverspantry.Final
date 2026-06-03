@@ -1,5 +1,7 @@
 // Parses a receipt photo or a handwritten "removal" note into a structured list of pantry items.
 // Uses Lovable AI Gateway (Gemini vision) with tool calling for reliable structured output.
+import { requireUserId, unauthorized } from "../_shared/userAuth.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -7,6 +9,8 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const userId = await requireUserId(req);
+  if (!userId) return unauthorized(corsHeaders);
   try {
     const { imageBase64, mode } = await req.json();
     if (!imageBase64 || typeof imageBase64 !== "string") {

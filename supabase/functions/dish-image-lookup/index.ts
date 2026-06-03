@@ -3,6 +3,7 @@
 // `dish-images` storage bucket, and return the public URL.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0";
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+import { requireUserId, unauthorized } from "../_shared/userAuth.ts";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const BUCKET = "dish-images";
@@ -22,6 +23,8 @@ const dataUrlToBytes = (dataUrl: string): { bytes: Uint8Array; contentType: stri
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const userId = await requireUserId(req);
+  if (!userId) return unauthorized(corsHeaders);
   try {
     const { dish, cuisine } = await req.json();
     if (!dish || typeof dish !== "string") {

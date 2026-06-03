@@ -1,6 +1,7 @@
 // Kroger real-price lookup. Takes a ZIP and a list of grocery items,
 // returns the best-match product + price for each at the nearest Kroger store.
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { requireUserId, unauthorized } from "../_shared/userAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -66,6 +67,8 @@ async function findProduct(token: string, term: string, locationId: string) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const userId = await requireUserId(req);
+  if (!userId) return unauthorized(corsHeaders);
   try {
     const { zip, items } = await req.json();
     if (!zip || !Array.isArray(items) || !items.length) {
