@@ -1791,6 +1791,7 @@ export type Database = {
         }
         Returns: string
       }
+      redeem_household_invite: { Args: { _code: string }; Returns: string }
       top_nutrition_searches: {
         Args: { _limit?: number }
         Returns: {

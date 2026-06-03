@@ -153,29 +153,12 @@ export function useHousehold() {
   const redeemInvite = async (code: string) => {
     if (!user) throw new Error("Not signed in");
     const trimmed = code.trim().toUpperCase();
-    const { data: invite, error: lookupErr } = await supabase
-      .rpc("get_invite_by_code", { _code: trimmed })
-      .maybeSingle();
-    if (lookupErr) throw lookupErr;
-    if (!invite) throw new Error("Invite not found");
-    if (invite.accepted_at) throw new Error("Invite already used");
-    if (new Date(invite.expires_at) < new Date()) throw new Error("Invite expired");
-
-    // Add as member (RLS allows auth.uid() = user_id)
-    const { error: addErr } = await supabase
-      .from("household_members")
-      .insert({ household_id: invite.household_id, user_id: user.id, role: "member" });
-    if (addErr && !addErr.message.includes("duplicate")) throw addErr;
-
-    await supabase
-      .from("household_invites")
-      .update({ accepted_at: new Date().toISOString(), accepted_by_user_id: user.id })
-      .eq("id", invite.id);
-
-    await supabase.from("profiles").update({ active_household_id: invite.household_id }).eq("user_id", user.id);
+    const { data, error } = await supabase.rpc("redeem_household_invite", { _code: trimmed });
+    if (error) throw error;
     await refresh();
-    return invite.household_id;
+    return data as string;
   };
+
 
   const active = households.find((h) => h.id === activeId) ?? null;
   const isOwner = !!(active && user && active.owner_user_id === user.id);
