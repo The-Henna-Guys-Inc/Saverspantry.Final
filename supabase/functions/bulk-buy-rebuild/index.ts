@@ -2,6 +2,7 @@
 // Looks at sales with high savings_pct and a pack_size hint, groups by food_name,
 // and upserts derived candidates that aren't already curated.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { checkCronAuth } from "../_shared/cronAuth.ts";
 
 // Lightweight cuisine detector (mirrors src/lib/cuisineHints.ts core rules).
 const RULES: Array<{ kw: string; tags: string[] }> = [
@@ -31,6 +32,8 @@ const PACK_RE = /(\d+(?:\.\d+)?)\s*(lb|lbs|pound|kg|oz|g|ct|count|pack)/i;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const unauth = await checkCronAuth(req);
+  if (unauth) return unauth;
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,

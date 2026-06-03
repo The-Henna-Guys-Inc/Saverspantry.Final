@@ -17,8 +17,8 @@ export const SessionEnforcer = () => {
   // Load settings
   useEffect(() => {
     if (!user) return;
-    supabase.from("admin_session_settings").select("session_max_hours, idle_timeout_minutes").maybeSingle()
-      .then(({ data }) => { if (data) settingsRef.current = data; });
+    supabase.rpc("get_session_timeout_settings").maybeSingle()
+      .then(({ data }) => { if (data) settingsRef.current = data as { session_max_hours: number; idle_timeout_minutes: number }; });
   }, [user]);
 
   // Track session start

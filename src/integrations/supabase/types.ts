@@ -1748,6 +1748,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _cron_secret_header: { Args: never; Returns: Json }
+      get_invite_by_code: {
+        Args: { _code: string }
+        Returns: {
+          accepted_at: string
+          expires_at: string
+          household_id: string
+          id: string
+        }[]
+      }
+      get_session_timeout_settings: {
+        Args: never
+        Returns: {
+          idle_timeout_minutes: number
+          session_max_hours: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1781,6 +1798,7 @@ export type Database = {
           query: string
         }[]
       }
+      verify_cron_secret: { Args: { _secret: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "household_owner" | "household_member"

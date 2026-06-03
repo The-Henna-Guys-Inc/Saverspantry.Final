@@ -2,11 +2,61 @@
 // Strategy: 1) try schema.org/Recipe JSON-LD (fast, deterministic, free).
 //           2) fall back to AI extraction from cleaned HTML body text.
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { requireUserId, unauthorized } from "../_shared/userAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Block private/loopback/link-local IP ranges to prevent SSRF.
+function isPrivateIp(ip: string): boolean {
+  // IPv4
+  const m = ip.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+  if (m) {
+    const [a, b] = [Number(m[1]), Number(m[2])];
+    if (a === 10) return true;
+    if (a === 127) return true;
+    if (a === 169 && b === 254) return true; // link-local incl. AWS metadata
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 0) return true;
+    if (a >= 224) return true; // multicast / reserved
+    return false;
+  }
+  // IPv6: block loopback, link-local, unique-local, mapped-private
+  const lower = ip.toLowerCase();
+  if (lower === "::1" || lower === "::") return true;
+  if (lower.startsWith("fe80:") || lower.startsWith("fc") || lower.startsWith("fd")) return true;
+  if (lower.startsWith("::ffff:")) {
+    return isPrivateIp(lower.slice(7));
+  }
+  return false;
+}
+
+async function isHostnameSafe(hostname: string): Promise<boolean> {
+  // Reject IP literals to private ranges directly
+  if (/^[\d.]+$/.test(hostname) || hostname.includes(":")) {
+    return !isPrivateIp(hostname);
+  }
+  // Reject obvious internal names
+  const lower = hostname.toLowerCase();
+  if (lower === "localhost" || lower.endsWith(".localhost") || lower.endsWith(".local") || lower.endsWith(".internal")) {
+    return false;
+  }
+  try {
+    const records = await Promise.all([
+      Deno.resolveDns(hostname, "A").catch(() => [] as string[]),
+      Deno.resolveDns(hostname, "AAAA").catch(() => [] as string[]),
+    ]);
+    const ips = records.flat();
+    if (ips.length === 0) return false;
+    return ips.every((ip) => !isPrivateIp(ip));
+  } catch {
+    return false;
+  }
+}
+
 
 const TOOL = {
   type: "function",
@@ -148,6 +198,8 @@ function htmlToText(html: string): string {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const userId = await requireUserId(req);
+  if (!userId) return unauthorized(corsHeaders);
   try {
     const { url } = await req.json();
     if (!url || typeof url !== "string") {
@@ -160,10 +212,18 @@ Deno.serve(async (req) => {
     if (!["http:", "https:"].includes(parsed.protocol)) {
       return new Response(JSON.stringify({ error: "Only http/https URLs allowed" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    if (!(await isHostnameSafe(parsed.hostname))) {
+      return new Response(JSON.stringify({ error: "URL host is not allowed" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
     const html = await fetch(parsed.toString(), {
       headers: { "User-Agent": "Mozilla/5.0 SaversPantryBot/1.0" },
-    }).then((r) => r.ok ? r.text() : Promise.reject(new Error(`Fetch ${r.status}`)));
+      redirect: "error",
+      signal: controller.signal,
+    }).then((r) => r.ok ? r.text() : Promise.reject(new Error(`Fetch ${r.status}`)))
+      .finally(() => clearTimeout(timeout));
 
     // 1) JSON-LD path
     const ld = tryJsonLd(html);

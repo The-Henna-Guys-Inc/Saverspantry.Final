@@ -1,6 +1,7 @@
 // Ops monitor: scans recent activity and records operational alerts.
 // Triggered via pg_cron (hourly). No JWT required.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkCronAuth } from "../_shared/cronAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,6 +39,8 @@ async function record(
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const unauth = await checkCronAuth(req);
+  if (unauth) return unauth;
 
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
   const checks: string[] = [];

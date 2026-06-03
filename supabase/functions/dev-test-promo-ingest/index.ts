@@ -23,6 +23,11 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
 
+  // Refuse to run outside of explicit development environments.
+  if ((Deno.env.get("APP_ENV") ?? "production").toLowerCase() !== "development") {
+    return json({ error: "dev-only endpoint disabled in this environment" }, 403);
+  }
+
   const url = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const secret = Deno.env.get("RESEND_WEBHOOK_SECRET");
