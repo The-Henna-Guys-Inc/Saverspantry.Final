@@ -80,6 +80,27 @@ export async function nativeSignIn(provider: "google" | "apple") {
     throw new Error(`Native ${provider} sign-in did not return an idToken`);
   }
 
+  if (provider === "apple") {
+    // Native iOS Apple tokens have aud = bundle ID, which the Supabase Apple
+    // provider (configured with the web Services ID) won't accept. Bridge
+    // through our edge function which verifies the token against Apple's
+    // JWKS with the bundle ID audience and returns a magic-link token_hash.
+    const { data, error } = await supabase.functions.invoke("apple-native-auth", {
+      body: { idToken, rawNonce },
+    });
+    if (error) throw error;
+    if (!data?.token_hash || !data?.email) {
+      throw new Error("Apple native auth bridge returned no token");
+    }
+    const { error: otpErr } = await supabase.auth.verifyOtp({
+      type: "magiclink",
+      email: data.email,
+      token_hash: data.token_hash,
+    } as any);
+    if (otpErr) throw otpErr;
+    return;
+  }
+
   const { error } = await supabase.auth.signInWithIdToken({
     provider,
     token: idToken,
