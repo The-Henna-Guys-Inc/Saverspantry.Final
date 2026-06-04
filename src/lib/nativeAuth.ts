@@ -94,7 +94,6 @@ export async function nativeSignIn(provider: "google" | "apple") {
     }
     const { error: otpErr } = await supabase.auth.verifyOtp({
       type: "magiclink",
-      email: data.email,
       token_hash: data.token_hash,
     } as any);
     if (otpErr) throw otpErr;
