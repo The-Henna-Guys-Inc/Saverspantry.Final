@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PantryExpiryView } from "@/components/PantryExpiryView";
 import BulkBuy from "@/pages/BulkBuy";
 import { PackageOpen } from "lucide-react";
+import { PantryItemIcon } from "@/components/PantryItemIcon";
 
 type PantryItem = {
   id: string;
