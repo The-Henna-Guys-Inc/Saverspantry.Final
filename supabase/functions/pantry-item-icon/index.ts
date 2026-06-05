@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    const path = `pantry-icons/v2/${slug(category ?? "any")}/${slug(item)}.png`;
+    const path = `pantry-icons/v3/${slug(category ?? "any")}/${slug(item)}.png`;
     const publicUrl = admin.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
 
     const head = await fetch(publicUrl, { method: "HEAD" });
