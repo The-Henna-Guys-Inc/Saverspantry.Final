@@ -45,6 +45,14 @@ const CATEGORIES = ["produce", "protein", "dairy", "pantry", "frozen", "bakery",
 const UNITS = ["unit", "g", "kg", "oz", "lb", "ml", "L", "cup", "tbsp", "tsp"];
 const DEFAULT_LOCATIONS = ["fridge", "freezer", "pantry", "counter"];
 
+const CATEGORY_EMOJI: Record<string, string> = {
+  produce: "🥦", protein: "🍗", dairy: "🧀", pantry: "🥫",
+  frozen: "🧊", bakery: "🍞", other: "🧂",
+};
+const LOCATION_EMOJI: Record<string, string> = {
+  fridge: "🧊", freezer: "❄️", pantry: "🥫", counter: "🍽️",
+};
+
 const Pantry = () => {
   const { user, loading: authLoading } = useAuth();
   const [items, setItems] = useState<PantryItem[]>([]);
@@ -65,6 +73,7 @@ const Pantry = () => {
   const [category, setCategory] = useState("pantry");
   const [location, setLocation] = useState("pantry");
   const [expires, setExpires] = useState("");
+  const [expiresDays, setExpiresDays] = useState("");
   const [threshold, setThreshold] = useState("");
   const [imageUrl, setImageUrl] = useState<string>("");
   const [barcode, setBarcode] = useState<string>("");
@@ -226,6 +235,14 @@ const Pantry = () => {
 
   const add = async () => {
     if (!name.trim()) return toast.error("Add an item name");
+    let expiresOn: string | null = expires || null;
+    if (!expiresOn && expiresDays.trim() !== "") {
+      const d = Number(expiresDays);
+      if (Number.isFinite(d) && d > 0) {
+        const dt = new Date(); dt.setHours(0, 0, 0, 0); dt.setDate(dt.getDate() + d);
+        expiresOn = dt.toISOString().slice(0, 10);
+      }
+    }
     setAdding(true);
     const { data, error } = await supabase
       .from("pantry_items")
@@ -236,7 +253,7 @@ const Pantry = () => {
         unit,
         category,
         location,
-        expires_on: expires || null,
+        expires_on: expiresOn,
         low_stock_threshold: threshold === "" ? null : Number(threshold),
         image_url: imageUrl || null,
         barcode: barcode || null,
@@ -246,7 +263,7 @@ const Pantry = () => {
     setAdding(false);
     if (error) return toast.error(error.message);
     setItems((p) => [data as PantryItem, ...p]);
-    setName(""); setQty("1"); setExpires(""); setThreshold(""); setImageUrl(""); setBarcode("");
+    setName(""); setQty("1"); setExpires(""); setExpiresDays(""); setThreshold(""); setImageUrl(""); setBarcode("");
     toast.success("Added to pantry");
   };
 
@@ -495,61 +512,124 @@ const Pantry = () => {
         </Card>
 
         {showManual && (
-          <Card className="p-6 rounded-3xl border-border-strong shadow-soft mb-8">
-            <div className="grid sm:grid-cols-2 lg:grid-cols-8 gap-3">
-              <div className="lg:col-span-2">
-                <Label htmlFor="n" className="text-xs">Item</Label>
-                <Input id="n" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Brown rice" className="rounded-xl mt-1" />
-              </div>
-              <div>
-                <Label htmlFor="q" className="text-xs">Qty</Label>
-                <Input id="q" type="number" min={0} step="0.1" value={qty} onChange={(e) => setQty(e.target.value)} className="rounded-xl mt-1" />
-              </div>
-              <div>
-                <Label className="text-xs">Unit</Label>
+          <Card className="p-5 sm:p-6 rounded-3xl border-border-strong shadow-soft mb-8 space-y-5">
+            {/* Name */}
+            <div>
+              <Label htmlFor="n" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name</Label>
+              <Input id="n" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Whole Milk" className="rounded-xl mt-2 h-12 text-base bg-card" />
+            </div>
+
+            {/* Qty + unit */}
+            <div>
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quantity & unit</Label>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <Input id="q" type="number" min={0} step="0.1" value={qty} onChange={(e) => setQty(e.target.value)} className="rounded-xl h-12 text-base bg-card" />
                 <Select value={unit} onValueChange={setUnit}>
-                  <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="rounded-xl h-12 text-base bg-card"><SelectValue /></SelectTrigger>
                   <SelectContent>{UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label className="text-xs">Category</Label>
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
-                  <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs">Location</Label>
-                <Select value={location} onValueChange={setLocation}>
-                  <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
-                  <SelectContent>{allLocations.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="e" className="text-xs">Expires</Label>
-                <div className="flex gap-1.5 mt-1">
-                  <Input id="e" type="date" value={expires} onChange={(e) => setExpires(e.target.value)} className="rounded-xl flex-1 min-w-0" />
-                  <ExpiryDateScanner onDate={setExpires} />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="t" className="text-xs">Low at</Label>
-                <Input id="t" type="number" min={0} step="0.1" value={threshold} onChange={(e) => setThreshold(e.target.value)} placeholder="opt." className="rounded-xl mt-1" />
+            </div>
+
+            {/* Category chips */}
+            <div>
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Category</Label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {CATEGORIES.map((c) => {
+                  const active = category === c;
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setCategory(c)}
+                      className={`inline-flex items-center gap-1.5 px-3.5 h-11 rounded-full text-sm font-medium border transition-smooth ${
+                        active
+                          ? "bg-primary text-primary-foreground border-primary shadow-glow"
+                          : "bg-card text-foreground border-border hover:bg-secondary"
+                      }`}
+                    >
+                      <span className="text-base leading-none">{CATEGORY_EMOJI[c] ?? "🍽️"}</span>
+                      <span className="capitalize">{c}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <Button variant="hero" onClick={add} disabled={adding} className="rounded-xl">
-                {adding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
-                Add to pantry
-              </Button>
-              {imageUrl && (
-                <div className="flex items-center gap-2 ml-auto">
-                  <img src={imageUrl} alt="Scanned product preview" className="h-10 w-10 rounded-lg object-cover border border-border" />
-                  <button onClick={() => setImageUrl("")} className="text-xs text-muted-foreground hover:text-destructive">Remove image</button>
+
+            {/* Location chips */}
+            <div>
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Location</Label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {allLocations.map((l) => {
+                  const active = location === l;
+                  return (
+                    <button
+                      key={l}
+                      type="button"
+                      onClick={() => setLocation(l)}
+                      className={`inline-flex items-center gap-1.5 px-3.5 h-11 rounded-full text-sm font-medium border transition-smooth ${
+                        active
+                          ? "bg-primary text-primary-foreground border-primary shadow-glow"
+                          : "bg-card text-foreground border-border hover:bg-secondary"
+                      }`}
+                    >
+                      <span className="text-base leading-none">{LOCATION_EMOJI[l] ?? "📦"}</span>
+                      <span className="capitalize">{l}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Expires in (days) — quick entry, with date + scanner fallback */}
+            <div>
+              <Label htmlFor="ed" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Expires in (days)</Label>
+              <div className="flex gap-2 mt-2">
+                <Input
+                  id="ed"
+                  type="number"
+                  min={0}
+                  step="1"
+                  inputMode="numeric"
+                  value={expiresDays}
+                  onChange={(e) => { setExpiresDays(e.target.value); if (e.target.value) setExpires(""); }}
+                  placeholder="7"
+                  className="rounded-xl h-12 text-base flex-1 bg-card"
+                />
+                <ExpiryDateScanner onDate={(d) => { setExpires(d); setExpiresDays(""); }} />
+              </div>
+              {expires && (
+                <div className="text-[11px] text-muted-foreground mt-1.5">
+                  Using exact date: {expires}{" "}
+                  <button onClick={() => setExpires("")} className="text-accent hover:underline">clear</button>
                 </div>
               )}
             </div>
+
+            {/* Low-stock alert — secondary, collapsed */}
+            <details className="group">
+              <summary className="text-xs font-semibold uppercase tracking-wider text-muted-foreground cursor-pointer select-none flex items-center gap-1.5">
+                <Plus className="h-3 w-3 transition-transform group-open:rotate-45" /> Low-stock alert (optional)
+              </summary>
+              <div className="mt-2 flex items-center gap-2">
+                <Label htmlFor="t" className="text-sm text-muted-foreground">Alert me when below</Label>
+                <Input id="t" type="number" min={0} step="0.1" value={threshold} onChange={(e) => setThreshold(e.target.value)} placeholder="off" className="rounded-xl h-10 w-24 bg-card" />
+                <span className="text-sm text-muted-foreground">{unit}</span>
+              </div>
+            </details>
+
+            {imageUrl && (
+              <div className="flex items-center gap-2 p-2 rounded-xl bg-muted/40 border border-border/40">
+                <img src={imageUrl} alt="Scanned product preview" className="h-10 w-10 rounded-lg object-cover border border-border" />
+                <span className="text-xs text-muted-foreground">Product image attached</span>
+                <button onClick={() => setImageUrl("")} className="ml-auto text-xs text-muted-foreground hover:text-destructive">Remove</button>
+              </div>
+            )}
+
+            <Button variant="hero" size="lg" onClick={add} disabled={adding} className="rounded-xl h-14 text-base w-full">
+              {adding ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Plus className="h-5 w-5 mr-2" />}
+              Save to Pantry
+            </Button>
           </Card>
         )}
 
