@@ -679,7 +679,7 @@ const Pantry = () => {
                             <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
                           </Button>
                         </div>
-                        <div className="flex items-center gap-1.5 flex-wrap pl-[52px]">
+                        <div className="flex items-center gap-1.5 flex-wrap pl-[64px]">
                           <div className="inline-flex items-center rounded-lg border border-border overflow-hidden">
                             <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none" onClick={() => adjust(it, -1)} disabled={out} title="Use one">
                               <Minus className="h-3 w-3" />
