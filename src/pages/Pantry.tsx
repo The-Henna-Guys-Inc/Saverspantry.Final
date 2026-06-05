@@ -235,6 +235,14 @@ const Pantry = () => {
 
   const add = async () => {
     if (!name.trim()) return toast.error("Add an item name");
+    let expiresOn: string | null = expires || null;
+    if (!expiresOn && expiresDays.trim() !== "") {
+      const d = Number(expiresDays);
+      if (Number.isFinite(d) && d > 0) {
+        const dt = new Date(); dt.setHours(0, 0, 0, 0); dt.setDate(dt.getDate() + d);
+        expiresOn = dt.toISOString().slice(0, 10);
+      }
+    }
     setAdding(true);
     const { data, error } = await supabase
       .from("pantry_items")
@@ -245,7 +253,7 @@ const Pantry = () => {
         unit,
         category,
         location,
-        expires_on: expires || null,
+        expires_on: expiresOn,
         low_stock_threshold: threshold === "" ? null : Number(threshold),
         image_url: imageUrl || null,
         barcode: barcode || null,
@@ -255,7 +263,7 @@ const Pantry = () => {
     setAdding(false);
     if (error) return toast.error(error.message);
     setItems((p) => [data as PantryItem, ...p]);
-    setName(""); setQty("1"); setExpires(""); setThreshold(""); setImageUrl(""); setBarcode("");
+    setName(""); setQty("1"); setExpires(""); setExpiresDays(""); setThreshold(""); setImageUrl(""); setBarcode("");
     toast.success("Added to pantry");
   };
 
