@@ -45,6 +45,14 @@ const CATEGORIES = ["produce", "protein", "dairy", "pantry", "frozen", "bakery",
 const UNITS = ["unit", "g", "kg", "oz", "lb", "ml", "L", "cup", "tbsp", "tsp"];
 const DEFAULT_LOCATIONS = ["fridge", "freezer", "pantry", "counter"];
 
+const CATEGORY_EMOJI: Record<string, string> = {
+  produce: "🥦", protein: "🍗", dairy: "🧀", pantry: "🥫",
+  frozen: "🧊", bakery: "🍞", other: "🧂",
+};
+const LOCATION_EMOJI: Record<string, string> = {
+  fridge: "🧊", freezer: "❄️", pantry: "🥫", counter: "🍽️",
+};
+
 const Pantry = () => {
   const { user, loading: authLoading } = useAuth();
   const [items, setItems] = useState<PantryItem[]>([]);
