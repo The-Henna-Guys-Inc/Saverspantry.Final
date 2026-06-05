@@ -18,24 +18,32 @@ export const PantryItemIcon = ({ item, category, imageUrl, className, alt }: Pro
 
   const wrapperCls =
     className ??
-    "h-11 w-11 rounded-lg object-cover border border-border shrink-0 bg-muted";
+    "h-14 w-14 rounded-full bg-secondary border border-border shrink-0 flex items-center justify-center overflow-hidden";
 
   if (imageUrl) {
-    return <img src={imageUrl} alt={alt ?? item} className={wrapperCls} loading="lazy" />;
+    return (
+      <div className={wrapperCls}>
+        <img src={imageUrl} alt={alt ?? item} className="h-full w-full object-cover" loading="lazy" />
+      </div>
+    );
   }
   if (generated === undefined) {
     return (
-      <div className={`${wrapperCls} flex items-center justify-center text-muted-foreground`}>
-        <Loader2 className="h-4 w-4 animate-spin" />
+      <div className={wrapperCls}>
+        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
       </div>
     );
   }
   if (generated === null) {
     return (
-      <div className={`${wrapperCls} flex items-center justify-center text-muted-foreground text-[10px] uppercase`}>
+      <div className={`${wrapperCls} text-muted-foreground text-xs uppercase font-semibold`}>
         {category?.[0] ?? item?.[0] ?? "·"}
       </div>
     );
   }
-  return <img src={generated} alt={alt ?? item} className={wrapperCls} loading="lazy" />;
+  return (
+    <div className={wrapperCls}>
+      <img src={generated} alt={alt ?? item} className="h-11 w-11 object-contain" loading="lazy" />
+    </div>
+  );
 };
