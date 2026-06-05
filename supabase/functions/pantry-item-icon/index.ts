@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const prompt = `A clean, modern flat-illustration icon of "${item}"${category ? ` (${category})` : ""} — a single grocery/pantry item shown centered on a plain white background. Soft pastel colors, subtle shading, friendly rounded shapes, sticker style with a thin soft outline. Square composition, lots of whitespace, no text, no labels, no packaging branding, no hands, no people. Just the item itself, recognizable at small sizes.`;
+    const prompt = `A single, vibrant, colorful 3D emoji-style icon of "${item}"${category ? ` (${category})` : ""} — glossy, saturated colors, soft shading and highlights, like an Apple/iOS food emoji. The item is centered and fills most of the frame (about 85%), shown on a plain pure white background. Realistic recognizable colors (e.g. bananas yellow, spinach green, milk white carton, bread golden brown). No text, no labels, no packaging logos, no plate, no hands, no shadow on the ground. Square composition.`;
 
     const aiResp = await fetch(GATEWAY, {
       method: "POST",
