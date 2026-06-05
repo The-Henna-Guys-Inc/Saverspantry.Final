@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PantryExpiryView } from "@/components/PantryExpiryView";
 import BulkBuy from "@/pages/BulkBuy";
 import { PackageOpen } from "lucide-react";
+import { PantryItemIcon } from "@/components/PantryItemIcon";
 
 type PantryItem = {
   id: string;
@@ -658,13 +659,7 @@ const Pantry = () => {
                     return (
                       <li key={it.id} className="flex flex-col gap-2 text-sm border-b border-border/40 pb-3 last:border-0 last:pb-0">
                         <div className="flex items-start gap-2.5">
-                          {it.image_url ? (
-                            <img src={it.image_url} alt={it.item} className="h-11 w-11 rounded-lg object-cover border border-border shrink-0" loading="lazy" />
-                          ) : (
-                            <div className="h-11 w-11 rounded-lg bg-muted border border-border shrink-0 flex items-center justify-center text-muted-foreground text-[10px] uppercase">
-                              {it.category?.[0] ?? "·"}
-                            </div>
-                          )}
+                          <PantryItemIcon item={it.item} category={it.category} imageUrl={it.image_url} />
                           <div className="min-w-0 flex-1">
                             <div className="font-medium text-primary break-words leading-snug flex items-start gap-1.5">
                               <span className="min-w-0 break-words">{it.item}</span>
