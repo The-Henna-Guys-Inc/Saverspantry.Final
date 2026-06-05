@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const prompt = `A single, vibrant, colorful 3D emoji-style icon of "${item}"${category ? ` (${category})` : ""} — glossy, saturated colors, soft shading and highlights, like an Apple/iOS food emoji. The item is centered and fills most of the frame (about 85%), shown on a plain pure white background. Realistic recognizable colors (e.g. bananas yellow, spinach green, milk white carton, bread golden brown). No text, no labels, no packaging logos, no plate, no hands, no shadow on the ground. Square composition.`;
+    const prompt = `A single bold, chunky 3D food/grocery icon of "${item}"${category ? ` (${category})` : ""} in the style of modern iOS/Fluent emoji. HIGHLY SATURATED, deep vivid colors (NOT pastel, NOT washed out). The item fills 90% of the frame, centered. Add a clear dark outline (2-3px) around the entire item so it stays readable on any background. Glossy 3D shading with strong highlights and visible shadows. Realistic colors true to the item (yellow bananas, deep red tomatoes, golden bread, white milk carton with blue cap, etc.). Plain solid pure white background (#FFFFFF). No text, no labels, no logos, no plate, no hands, no extra props. Square composition.`;
 
     const aiResp = await fetch(GATEWAY, {
       method: "POST",
