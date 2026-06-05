@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 // Resolves an AI-generated icon for a pantry item via an edge function.
 // Cached in localStorage with a 30-day TTL and deduped in-flight.
 
-const PREFIX = "pantryItemIcon:v1:";
+const PREFIX = "pantryItemIcon:v2:";
 const mem = new Map<string, string | null>();
 const inflight = new Map<string, Promise<string | null>>();
 
