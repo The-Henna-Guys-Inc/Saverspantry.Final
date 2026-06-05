@@ -73,6 +73,7 @@ const Pantry = () => {
   const [category, setCategory] = useState("pantry");
   const [location, setLocation] = useState("pantry");
   const [expires, setExpires] = useState("");
+  const [expiresDays, setExpiresDays] = useState("");
   const [threshold, setThreshold] = useState("");
   const [imageUrl, setImageUrl] = useState<string>("");
   const [barcode, setBarcode] = useState<string>("");
