@@ -1,4 +1,5 @@
-// Parses a receipt photo or a handwritten "removal" note into a structured list of pantry items.
+// Parses a receipt photo, removal list, or item photo into a structured list of pantry items.
+// Supports mode: "add" | "remove" | "auto" (auto-detects image type).
 // Uses Lovable AI Gateway (Gemini vision) with tool calling for reliable structured output.
 import { requireUserId, unauthorized } from "../_shared/userAuth.ts";
 
@@ -16,7 +17,7 @@ Deno.serve(async (req) => {
     if (!imageBase64 || typeof imageBase64 !== "string") {
       return new Response(JSON.stringify({ error: "Missing imageBase64" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const m = mode === "remove" ? "remove" : "add";
+    const m = mode === "remove" ? "remove" : mode === "add" ? "add" : "auto";
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
 
@@ -36,17 +37,33 @@ Deno.serve(async (req) => {
       "Convert fractions like 'half' -> 0.5, 'quarter' -> 0.25, 'a' or 'one' -> 1. Default to quantity 1, unit 'unit' if unclear. " +
       "Pick a category from: produce, protein, dairy, pantry, frozen, bakery, other.";
 
+    const systemAuto =
+      "You analyze a photo and extract grocery/pantry items from it. The image could be one of: " +
+      "(1) a printed store RECEIPT, (2) a handwritten or typed LIST of items, or (3) a PHOTO of actual food/grocery items (fridge, counter, bag of groceries, etc). " +
+      "First detect which type it is. Then extract every distinct food/grocery item visible. " +
+      "For receipts: skip totals, taxes, fees, discounts, loyalty/payment lines; normalize cryptic abbreviations (e.g. 'GV WHL MLK GAL' -> 'Whole Milk'); use printed weights/counts. " +
+      "For lists: parse informal quantities ('half' -> 0.5, 'quarter' -> 0.25, 'a'/'one' -> 1). " +
+      "For item photos: identify each visible product (e.g. 'Bananas', 'Eggs', 'Whole Milk'); count when possible, otherwise quantity 1 unit 'unit'. " +
+      "Pick category from: produce, protein, dairy, pantry, frozen, bakery, other. Default qty 1, unit 'unit' if unclear. " +
+      "Also suggest the most likely action: 'add' (receipts and item photos usually mean adding to pantry) or 'remove' (handwritten removal/used-up lists usually mean removing).";
+
+    const systemContent = m === "add" ? systemAdd : m === "remove" ? systemRemove : systemAuto;
+    const userText =
+      m === "add" ? "Extract the grocery items from this receipt." :
+      m === "remove" ? "Extract the items being removed from pantry." :
+      "Detect what this image is (receipt, list, or item photo) and extract every item with quantity and category.";
+
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: m === "add" ? systemAdd : systemRemove },
+          { role: "system", content: systemContent },
           {
             role: "user",
             content: [
-              { type: "text", text: m === "add" ? "Extract the grocery items from this receipt." : "Extract the items being removed from pantry." },
+              { type: "text", text: userText },
               { type: "image_url", image_url: { url: dataUrl } },
             ],
           },
@@ -60,6 +77,8 @@ Deno.serve(async (req) => {
               parameters: {
                 type: "object",
                 properties: {
+                  detected_type: { type: "string", enum: ["receipt", "list", "items", "unknown"], description: "What kind of image this is" },
+                  suggested_action: { type: "string", enum: ["add", "remove"], description: "Most likely action for the detected content" },
                   store_name: { type: ["string", "null"], description: "Store name if visible on receipt" },
                   items: {
                     type: "array",
@@ -96,7 +115,11 @@ Deno.serve(async (req) => {
     const j = await resp.json();
     const call = j?.choices?.[0]?.message?.tool_calls?.[0];
     const args = call ? JSON.parse(call.function.arguments) : {};
+    const detected_type = args.detected_type ?? (m === "remove" ? "list" : m === "add" ? "receipt" : "unknown");
+    const suggested_action = args.suggested_action ?? (detected_type === "list" ? "remove" : "add");
     return new Response(JSON.stringify({
+      detected_type,
+      suggested_action,
       store_name: args.store_name ?? null,
       items: Array.isArray(args.items) ? args.items : [],
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
