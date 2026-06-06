@@ -286,10 +286,25 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
     }
   };
 
-  const title = mode === "add" ? "Scan a receipt" : "Scan removal note";
-  const description = mode === "add"
-    ? "Snap a photo of your grocery receipt — we'll add the items to your pantry."
-    : "Snap a photo of your handwritten or typed list — we'll match items and remove them from your pantry.";
+  const isAuto = mode === "auto";
+  const title = isAuto
+    ? "Scan receipt, list, or items"
+    : actionMode === "add" ? "Scan a receipt" : "Scan removal note";
+  const description = isAuto
+    ? "Snap a photo of a receipt, a handwritten list, or your groceries — we'll detect what it is and pull out the items."
+    : actionMode === "add"
+      ? "Snap a photo of your grocery receipt — we'll add the items to your pantry."
+      : "Snap a photo of your handwritten or typed list — we'll match items and remove them from your pantry.";
+
+  const defaultLabel = isAuto
+    ? "Scan receipt, list, or items"
+    : actionMode === "add" ? "Scan receipt" : "Scan removal list";
+
+  const detectedLabel =
+    detectedType === "receipt" ? "Detected: store receipt"
+    : detectedType === "list" ? "Detected: handwritten/typed list"
+    : detectedType === "items" ? "Detected: photo of items"
+    : detectedType ? "Detected content" : null;
 
   return (
     <>
@@ -297,7 +312,7 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
         {trigger ?? (
           <Button variant="outline" size="sm" className="rounded-xl w-full px-2 text-xs sm:text-sm whitespace-normal h-auto min-h-[44px] leading-tight">
             <Receipt className="h-4 w-4 mr-1.5 shrink-0" />
-            <span className="truncate">{mode === "add" ? "Scan receipt" : "Scan removal list"}</span>
+            <span className="truncate">{defaultLabel}</span>
           </Button>
         )}
       </span>
@@ -330,10 +345,13 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
                 <Camera className="h-4 w-4 mr-2" /> Take or upload photo
               </Button>
               <p className="text-xs text-muted-foreground text-center max-w-sm">
-                Hold the phone steady, fill the frame with the {mode === "add" ? "receipt" : "list"}, and make sure the text is in focus.
+                {isAuto
+                  ? "Hold the phone steady and fill the frame — a receipt, a list, or your groceries all work."
+                  : `Hold the phone steady, fill the frame with the ${actionMode === "add" ? "receipt" : "list"}, and make sure the text is in focus.`}
               </p>
             </div>
           )}
+
 
           {busy && (
             <div className="flex flex-col items-center py-8 gap-2 text-sm text-muted-foreground">
