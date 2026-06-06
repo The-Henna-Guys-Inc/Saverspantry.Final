@@ -35,7 +35,7 @@ const Support = () => {
         <Card className="p-6 rounded-3xl border-border/50 shadow-soft mb-6">
           <div className="flex items-center gap-3 mb-5">
             <div className="h-10 w-10 rounded-xl bg-accent/20 flex items-center justify-center shrink-0">
-              <MessageSquareQuestion className="h-5 w-5 text-primary" />
+              <MessageSquare className="h-5 w-5 text-primary" />
             </div>
             <h2 className="text-lg font-semibold text-primary">Frequently Asked Questions</h2>
           </div>
