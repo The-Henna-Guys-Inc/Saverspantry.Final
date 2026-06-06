@@ -8,7 +8,8 @@ import { Receipt, Loader2, Camera, RotateCcw, Trash2, CheckCircle2, AlertCircle,
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-type Mode = "add" | "remove";
+type Mode = "add" | "remove" | "auto";
+type ActionMode = "add" | "remove";
 
 type ParsedItem = {
   name: string;
