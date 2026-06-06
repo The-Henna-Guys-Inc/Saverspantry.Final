@@ -366,6 +366,7 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
                 <img src={preview} alt="Scanned" className="h-16 w-16 rounded-lg object-cover border border-border" />
                 <div className="flex-1 min-w-0">
                   {storeName && <div className="text-xs uppercase tracking-wider text-muted-foreground">{storeName}</div>}
+                  {detectedLabel && <div className="text-[10px] uppercase tracking-wider text-accent">{detectedLabel}</div>}
                   <div className="text-sm font-medium">{items.length} item{items.length === 1 ? "" : "s"} detected</div>
                   <div className="text-xs text-muted-foreground">Review, edit, then confirm.</div>
                 </div>
@@ -373,6 +374,37 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
                   <RotateCcw className="h-3.5 w-3.5 mr-1" /> Retake
                 </Button>
               </div>
+
+              {isAuto && (
+                <div className="rounded-xl border border-border bg-muted/40 p-2">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 px-1">
+                    What do you want to do with these items?
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {(["add", "remove"] as ActionMode[]).map((a) => {
+                      const active = actionMode === a;
+                      return (
+                        <button
+                          key={a}
+                          type="button"
+                          onClick={() => {
+                            setActionMode(a);
+                            setItems((prev) => applyActionMode(a, prev));
+                          }}
+                          className={`rounded-lg h-10 text-sm font-medium transition-colors ${
+                            active
+                              ? "bg-primary text-primary-foreground shadow-soft"
+                              : "bg-card text-foreground hover:bg-muted"
+                          }`}
+                        >
+                          {a === "add" ? "Add to pantry" : "Remove from pantry"}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
 
               <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1 -mr-1">
                 {items.map((it) => (
