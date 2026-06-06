@@ -8,7 +8,8 @@ import { Receipt, Loader2, Camera, RotateCcw, Trash2, CheckCircle2, AlertCircle,
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-type Mode = "add" | "remove";
+type Mode = "add" | "remove" | "auto";
+type ActionMode = "add" | "remove";
 
 type ParsedItem = {
   name: string;
@@ -129,8 +130,28 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
   const [items, setItems] = useState<EditableItem[]>([]);
   const [storeName, setStoreName] = useState<string | null>(null);
   const [committing, setCommitting] = useState(false);
+  const [detectedType, setDetectedType] = useState<string | null>(null);
+  // Effective action mode used in the UI/commit. In "auto", it's set after parse and toggleable.
+  const [actionMode, setActionMode] = useState<ActionMode>(mode === "remove" ? "remove" : "add");
 
-  const reset = () => { setPreview(null); setItems([]); setStoreName(null); };
+  const reset = () => {
+    setPreview(null); setItems([]); setStoreName(null); setDetectedType(null);
+    setActionMode(mode === "remove" ? "remove" : "add");
+  };
+
+  // When switching action in auto mode, re-run fuzzy match for the remove view.
+  const applyActionMode = (next: ActionMode, list: EditableItem[]) => {
+    if (next === "remove") {
+      return list.map((it) => {
+        if (it.matchedId) return it;
+        const match = fuzzyMatch(it.name, pantry);
+        return match
+          ? { ...it, matchedId: match.id, matchedName: match.item, matchedQty: match.quantity, matchedUnit: match.unit }
+          : it;
+      });
+    }
+    return list;
+  };
 
   const handleFile = async (file: File) => {
     setBusy(true);
@@ -147,8 +168,16 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
         return;
       }
       setStoreName(data?.store_name ?? null);
+      setDetectedType(data?.detected_type ?? null);
+      // Decide initial action mode
+      const initialAction: ActionMode =
+        mode === "auto"
+          ? ((data?.suggested_action as ActionMode | undefined) ?? "add")
+          : (mode as ActionMode);
+      setActionMode(initialAction);
+
       const editable: EditableItem[] = parsed.map((p, idx) => {
-        const match = mode === "remove" ? fuzzyMatch(p.name, pantry) : null;
+        const match = initialAction === "remove" ? fuzzyMatch(p.name, pantry) : null;
         return {
           ...p,
           _key: `${Date.now()}-${idx}`,
@@ -174,6 +203,7 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
       setBusy(false);
     }
   };
+
 
   const updateItem = (key: string, patch: Partial<EditableItem>) => {
     setItems((p) => p.map((it) => (it._key === key ? { ...it, ...patch } : it)));
@@ -256,10 +286,25 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
     }
   };
 
-  const title = mode === "add" ? "Scan a receipt" : "Scan removal note";
-  const description = mode === "add"
-    ? "Snap a photo of your grocery receipt — we'll add the items to your pantry."
-    : "Snap a photo of your handwritten or typed list — we'll match items and remove them from your pantry.";
+  const isAuto = mode === "auto";
+  const title = isAuto
+    ? "Scan receipt, list, or items"
+    : actionMode === "add" ? "Scan a receipt" : "Scan removal note";
+  const description = isAuto
+    ? "Snap a photo of a receipt, a handwritten list, or your groceries — we'll detect what it is and pull out the items."
+    : actionMode === "add"
+      ? "Snap a photo of your grocery receipt — we'll add the items to your pantry."
+      : "Snap a photo of your handwritten or typed list — we'll match items and remove them from your pantry.";
+
+  const defaultLabel = isAuto
+    ? "Scan receipt, list, or items"
+    : actionMode === "add" ? "Scan receipt" : "Scan removal list";
+
+  const detectedLabel =
+    detectedType === "receipt" ? "Detected: store receipt"
+    : detectedType === "list" ? "Detected: handwritten/typed list"
+    : detectedType === "items" ? "Detected: photo of items"
+    : detectedType ? "Detected content" : null;
 
   return (
     <>
@@ -267,7 +312,7 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
         {trigger ?? (
           <Button variant="outline" size="sm" className="rounded-xl w-full px-2 text-xs sm:text-sm whitespace-normal h-auto min-h-[44px] leading-tight">
             <Receipt className="h-4 w-4 mr-1.5 shrink-0" />
-            <span className="truncate">{mode === "add" ? "Scan receipt" : "Scan removal list"}</span>
+            <span className="truncate">{defaultLabel}</span>
           </Button>
         )}
       </span>
@@ -300,10 +345,13 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
                 <Camera className="h-4 w-4 mr-2" /> Take or upload photo
               </Button>
               <p className="text-xs text-muted-foreground text-center max-w-sm">
-                Hold the phone steady, fill the frame with the {mode === "add" ? "receipt" : "list"}, and make sure the text is in focus.
+                {isAuto
+                  ? "Hold the phone steady and fill the frame — a receipt, a list, or your groceries all work."
+                  : `Hold the phone steady, fill the frame with the ${actionMode === "add" ? "receipt" : "list"}, and make sure the text is in focus.`}
               </p>
             </div>
           )}
+
 
           {busy && (
             <div className="flex flex-col items-center py-8 gap-2 text-sm text-muted-foreground">
@@ -318,6 +366,7 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
                 <img src={preview} alt="Scanned" className="h-16 w-16 rounded-lg object-cover border border-border" />
                 <div className="flex-1 min-w-0">
                   {storeName && <div className="text-xs uppercase tracking-wider text-muted-foreground">{storeName}</div>}
+                  {detectedLabel && <div className="text-[10px] uppercase tracking-wider text-accent">{detectedLabel}</div>}
                   <div className="text-sm font-medium">{items.length} item{items.length === 1 ? "" : "s"} detected</div>
                   <div className="text-xs text-muted-foreground">Review, edit, then confirm.</div>
                 </div>
@@ -325,6 +374,37 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
                   <RotateCcw className="h-3.5 w-3.5 mr-1" /> Retake
                 </Button>
               </div>
+
+              {isAuto && (
+                <div className="rounded-xl border border-border bg-muted/40 p-2">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 px-1">
+                    What do you want to do with these items?
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {(["add", "remove"] as ActionMode[]).map((a) => {
+                      const active = actionMode === a;
+                      return (
+                        <button
+                          key={a}
+                          type="button"
+                          onClick={() => {
+                            setActionMode(a);
+                            setItems((prev) => applyActionMode(a, prev));
+                          }}
+                          className={`rounded-lg h-10 text-sm font-medium transition-colors ${
+                            active
+                              ? "bg-primary text-primary-foreground shadow-soft"
+                              : "bg-card text-foreground hover:bg-muted"
+                          }`}
+                        >
+                          {a === "add" ? "Add to pantry" : "Remove from pantry"}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
 
               <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1 -mr-1">
                 {items.map((it) => (
@@ -368,7 +448,7 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
                           <SelectContent>{UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
                         </Select>
                       </div>
-                      {mode === "add" ? (
+                      {actionMode === "add" ? (
                         <>
                           <div className="col-span-4 sm:col-span-3">
                             <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Category</Label>
@@ -434,7 +514,7 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
                       </div>
                       </div>
                     </div>
-                    {mode === "remove" && (
+                    {actionMode === "remove" && (
                       <div className="mt-2 text-xs flex items-center gap-1.5">
                         {it.matchedId ? (
                           <span className="inline-flex items-center gap-1 text-primary">
@@ -464,11 +544,11 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
                 <Button
                   variant="hero"
                   className="rounded-xl"
-                  onClick={mode === "add" ? commitAdd : commitRemove}
+                  onClick={actionMode === "add" ? commitAdd : commitRemove}
                   disabled={committing}
                 >
                   {committing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  {mode === "add" ? `Add ${items.length} to pantry` : `Remove from pantry`}
+                  {actionMode === "add" ? `Add ${items.length} to pantry` : `Remove from pantry`}
                 </Button>
               </div>
             </div>
