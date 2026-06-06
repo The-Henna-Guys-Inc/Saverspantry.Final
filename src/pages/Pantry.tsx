@@ -486,30 +486,26 @@ const Pantry = () => {
 
           <div className="mt-4 pt-4 border-t border-border-strong">
             <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Bulk add or remove</div>
-            <div className="grid grid-cols-2 gap-2">
-              <ReceiptScanner
-                mode="add"
-                userId={user!.id}
-                pantry={items.map((i) => ({ id: i.id, item: i.item, quantity: i.quantity, unit: i.unit, location: i.location }))}
-                locations={allLocations}
-                defaultLocation={location}
-                onAdded={(rows) => setItems((p) => [...(rows as PantryItem[]), ...p])}
-              />
-              <ReceiptScanner
-                mode="remove"
-                userId={user!.id}
-                pantry={items.map((i) => ({ id: i.id, item: i.item, quantity: i.quantity, unit: i.unit, location: i.location }))}
-                locations={allLocations}
-                onRemoved={(updates) => {
-                  setItems((p) => p.map((it) => {
-                    const u = updates.find((x) => x.id === it.id);
-                    return u ? { ...it, quantity: u.newQuantity } : it;
-                  }));
-                }}
-              />
-            </div>
+            <ReceiptScanner
+              mode="auto"
+              userId={user!.id}
+              pantry={items.map((i) => ({ id: i.id, item: i.item, quantity: i.quantity, unit: i.unit, location: i.location }))}
+              locations={allLocations}
+              defaultLocation={location}
+              onAdded={(rows) => setItems((p) => [...(rows as PantryItem[]), ...p])}
+              onRemoved={(updates) => {
+                setItems((p) => p.map((it) => {
+                  const u = updates.find((x) => x.id === it.id);
+                  return u ? { ...it, quantity: u.newQuantity } : it;
+                }));
+              }}
+            />
+            <p className="text-[11px] text-muted-foreground mt-2 leading-snug">
+              Snap a receipt, a handwritten list, or your groceries — we'll detect what it is, pull out the items, and ask whether to add or remove.
+            </p>
           </div>
         </Card>
+
 
         {showManual && (
           <Card className="p-5 sm:p-6 rounded-3xl border-border-strong shadow-soft mb-8 space-y-5">
