@@ -1,6 +1,6 @@
 import { Header } from "@/components/Header";
 import { Card } from "@/components/ui/card";
-import { HelpCircle, Mail, MessageSquareQuestion, Bug } from "lucide-react";
+import { HelpCircle, Mail, MessageSquare, Bug } from "lucide-react";
 
 const Support = () => {
   return (
