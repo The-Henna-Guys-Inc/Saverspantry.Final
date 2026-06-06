@@ -341,6 +341,26 @@ const Settings = () => {
         <MyContributions />
         <SupportTickets />
         <AccountManagement />
+
+        <div className="pt-2">
+          <div className="flex items-center gap-2 text-accent text-xs font-semibold uppercase tracking-widest mb-3">
+            <ScrollText className="h-3.5 w-3.5" /> Legal & Support
+          </div>
+          <Card className="rounded-3xl border-border/50 shadow-soft overflow-hidden">
+            <Link to="/privacy" className="flex items-center justify-between px-5 py-3.5 hover:bg-muted/50 transition-colors border-b border-border/40">
+              <span className="text-sm text-foreground">Privacy Policy</span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+            <Link to="/terms" className="flex items-center justify-between px-5 py-3.5 hover:bg-muted/50 transition-colors border-b border-border/40">
+              <span className="text-sm text-foreground">Terms of Service</span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+            <Link to="/support" className="flex items-center justify-between px-5 py-3.5 hover:bg-muted/50 transition-colors">
+              <span className="text-sm text-foreground">Support</span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+          </Card>
+        </div>
       </div>
     </main>
   );
