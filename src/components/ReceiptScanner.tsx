@@ -130,8 +130,28 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
   const [items, setItems] = useState<EditableItem[]>([]);
   const [storeName, setStoreName] = useState<string | null>(null);
   const [committing, setCommitting] = useState(false);
+  const [detectedType, setDetectedType] = useState<string | null>(null);
+  // Effective action mode used in the UI/commit. In "auto", it's set after parse and toggleable.
+  const [actionMode, setActionMode] = useState<ActionMode>(mode === "remove" ? "remove" : "add");
 
-  const reset = () => { setPreview(null); setItems([]); setStoreName(null); };
+  const reset = () => {
+    setPreview(null); setItems([]); setStoreName(null); setDetectedType(null);
+    setActionMode(mode === "remove" ? "remove" : "add");
+  };
+
+  // When switching action in auto mode, re-run fuzzy match for the remove view.
+  const applyActionMode = (next: ActionMode, list: EditableItem[]) => {
+    if (next === "remove") {
+      return list.map((it) => {
+        if (it.matchedId) return it;
+        const match = fuzzyMatch(it.name, pantry);
+        return match
+          ? { ...it, matchedId: match.id, matchedName: match.item, matchedQty: match.quantity, matchedUnit: match.unit }
+          : it;
+      });
+    }
+    return list;
+  };
 
   const handleFile = async (file: File) => {
     setBusy(true);
@@ -148,8 +168,16 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
         return;
       }
       setStoreName(data?.store_name ?? null);
+      setDetectedType(data?.detected_type ?? null);
+      // Decide initial action mode
+      const initialAction: ActionMode =
+        mode === "auto"
+          ? ((data?.suggested_action as ActionMode | undefined) ?? "add")
+          : (mode as ActionMode);
+      setActionMode(initialAction);
+
       const editable: EditableItem[] = parsed.map((p, idx) => {
-        const match = mode === "remove" ? fuzzyMatch(p.name, pantry) : null;
+        const match = initialAction === "remove" ? fuzzyMatch(p.name, pantry) : null;
         return {
           ...p,
           _key: `${Date.now()}-${idx}`,
@@ -175,6 +203,7 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
       setBusy(false);
     }
   };
+
 
   const updateItem = (key: string, patch: Partial<EditableItem>) => {
     setItems((p) => p.map((it) => (it._key === key ? { ...it, ...patch } : it)));
