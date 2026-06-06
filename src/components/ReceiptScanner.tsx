@@ -132,11 +132,11 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
   const [committing, setCommitting] = useState(false);
   const [detectedType, setDetectedType] = useState<string | null>(null);
   // Effective action mode used in the UI/commit. In "auto", it's set after parse and toggleable.
-  const [actionMode, setActionMode] = useState<ActionMode>(mode === "remove" ? "remove" : "add");
+  const [actionMode, setActionMode] = useState<ActionMode>(actionMode === "remove" ? "remove" : "add");
 
   const reset = () => {
     setPreview(null); setItems([]); setStoreName(null); setDetectedType(null);
-    setActionMode(mode === "remove" ? "remove" : "add");
+    setActionMode(actionMode === "remove" ? "remove" : "add");
   };
 
   // When switching action in auto mode, re-run fuzzy match for the remove view.
@@ -448,7 +448,7 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
                           <SelectContent>{UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
                         </Select>
                       </div>
-                      {mode === "add" ? (
+                      {actionMode === "add" ? (
                         <>
                           <div className="col-span-4 sm:col-span-3">
                             <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Category</Label>
@@ -514,7 +514,7 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
                       </div>
                       </div>
                     </div>
-                    {mode === "remove" && (
+                    {actionMode === "remove" && (
                       <div className="mt-2 text-xs flex items-center gap-1.5">
                         {it.matchedId ? (
                           <span className="inline-flex items-center gap-1 text-primary">
@@ -544,11 +544,11 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
                 <Button
                   variant="hero"
                   className="rounded-xl"
-                  onClick={mode === "add" ? commitAdd : commitRemove}
+                  onClick={actionMode === "add" ? commitAdd : commitRemove}
                   disabled={committing}
                 >
                   {committing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  {mode === "add" ? `Add ${items.length} to pantry` : `Remove from pantry`}
+                  {actionMode === "add" ? `Add ${items.length} to pantry` : `Remove from pantry`}
                 </Button>
               </div>
             </div>
