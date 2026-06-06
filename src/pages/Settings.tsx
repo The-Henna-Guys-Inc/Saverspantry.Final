@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Save, Settings as SettingsIcon, TrendingDown, Utensils } from "lucide-react";
+import { Loader2, Save, Settings as SettingsIcon, TrendingDown, Utensils, ScrollText, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { AccountManagement } from "@/components/AccountManagement";
 import { SupportTickets } from "@/components/SupportTickets";
