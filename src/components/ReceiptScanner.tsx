@@ -132,11 +132,11 @@ export const ReceiptScanner = ({ mode, userId, pantry, locations, defaultLocatio
   const [committing, setCommitting] = useState(false);
   const [detectedType, setDetectedType] = useState<string | null>(null);
   // Effective action mode used in the UI/commit. In "auto", it's set after parse and toggleable.
-  const [actionMode, setActionMode] = useState<ActionMode>(actionMode === "remove" ? "remove" : "add");
+  const [actionMode, setActionMode] = useState<ActionMode>(mode === "remove" ? "remove" : "add");
 
   const reset = () => {
     setPreview(null); setItems([]); setStoreName(null); setDetectedType(null);
-    setActionMode(actionMode === "remove" ? "remove" : "add");
+    setActionMode(mode === "remove" ? "remove" : "add");
   };
 
   // When switching action in auto mode, re-run fuzzy match for the remove view.
