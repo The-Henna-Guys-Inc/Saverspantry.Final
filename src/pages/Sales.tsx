@@ -13,6 +13,7 @@ import { formatDistanceToNow } from "date-fns";
 import { AdminSaleDialog } from "@/components/AdminSaleDialog";
 import { AdminSaleCsvUpload } from "@/components/AdminSaleCsvUpload";
 import { AdminFlyerUpload } from "@/components/AdminFlyerUpload";
+import { AdminFlyerUrlImport } from "@/components/AdminFlyerUrlImport";
 import { CuisineFilterBar } from "@/components/CuisineFilterBar";
 import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
 import { detectItemCuisines } from "@/lib/cuisineHints";
@@ -233,6 +234,7 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
               </Button>
             )}
             {isAdmin && user && <AdminFlyerUpload userId={user.id} onComplete={loadSales} />}
+            {isAdmin && user && <AdminFlyerUrlImport userId={user.id} onComplete={loadSales} />}
             {isAdmin && user && <AdminSaleCsvUpload userId={user.id} onCreated={loadSales} />}
             {isAdmin && user && <AdminSaleDialog userId={user.id} onCreated={loadSales} />}
             <UserSubmitDealDialog onSubmitted={loadSales} />

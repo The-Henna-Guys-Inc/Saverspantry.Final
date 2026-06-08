@@ -395,6 +395,7 @@ export type Database = {
           original_filename: string
           page_count: number
           source_email_id: string | null
+          source_url: string | null
           store_id: string
           stored_file_url: string
         }
@@ -415,6 +416,7 @@ export type Database = {
           original_filename: string
           page_count?: number
           source_email_id?: string | null
+          source_url?: string | null
           store_id: string
           stored_file_url: string
         }
@@ -435,6 +437,7 @@ export type Database = {
           original_filename?: string
           page_count?: number
           source_email_id?: string | null
+          source_url?: string | null
           store_id?: string
           stored_file_url?: string
         }

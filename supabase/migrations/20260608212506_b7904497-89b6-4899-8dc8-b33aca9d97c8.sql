@@ -1,0 +1,2 @@
+ALTER TABLE public.flyer_extraction_batches ADD COLUMN IF NOT EXISTS source_url TEXT;
+CREATE INDEX IF NOT EXISTS idx_flyer_batches_source_url ON public.flyer_extraction_batches(source_url) WHERE source_url IS NOT NULL;
