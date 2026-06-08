@@ -202,9 +202,15 @@ const AdminDeals = () => {
                   </span>
                 )}
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setSearchParams({})}>
-                Clear filter
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button size="sm" onClick={approveAll} disabled={busyAll || counts.pending === 0} className="rounded-xl">
+                  {busyAll ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                  <span className="ml-1.5">Approve all</span>
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setSearchParams({})}>
+                  Clear filter
+                </Button>
+              </div>
             </div>
           </Card>
         )}
