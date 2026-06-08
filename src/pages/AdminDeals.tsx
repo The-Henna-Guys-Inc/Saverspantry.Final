@@ -49,6 +49,7 @@ const AdminDeals = () => {
   const [mode, setMode] = useState<QueueMode>("pending");
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   const [batchInfo, setBatchInfo] = useState<{ extracted_items_count: number; ai_cost_usd: number; original_filename: string } | null>(null);
+  const [busyAll, setBusyAll] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -137,8 +138,32 @@ const AdminDeals = () => {
     setDeals((prev) => prev.filter((d) => d.id !== id));
   };
 
+  const approveAll = async () => {
+    if (!batchFilter) return;
+    const pending = deals.filter((d) => d.moderation_status === "pending_review");
+    if (pending.length === 0) {
+      toast.info("No pending deals to approve");
+      return;
+    }
+    if (!window.confirm(`Approve all ${pending.length} pending deals in this batch?`)) return;
+    setBusyAll(true);
+    const { error } = await supabase.from("sale_observations")
+      .update({
+        moderation_status: "approved",
+        approved_at: new Date().toISOString(),
+        approved_by_admin_id: user!.id,
+      })
+      .eq("extraction_batch_id", batchFilter)
+      .eq("moderation_status", "pending_review");
+    setBusyAll(false);
+    if (error) return toast.error(error.message);
+    toast.success(`Approved ${pending.length} deals`);
+    load();
+  };
+
   const counts = useMemo(() => ({
     total: deals.length,
+    pending: deals.filter((d) => d.moderation_status === "pending_review").length,
   }), [deals]);
 
   if (authLoading || checking) {
@@ -177,9 +202,15 @@ const AdminDeals = () => {
                   </span>
                 )}
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setSearchParams({})}>
-                Clear filter
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button size="sm" onClick={approveAll} disabled={busyAll || counts.pending === 0} className="rounded-xl">
+                  {busyAll ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                  <span className="ml-1.5">Approve all</span>
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setSearchParams({})}>
+                  Clear filter
+                </Button>
+              </div>
             </div>
           </Card>
         )}
