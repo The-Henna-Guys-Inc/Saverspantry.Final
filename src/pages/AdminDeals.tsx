@@ -138,8 +138,32 @@ const AdminDeals = () => {
     setDeals((prev) => prev.filter((d) => d.id !== id));
   };
 
+  const approveAll = async () => {
+    if (!batchFilter) return;
+    const pending = deals.filter((d) => d.moderation_status === "pending_review");
+    if (pending.length === 0) {
+      toast.info("No pending deals to approve");
+      return;
+    }
+    if (!window.confirm(`Approve all ${pending.length} pending deals in this batch?`)) return;
+    setBusyAll(true);
+    const { error } = await supabase.from("sale_observations")
+      .update({
+        moderation_status: "approved",
+        approved_at: new Date().toISOString(),
+        approved_by_admin_id: user!.id,
+      })
+      .eq("extraction_batch_id", batchFilter)
+      .eq("moderation_status", "pending_review");
+    setBusyAll(false);
+    if (error) return toast.error(error.message);
+    toast.success(`Approved ${pending.length} deals`);
+    load();
+  };
+
   const counts = useMemo(() => ({
     total: deals.length,
+    pending: deals.filter((d) => d.moderation_status === "pending_review").length,
   }), [deals]);
 
   if (authLoading || checking) {
