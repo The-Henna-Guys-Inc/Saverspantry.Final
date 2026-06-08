@@ -68,7 +68,7 @@ const AdminDeals = () => {
       .order("created_at", { ascending: false })
       .limit(200);
     if (batchFilter) {
-      q = q.eq("extraction_batch_id", batchFilter);
+      q = q.eq("extraction_batch_id", batchFilter).eq("moderation_status", "pending_review");
     } else if (mode === "pending") {
       q = q.eq("moderation_status", "pending_review");
     } else if (mode === "flagged") {
