@@ -233,6 +233,7 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
               </Button>
             )}
             {isAdmin && user && <AdminFlyerUpload userId={user.id} onComplete={loadSales} />}
+            {isAdmin && user && <AdminFlyerUrlImport userId={user.id} onComplete={loadSales} />}
             {isAdmin && user && <AdminSaleCsvUpload userId={user.id} onCreated={loadSales} />}
             {isAdmin && user && <AdminSaleDialog userId={user.id} onCreated={loadSales} />}
             <UserSubmitDealDialog onSubmitted={loadSales} />
