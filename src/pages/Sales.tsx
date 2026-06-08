@@ -13,6 +13,7 @@ import { formatDistanceToNow } from "date-fns";
 import { AdminSaleDialog } from "@/components/AdminSaleDialog";
 import { AdminSaleCsvUpload } from "@/components/AdminSaleCsvUpload";
 import { AdminFlyerUpload } from "@/components/AdminFlyerUpload";
+import { AdminFlyerUrlImport } from "@/components/AdminFlyerUrlImport";
 import { CuisineFilterBar } from "@/components/CuisineFilterBar";
 import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
 import { detectItemCuisines } from "@/lib/cuisineHints";
