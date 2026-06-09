@@ -159,12 +159,37 @@ Deno.serve(async (req) => {
   if (!apiKey) return json({ error: "AI gateway not configured" }, 500);
 
   const html = await res.text();
-  const text = stripHtml(html);
+  let text = stripHtml(html);
+  let usedFirecrawl = false;
+
+  // Fallback: JS-rendered flyer sites (Flipp, Circular.com, etc.) — try Firecrawl.
   if (text.length < 300) {
-    return json({
-      error: "Page returned almost no text. It likely renders the flyer with JavaScript (Flipp, Circular.com, etc.), which this importer can't read. Try the direct PDF/image link if the site offers one.",
-      text_length: text.length,
-    }, 422);
+    const fcKey = Deno.env.get("FIRECRAWL_API_KEY");
+    if (!fcKey) {
+      return json({
+        error: "Page returned almost no text and Firecrawl is not configured. Try the direct PDF/image link if the site offers one.",
+        text_length: text.length,
+      }, 422);
+    }
+    try {
+      const fcResp = await fetch("https://api.firecrawl.dev/v2/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${fcKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true, waitFor: 2500 }),
+      });
+      const fcJson = await fcResp.json().catch(() => ({}));
+      if (!fcResp.ok) {
+        if (fcResp.status === 402) return json({ error: "Firecrawl credits exhausted." }, 402);
+        return json({ error: `Firecrawl failed (${fcResp.status})`, detail: String(fcJson?.error ?? "").slice(0, 240) }, 422);
+      }
+      const md = fcJson?.data?.markdown ?? fcJson?.markdown ?? "";
+      if (md && md.length > text.length) { text = md; usedFirecrawl = true; }
+    } catch (e) {
+      return json({ error: `Firecrawl request failed: ${e instanceof Error ? e.message : String(e)}` }, 502);
+    }
+    if (text.length < 300) {
+      return json({ error: "Even with Firecrawl the page returned almost no text. Try the direct PDF/image link.", text_length: text.length }, 422);
+    }
   }
 
   const { data: batch, error: bErr } = await admin
