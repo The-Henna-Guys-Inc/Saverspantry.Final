@@ -16,6 +16,10 @@ const BodySchema = z.object({
   valid_until: z.string().optional().nullable(),
   // Internal: set by the cron scraper running with service-role auth.
   internal_admin_user_id: z.string().uuid().optional().nullable(),
+  // Optional: force Firecrawl (for JS-rendered/multi-week pages) and optional
+  // pre-scrape actions (click "this week" tab, etc.) passed in by resolve-flyer-url.
+  force_firecrawl: z.boolean().optional(),
+  firecrawl_actions: z.array(z.any()).optional().nullable(),
 });
 
 const MAX_BYTES = 20 * 1024 * 1024;
@@ -105,7 +109,7 @@ Deno.serve(async (req) => {
     actingUserId = userRes.user.id;
   }
 
-  const { url, store_id, valid_from, valid_until } = parsed.data;
+  const { url, store_id, valid_from, valid_until, force_firecrawl, firecrawl_actions } = parsed.data;
 
   let res: Response;
   try {
@@ -174,8 +178,10 @@ Deno.serve(async (req) => {
   let text = stripHtml(html);
   let usedFirecrawl = false;
 
-  // Fallback: JS-rendered flyer sites (Flipp, Circular.com, etc.) — try Firecrawl.
-  if (text.length < 300) {
+  // Use Firecrawl when: HTML stripped text is too small, or caller forces it
+  // (JS-rendered sites, multi-week tabs requiring click actions).
+  const needsFirecrawl = force_firecrawl || text.length < 300;
+  if (needsFirecrawl) {
     const fcKey = Deno.env.get("FIRECRAWL_API_KEY");
     if (!fcKey) {
       return json({
@@ -184,10 +190,12 @@ Deno.serve(async (req) => {
       }, 422);
     }
     try {
+      const fcBody: any = { url, formats: ["markdown"], onlyMainContent: true, waitFor: 2500 };
+      if (firecrawl_actions && firecrawl_actions.length) fcBody.actions = firecrawl_actions;
       const fcResp = await fetch("https://api.firecrawl.dev/v2/scrape", {
         method: "POST",
         headers: { Authorization: `Bearer ${fcKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true, waitFor: 2500 }),
+        body: JSON.stringify(fcBody),
       });
       const fcJson = await fcResp.json().catch(() => ({}));
       if (!fcResp.ok) {

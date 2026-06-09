@@ -81,13 +81,33 @@ Deno.serve(async (req) => {
   for (const src of candidates) {
     const startedAt = new Date().toISOString();
     try {
+      // Resolve current week's URL + selector actions (cached when fresh).
+      let resolvedUrl = src.flyer_url;
+      let actions: any[] | null = null;
+      let forceFc = src.render_mode === "firecrawl" || !!src.requires_week_select;
+      try {
+        const rr = await fetch(`${supaUrl}/functions/v1/resolve-flyer-url`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceKey}` },
+          body: JSON.stringify({ source_id: src.id }),
+        });
+        const rj = await rr.json().catch(() => ({}));
+        if (rr.ok && rj?.resolved_url) {
+          resolvedUrl = rj.resolved_url;
+          actions = rj.actions ?? null;
+          forceFc = !!rj.force_firecrawl;
+        }
+      } catch (_) { /* fall back to stored URL */ }
+
       const r = await fetch(`${supaUrl}/functions/v1/import-flyer-from-url`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceKey}` },
         body: JSON.stringify({
-          url: src.flyer_url,
+          url: resolvedUrl,
           store_id: src.default_store_id ?? null,
           internal_admin_user_id: actingAdminId,
+          force_firecrawl: forceFc,
+          firecrawl_actions: actions,
         }),
       });
       const data = await r.json().catch(() => ({}));

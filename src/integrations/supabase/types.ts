@@ -491,17 +491,24 @@ export type Database = {
           consecutive_failures: number
           created_at: string
           default_store_id: string | null
+          flyer_landing_url: string | null
           flyer_url: string
           id: string
           last_batch_id: string | null
           last_error: string | null
+          last_resolved_at: string | null
+          last_resolved_url: string | null
           last_run_at: string | null
           last_status: string | null
           notes: string | null
           region: string | null
           render_mode: string
+          requires_week_select: boolean
+          selector_learned_at: string | null
           store_name: string | null
           updated_at: string
+          week_selector_css: string | null
+          week_selector_strategy: string | null
         }
         Insert: {
           active?: boolean
@@ -511,17 +518,24 @@ export type Database = {
           consecutive_failures?: number
           created_at?: string
           default_store_id?: string | null
+          flyer_landing_url?: string | null
           flyer_url: string
           id?: string
           last_batch_id?: string | null
           last_error?: string | null
+          last_resolved_at?: string | null
+          last_resolved_url?: string | null
           last_run_at?: string | null
           last_status?: string | null
           notes?: string | null
           region?: string | null
           render_mode?: string
+          requires_week_select?: boolean
+          selector_learned_at?: string | null
           store_name?: string | null
           updated_at?: string
+          week_selector_css?: string | null
+          week_selector_strategy?: string | null
         }
         Update: {
           active?: boolean
@@ -531,17 +545,24 @@ export type Database = {
           consecutive_failures?: number
           created_at?: string
           default_store_id?: string | null
+          flyer_landing_url?: string | null
           flyer_url?: string
           id?: string
           last_batch_id?: string | null
           last_error?: string | null
+          last_resolved_at?: string | null
+          last_resolved_url?: string | null
           last_run_at?: string | null
           last_status?: string | null
           notes?: string | null
           region?: string | null
           render_mode?: string
+          requires_week_select?: boolean
+          selector_learned_at?: string | null
           store_name?: string | null
           updated_at?: string
+          week_selector_css?: string | null
+          week_selector_strategy?: string | null
         }
         Relationships: [
           {

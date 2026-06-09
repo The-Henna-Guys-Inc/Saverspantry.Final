@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2, Plus, Play, Trash2, ShieldCheck, RefreshCw, ExternalLink, Edit } from "lucide-react";
+import { Loader2, Plus, Play, Trash2, ShieldCheck, RefreshCw, ExternalLink, Edit, Wand2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -22,6 +22,13 @@ type Source = {
   region: string | null;
   city: string | null;
   flyer_url: string;
+  flyer_landing_url: string | null;
+  last_resolved_url: string | null;
+  last_resolved_at: string | null;
+  requires_week_select: boolean;
+  week_selector_css: string | null;
+  week_selector_strategy: string | null;
+  selector_learned_at: string | null;
   render_mode: "html" | "firecrawl";
   default_store_id: string | null;
   cadence: string;
@@ -36,7 +43,9 @@ type Source = {
 
 const EMPTY: Partial<Source> = {
   chain_name: "", store_name: "", region: "IL", city: "",
-  flyer_url: "", render_mode: "html", default_store_id: null, active: true, notes: "",
+  flyer_url: "", flyer_landing_url: "", render_mode: "html",
+  default_store_id: null, active: true, notes: "",
+  requires_week_select: false, week_selector_css: "",
 };
 
 const AdminFlyerSources = () => {
@@ -82,10 +91,13 @@ const AdminFlyerSources = () => {
       region: editing.region || null,
       city: editing.city || null,
       flyer_url: editing.flyer_url,
+      flyer_landing_url: editing.flyer_landing_url || null,
       render_mode: editing.render_mode || "html",
       default_store_id: editing.default_store_id || null,
       active: editing.active ?? true,
       notes: editing.notes || null,
+      requires_week_select: editing.requires_week_select ?? false,
+      week_selector_css: editing.week_selector_css || null,
     };
     const res = editing.id
       ? await supabase.from("flyer_sources" as any).update(payload).eq("id", editing.id)
@@ -136,6 +148,20 @@ const AdminFlyerSources = () => {
     load();
   };
 
+  const [resolving, setResolving] = useState<string | null>(null);
+  const resolveOne = async (id: string, relearn = false) => {
+    setResolving(id);
+    const { data, error } = await supabase.functions.invoke("resolve-flyer-url", {
+      body: { source_id: id, force: true, relearn_selector: relearn },
+    });
+    setResolving(null);
+    if (error) return toast.error(error.message);
+    const r = data as any;
+    if (r?.resolved_url) toast.success(`Resolved via ${r.resolved_via}${r.selector ? " · selector learned" : ""}`);
+    else toast.error(r?.error ?? "Resolve failed");
+    load();
+  };
+
   if (authLoading || checking) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
@@ -172,7 +198,12 @@ const AdminFlyerSources = () => {
                     <div><Label>Region</Label><Input value={editing.region ?? ""} onChange={(e) => setEditing({ ...editing, region: e.target.value })} placeholder="IL" /></div>
                     <div><Label>City</Label><Input value={editing.city ?? ""} onChange={(e) => setEditing({ ...editing, city: e.target.value })} placeholder="Chicago" /></div>
                   </div>
-                  <div><Label>Flyer URL *</Label><Input value={editing.flyer_url ?? ""} onChange={(e) => setEditing({ ...editing, flyer_url: e.target.value })} placeholder="https://www.jewelosco.com/weeklyad/..." /></div>
+                  <div>
+                    <Label>Landing URL (weekly-ad hub)</Label>
+                    <Input value={editing.flyer_landing_url ?? ""} onChange={(e) => setEditing({ ...editing, flyer_landing_url: e.target.value })} placeholder="https://www.jewelosco.com/weeklyad" />
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Stable page we search to find the current week's flyer.</p>
+                  </div>
+                  <div><Label>Flyer URL * (fallback)</Label><Input value={editing.flyer_url ?? ""} onChange={(e) => setEditing({ ...editing, flyer_url: e.target.value })} placeholder="https://www.jewelosco.com/weeklyad/..." /></div>
                   <div>
                     <Label>Render mode</Label>
                     <Select value={editing.render_mode ?? "html"} onValueChange={(v) => setEditing({ ...editing, render_mode: v as any })}>
@@ -183,6 +214,16 @@ const AdminFlyerSources = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Has week-selector tabs</Label>
+                    <Switch checked={editing.requires_week_select ?? false} onCheckedChange={(v) => setEditing({ ...editing, requires_week_select: v })} />
+                  </div>
+                  {editing.requires_week_select && (
+                    <div>
+                      <Label>Week selector CSS (auto-learned if empty)</Label>
+                      <Input value={editing.week_selector_css ?? ""} onChange={(e) => setEditing({ ...editing, week_selector_css: e.target.value })} placeholder='[data-week="current"]' />
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <Label>Active</Label>
                     <Switch checked={editing.active ?? true} onCheckedChange={(v) => setEditing({ ...editing, active: v })} />
@@ -216,6 +257,7 @@ const AdminFlyerSources = () => {
                       <h3 className="font-semibold truncate">{s.chain_name}</h3>
                       {!s.active && <Badge variant="outline">inactive</Badge>}
                       {s.render_mode === "firecrawl" && <Badge variant="secondary">firecrawl</Badge>}
+                      {s.requires_week_select && <Badge variant="secondary">week tabs</Badge>}
                       {s.last_status === "ok" && <Badge className="bg-primary/15 text-primary border-0">last: ok</Badge>}
                       {s.last_status && s.last_status !== "ok" && <Badge variant="destructive">last: {s.last_status}</Badge>}
                       {s.consecutive_failures > 0 && <Badge variant="destructive">{s.consecutive_failures} fails</Badge>}
@@ -224,10 +266,21 @@ const AdminFlyerSources = () => {
                       {[s.city, s.region].filter(Boolean).join(", ")}
                       {s.last_run_at && <> · last run {formatDistanceToNow(new Date(s.last_run_at), { addSuffix: true })}</>}
                     </p>
-                    <a href={s.flyer_url} target="_blank" rel="noopener noreferrer"
+                    {s.flyer_landing_url && (
+                      <a href={s.flyer_landing_url} target="_blank" rel="noopener noreferrer"
+                         className="text-xs text-muted-foreground hover:underline inline-flex items-center gap-1 mt-1 break-all">
+                        landing: {s.flyer_landing_url} <ExternalLink className="h-3 w-3 shrink-0" />
+                      </a>
+                    )}
+                    <a href={s.last_resolved_url || s.flyer_url} target="_blank" rel="noopener noreferrer"
                        className="text-xs text-primary hover:underline inline-flex items-center gap-1 mt-1 break-all">
-                      {s.flyer_url} <ExternalLink className="h-3 w-3 shrink-0" />
+                      {s.last_resolved_url ? <>resolved: {s.last_resolved_url}</> : s.flyer_url} <ExternalLink className="h-3 w-3 shrink-0" />
                     </a>
+                    {s.week_selector_css && (
+                      <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                        selector ({s.week_selector_strategy ?? "click"}): <code>{s.week_selector_css}</code>
+                      </p>
+                    )}
                     {s.last_error && <p className="text-xs text-destructive mt-1 line-clamp-2">{s.last_error}</p>}
                     {s.last_batch_id && (
                       <Link to={`/admin/deals?batch=${s.last_batch_id}`} className="text-xs text-primary hover:underline mt-1 inline-block">
@@ -240,6 +293,15 @@ const AdminFlyerSources = () => {
                       {running === s.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
                       <span className="ml-1.5">Run now</span>
                     </Button>
+                    <Button size="sm" variant="outline" onClick={() => resolveOne(s.id, false)} disabled={resolving === s.id} className="rounded-xl">
+                      {resolving === s.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Search className="h-3 w-3" />}
+                      <span className="ml-1.5">Resolve URL</span>
+                    </Button>
+                    {s.requires_week_select && (
+                      <Button size="sm" variant="ghost" onClick={() => resolveOne(s.id, true)} disabled={resolving === s.id} className="rounded-xl">
+                        <Wand2 className="h-3 w-3 mr-1.5" />Re-learn selector
+                      </Button>
+                    )}
                     <div className="flex items-center gap-1">
                       <Switch checked={s.active} onCheckedChange={() => toggleActive(s)} />
                       <Button size="icon" variant="ghost" onClick={() => { setEditing(s); setDialogOpen(true); }}><Edit className="h-3.5 w-3.5" /></Button>
