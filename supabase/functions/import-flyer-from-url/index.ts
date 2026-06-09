@@ -82,19 +82,29 @@ Deno.serve(async (req) => {
   const authHeader = req.headers.get("Authorization") ?? "";
   const token = authHeader.replace(/^Bearer\s+/i, "");
   if (!token) return json({ error: "missing auth" }, 401);
-  const userClient = createClient(supaUrl, anonKey, {
-    global: { headers: { Authorization: `Bearer ${token}` } },
-    auth: { persistSession: false },
-  });
-  const { data: userRes, error: userErr } = await userClient.auth.getUser();
-  if (userErr || !userRes?.user) return json({ error: "invalid auth" }, 401);
-  const admin = createClient(supaUrl, serviceKey, { auth: { persistSession: false } });
-  const { data: roleRow } = await admin.from("user_roles").select("role")
-    .eq("user_id", userRes.user.id).eq("role", "admin").maybeSingle();
-  if (!roleRow) return json({ error: "admin only" }, 403);
 
+  const admin = createClient(supaUrl, serviceKey, { auth: { persistSession: false } });
+
+  // Service-role internal call (cron scraper). Otherwise: user JWT + admin role check.
+  let actingUserId: string;
   const parsed = BodySchema.safeParse(await safeJson(req));
   if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
+
+  if (token === serviceKey && parsed.data.internal_admin_user_id) {
+    actingUserId = parsed.data.internal_admin_user_id;
+  } else {
+    const userClient = createClient(supaUrl, anonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+      auth: { persistSession: false },
+    });
+    const { data: userRes, error: userErr } = await userClient.auth.getUser();
+    if (userErr || !userRes?.user) return json({ error: "invalid auth" }, 401);
+    const { data: roleRow } = await admin.from("user_roles").select("role")
+      .eq("user_id", userRes.user.id).eq("role", "admin").maybeSingle();
+    if (!roleRow) return json({ error: "admin only" }, 403);
+    actingUserId = userRes.user.id;
+  }
+
   const { url, store_id, valid_from, valid_until } = parsed.data;
 
   let res: Response;
