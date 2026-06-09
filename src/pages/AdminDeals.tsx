@@ -220,6 +220,29 @@ const AdminDeals = () => {
           </Card>
         )}
 
+        {batchFilter && batchInfo?.extraction_status === "awaiting_confirmation" && (
+          <Card className="p-4 rounded-2xl bg-amber-500/5 border-amber-500/30">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="text-sm">
+                <span className="font-semibold text-amber-700 dark:text-amber-400">Awaiting confirmation</span>
+                <span className="text-muted-foreground ml-2">
+                  AI extracted {batchInfo.extracted_items_count} deal{batchInfo.extracted_items_count === 1 ? "" : "s"}. Confirm the store and dates to send them to moderation.
+                </span>
+              </div>
+              <Button size="sm" onClick={() => setConfirmOpen(true)} className="rounded-xl">
+                <Sparkles className="h-3 w-3 mr-1.5" /> Confirm details
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        <AdminFlyerConfirmDialog
+          batchId={batchFilter}
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          onConfirmed={() => { setConfirmOpen(false); load(); }}
+        />
+
         {!batchFilter && (
           <Tabs value={mode} onValueChange={(v) => setMode(v as QueueMode)}>
             <TabsList className="rounded-xl">
