@@ -178,8 +178,10 @@ Deno.serve(async (req) => {
   let text = stripHtml(html);
   let usedFirecrawl = false;
 
-  // Fallback: JS-rendered flyer sites (Flipp, Circular.com, etc.) — try Firecrawl.
-  if (text.length < 300) {
+  // Use Firecrawl when: HTML stripped text is too small, or caller forces it
+  // (JS-rendered sites, multi-week tabs requiring click actions).
+  const needsFirecrawl = force_firecrawl || text.length < 300;
+  if (needsFirecrawl) {
     const fcKey = Deno.env.get("FIRECRAWL_API_KEY");
     if (!fcKey) {
       return json({
@@ -188,10 +190,12 @@ Deno.serve(async (req) => {
       }, 422);
     }
     try {
+      const fcBody: any = { url, formats: ["markdown"], onlyMainContent: true, waitFor: 2500 };
+      if (firecrawl_actions && firecrawl_actions.length) fcBody.actions = firecrawl_actions;
       const fcResp = await fetch("https://api.firecrawl.dev/v2/scrape", {
         method: "POST",
         headers: { Authorization: `Bearer ${fcKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true, waitFor: 2500 }),
+        body: JSON.stringify(fcBody),
       });
       const fcJson = await fcResp.json().catch(() => ({}));
       if (!fcResp.ok) {
