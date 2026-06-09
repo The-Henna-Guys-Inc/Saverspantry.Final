@@ -148,6 +148,20 @@ const AdminFlyerSources = () => {
     load();
   };
 
+  const [resolving, setResolving] = useState<string | null>(null);
+  const resolveOne = async (id: string, relearn = false) => {
+    setResolving(id);
+    const { data, error } = await supabase.functions.invoke("resolve-flyer-url", {
+      body: { source_id: id, force: true, relearn_selector: relearn },
+    });
+    setResolving(null);
+    if (error) return toast.error(error.message);
+    const r = data as any;
+    if (r?.resolved_url) toast.success(`Resolved via ${r.resolved_via}${r.selector ? " · selector learned" : ""}`);
+    else toast.error(r?.error ?? "Resolve failed");
+    load();
+  };
+
   if (authLoading || checking) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
