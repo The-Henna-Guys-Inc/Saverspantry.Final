@@ -14,6 +14,8 @@ const BodySchema = z.object({
   store_id: z.string().uuid().optional().nullable(),
   valid_from: z.string().optional().nullable(),
   valid_until: z.string().optional().nullable(),
+  // Internal: set by the cron scraper running with service-role auth.
+  internal_admin_user_id: z.string().uuid().optional().nullable(),
 });
 
 const MAX_BYTES = 20 * 1024 * 1024;
