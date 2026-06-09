@@ -16,6 +16,10 @@ const BodySchema = z.object({
   valid_until: z.string().optional().nullable(),
   // Internal: set by the cron scraper running with service-role auth.
   internal_admin_user_id: z.string().uuid().optional().nullable(),
+  // Optional: force Firecrawl (for JS-rendered/multi-week pages) and optional
+  // pre-scrape actions (click "this week" tab, etc.) passed in by resolve-flyer-url.
+  force_firecrawl: z.boolean().optional(),
+  firecrawl_actions: z.array(z.any()).optional().nullable(),
 });
 
 const MAX_BYTES = 20 * 1024 * 1024;
