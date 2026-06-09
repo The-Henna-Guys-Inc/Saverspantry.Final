@@ -7,7 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, Loader2, Sparkles, AlertTriangle } from "lucide-react";
+import { CheckCircle2, Loader2, Sparkles, AlertTriangle, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 type Store = { id: string; name: string; chain_name: string | null; city: string | null; region: string | null };
