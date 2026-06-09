@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2, Plus, Play, Trash2, ShieldCheck, RefreshCw, ExternalLink, Edit } from "lucide-react";
+import { Loader2, Plus, Play, Trash2, ShieldCheck, RefreshCw, ExternalLink, Edit, Wand2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -22,6 +22,13 @@ type Source = {
   region: string | null;
   city: string | null;
   flyer_url: string;
+  flyer_landing_url: string | null;
+  last_resolved_url: string | null;
+  last_resolved_at: string | null;
+  requires_week_select: boolean;
+  week_selector_css: string | null;
+  week_selector_strategy: string | null;
+  selector_learned_at: string | null;
   render_mode: "html" | "firecrawl";
   default_store_id: string | null;
   cadence: string;
@@ -36,7 +43,9 @@ type Source = {
 
 const EMPTY: Partial<Source> = {
   chain_name: "", store_name: "", region: "IL", city: "",
-  flyer_url: "", render_mode: "html", default_store_id: null, active: true, notes: "",
+  flyer_url: "", flyer_landing_url: "", render_mode: "html",
+  default_store_id: null, active: true, notes: "",
+  requires_week_select: false, week_selector_css: "",
 };
 
 const AdminFlyerSources = () => {
