@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
       .from("flyer_extraction_batches")
       .insert({
         store_id: store_id ?? null,
-        admin_user_id: userRes.user.id,
+        admin_user_id: actingUserId,
         original_filename: url.split("/").pop()?.slice(0, 200) || "url-import",
         stored_file_url: "pending",
         file_type: contentType,
@@ -208,7 +208,7 @@ Deno.serve(async (req) => {
     .from("flyer_extraction_batches")
     .insert({
       store_id: store_id ?? null,
-      admin_user_id: userRes.user.id,
+      admin_user_id: actingUserId,
       original_filename: url.slice(0, 200),
       stored_file_url: "url-html",
       file_type: "text/html",
@@ -250,7 +250,7 @@ Deno.serve(async (req) => {
   const latency = Date.now() - t0;
   if (!aiResp.ok) {
     const t = await aiResp.text();
-    await logAiUsage({ userId: userRes.user.id, functionName: FN, model: MODEL, latencyMs: latency, status: "error", error: `${aiResp.status}` });
+    await logAiUsage({ userId: actingUserId, functionName: FN, model: MODEL, latencyMs: latency, status: "error", error: `${aiResp.status}` });
     await admin.from("flyer_extraction_batches").update({
       extraction_status: "failed", extraction_notes: `ai ${aiResp.status}: ${t.slice(0, 240)}`,
     }).eq("id", batch.id);
@@ -274,7 +274,7 @@ Deno.serve(async (req) => {
   } catch (e) { console.error("tool args parse failed", e); }
 
   await logAiUsage({
-    userId: userRes.user.id, functionName: FN, model: MODEL,
+    userId: actingUserId, functionName: FN, model: MODEL,
     promptTokens: usage.prompt_tokens ?? 0, completionTokens: usage.completion_tokens ?? 0, latencyMs: latency,
   });
 
