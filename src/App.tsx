@@ -87,6 +87,7 @@ const App = () => (
           <Route path="/admin/email-inbox" element={<AdminEmailInbox />} />
           <Route path="/admin/email-aliases" element={<AdminEmailAliases />} />
           <Route path="/admin/usda-sync" element={<AdminUsdaSync />} />
+          <Route path="/admin/flyer-sources" element={<AdminFlyerSources />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
