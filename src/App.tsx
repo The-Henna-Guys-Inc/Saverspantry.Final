@@ -28,6 +28,7 @@ import AdminDeals from "./pages/AdminDeals.tsx";
 import AdminEmailInbox from "./pages/AdminEmailInbox.tsx";
 import AdminEmailAliases from "./pages/AdminEmailAliases.tsx";
 import AdminUsdaSync from "./pages/AdminUsdaSync.tsx";
+import AdminFlyerSources from "./pages/AdminFlyerSources.tsx";
 import Legal from "./pages/Legal.tsx";
 import Privacy from "./pages/Privacy.tsx";
 import Terms from "./pages/Terms.tsx";
