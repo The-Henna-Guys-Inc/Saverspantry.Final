@@ -262,6 +262,20 @@ export function AdminFlyerConfirmDialog({
             {/* Store picker */}
             <div className="space-y-2">
               <Label>Store</Label>
+
+              {autoCreating && (
+                <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Adding extracted store to curated list…
+                </div>
+              )}
+              {autoCreatedId && storeId === autoCreatedId && (
+                <div className="rounded-xl border border-primary/40 bg-primary/5 px-3 py-2 text-xs text-primary flex items-start gap-1.5">
+                  <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                  <span>Auto-added <b>{stores.find(s => s.id === autoCreatedId)?.name ?? "store"}</b> to the curated stores list from the flyer.</span>
+                </div>
+              )}
+
               {candidates.length > 0 && (
                 <div className="space-y-1.5">
                   <p className="text-xs text-muted-foreground">Top matches:</p>
@@ -312,7 +326,40 @@ export function AdminFlyerConfirmDialog({
                   Selected: {stores.find((s) => s.id === storeId)?.name ?? candidates.find((c) => c.id === storeId)?.name ?? storeId}
                 </p>
               )}
+
+              {!showCreateForm ? (
+                <Button
+                  type="button" variant="outline" size="sm"
+                  className="w-full rounded-xl"
+                  onClick={() => setShowCreateForm(true)}
+                  disabled={busy}
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                  Add a new store{hint?.name ? " (pre-filled from flyer)" : ""}
+                </Button>
+              ) : (
+                <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-2">
+                  <p className="text-xs font-semibold">New store</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input placeholder="Name *" value={newStore.name} onChange={(e) => setNewStore({ ...newStore, name: e.target.value })} disabled={creatingNew} />
+                    <Input placeholder="Chain (optional)" value={newStore.chain_name} onChange={(e) => setNewStore({ ...newStore, chain_name: e.target.value })} disabled={creatingNew} />
+                    <Input className="col-span-2" placeholder="Address" value={newStore.address} onChange={(e) => setNewStore({ ...newStore, address: e.target.value })} disabled={creatingNew} />
+                    <Input placeholder="City" value={newStore.city} onChange={(e) => setNewStore({ ...newStore, city: e.target.value })} disabled={creatingNew} />
+                    <Input placeholder="Region / State" value={newStore.region} onChange={(e) => setNewStore({ ...newStore, region: e.target.value })} disabled={creatingNew} />
+                    <Input placeholder="ZIP" value={newStore.zip_code} onChange={(e) => setNewStore({ ...newStore, zip_code: e.target.value })} disabled={creatingNew} />
+                    <Input placeholder="Country" value={newStore.country} onChange={(e) => setNewStore({ ...newStore, country: e.target.value })} disabled={creatingNew} />
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setShowCreateForm(false)} disabled={creatingNew}>Cancel</Button>
+                    <Button type="button" size="sm" onClick={submitNewStore} disabled={creatingNew || !newStore.name.trim()} className="rounded-xl">
+                      {creatingNew ? <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> : <Plus className="h-3 w-3 mr-1.5" />}
+                      Create &amp; select
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
+
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
