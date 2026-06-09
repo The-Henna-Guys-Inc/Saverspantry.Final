@@ -285,7 +285,7 @@ Deno.serve(async (req) => {
   }).eq("id", batch.id);
 
   return json({
-    ok: true, mode: "html", batch_id: batch.id,
+    ok: true, mode: usedFirecrawl ? "html+firecrawl" : "html", batch_id: batch.id,
     extracted: { extracted: cleanDeals.length, raw_returned: parsedDeals.length },
     store_match_confidence: match.confidence,
   });
