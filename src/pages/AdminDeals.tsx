@@ -7,9 +7,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, ShieldCheck, Check, X, ExternalLink, Flag, MapPin } from "lucide-react";
+import { Loader2, ShieldCheck, Check, X, ExternalLink, Flag, MapPin, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { AdminFlyerConfirmDialog } from "@/components/AdminFlyerConfirmDialog";
 
 type Deal = {
   id: string;
