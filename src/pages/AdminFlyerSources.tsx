@@ -198,7 +198,12 @@ const AdminFlyerSources = () => {
                     <div><Label>Region</Label><Input value={editing.region ?? ""} onChange={(e) => setEditing({ ...editing, region: e.target.value })} placeholder="IL" /></div>
                     <div><Label>City</Label><Input value={editing.city ?? ""} onChange={(e) => setEditing({ ...editing, city: e.target.value })} placeholder="Chicago" /></div>
                   </div>
-                  <div><Label>Flyer URL *</Label><Input value={editing.flyer_url ?? ""} onChange={(e) => setEditing({ ...editing, flyer_url: e.target.value })} placeholder="https://www.jewelosco.com/weeklyad/..." /></div>
+                  <div>
+                    <Label>Landing URL (weekly-ad hub)</Label>
+                    <Input value={editing.flyer_landing_url ?? ""} onChange={(e) => setEditing({ ...editing, flyer_landing_url: e.target.value })} placeholder="https://www.jewelosco.com/weeklyad" />
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Stable page we search to find the current week's flyer.</p>
+                  </div>
+                  <div><Label>Flyer URL * (fallback)</Label><Input value={editing.flyer_url ?? ""} onChange={(e) => setEditing({ ...editing, flyer_url: e.target.value })} placeholder="https://www.jewelosco.com/weeklyad/..." /></div>
                   <div>
                     <Label>Render mode</Label>
                     <Select value={editing.render_mode ?? "html"} onValueChange={(v) => setEditing({ ...editing, render_mode: v as any })}>
@@ -209,6 +214,16 @@ const AdminFlyerSources = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Has week-selector tabs</Label>
+                    <Switch checked={editing.requires_week_select ?? false} onCheckedChange={(v) => setEditing({ ...editing, requires_week_select: v })} />
+                  </div>
+                  {editing.requires_week_select && (
+                    <div>
+                      <Label>Week selector CSS (auto-learned if empty)</Label>
+                      <Input value={editing.week_selector_css ?? ""} onChange={(e) => setEditing({ ...editing, week_selector_css: e.target.value })} placeholder='[data-week="current"]' />
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <Label>Active</Label>
                     <Switch checked={editing.active ?? true} onCheckedChange={(v) => setEditing({ ...editing, active: v })} />
