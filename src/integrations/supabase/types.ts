@@ -383,8 +383,12 @@ export type Database = {
           ai_cost_usd: number
           approved_items_count: number
           completed_at: string | null
+          confirmed_at: string | null
           created_at: string
           extracted_items_count: number
+          extracted_store_hint: Json | null
+          extracted_valid_from: string | null
+          extracted_valid_until: string | null
           extraction_notes: string | null
           extraction_status: string
           file_hash: string | null
@@ -394,9 +398,13 @@ export type Database = {
           id: string
           original_filename: string
           page_count: number
+          pending_deals: Json | null
+          requires_confirmation: boolean
           source_email_id: string | null
           source_url: string | null
-          store_id: string
+          store_id: string | null
+          store_match_candidates: Json | null
+          store_match_confidence: string | null
           stored_file_url: string
         }
         Insert: {
@@ -404,8 +412,12 @@ export type Database = {
           ai_cost_usd?: number
           approved_items_count?: number
           completed_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
           extracted_items_count?: number
+          extracted_store_hint?: Json | null
+          extracted_valid_from?: string | null
+          extracted_valid_until?: string | null
           extraction_notes?: string | null
           extraction_status?: string
           file_hash?: string | null
@@ -415,9 +427,13 @@ export type Database = {
           id?: string
           original_filename: string
           page_count?: number
+          pending_deals?: Json | null
+          requires_confirmation?: boolean
           source_email_id?: string | null
           source_url?: string | null
-          store_id: string
+          store_id?: string | null
+          store_match_candidates?: Json | null
+          store_match_confidence?: string | null
           stored_file_url: string
         }
         Update: {
@@ -425,8 +441,12 @@ export type Database = {
           ai_cost_usd?: number
           approved_items_count?: number
           completed_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
           extracted_items_count?: number
+          extracted_store_hint?: Json | null
+          extracted_valid_from?: string | null
+          extracted_valid_until?: string | null
           extraction_notes?: string | null
           extraction_status?: string
           file_hash?: string | null
@@ -436,9 +456,13 @@ export type Database = {
           id?: string
           original_filename?: string
           page_count?: number
+          pending_deals?: Json | null
+          requires_confirmation?: boolean
           source_email_id?: string | null
           source_url?: string | null
-          store_id?: string
+          store_id?: string | null
+          store_match_candidates?: Json | null
+          store_match_confidence?: string | null
           stored_file_url?: string
         }
         Relationships: [
