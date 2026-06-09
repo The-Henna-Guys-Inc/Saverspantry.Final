@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
     actingUserId = userRes.user.id;
   }
 
-  const { url, store_id, valid_from, valid_until } = parsed.data;
+  const { url, store_id, valid_from, valid_until, force_firecrawl, firecrawl_actions } = parsed.data;
 
   let res: Response;
   try {
