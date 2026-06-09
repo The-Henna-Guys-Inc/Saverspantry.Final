@@ -124,7 +124,15 @@ const AdminDeals = () => {
   useEffect(() => {
     if (isAdmin) load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin, mode, batchFilter]);
+  }, [isAdmin, mode, batchFilter, storeFilter, cityFilter, sourceFilter, sortBy, newlyExtracted]);
+
+  // Debounce item search
+  useEffect(() => {
+    if (!isAdmin) return;
+    const t = setTimeout(() => load(), 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemQuery]);
 
   // Sign photo URLs for deal-submissions bucket
   useEffect(() => {
