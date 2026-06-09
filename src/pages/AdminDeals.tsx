@@ -55,6 +55,14 @@ const AdminDeals = () => {
   const [busyAll, setBusyAll] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  // Filters
+  const [storeFilter, setStoreFilter] = useState<string>("all");
+  const [cityFilter, setCityFilter] = useState<string>("all");
+  const [itemQuery, setItemQuery] = useState("");
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("newest");
+  const [newlyExtracted, setNewlyExtracted] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     (async () => {
