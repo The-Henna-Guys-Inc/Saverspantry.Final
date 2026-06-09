@@ -48,29 +48,72 @@ export function AdminFlyerConfirmDialog({
   const [validUntil, setValidUntil] = useState("");
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [autoCreating, setAutoCreating] = useState(false);
+  const [autoCreatedId, setAutoCreatedId] = useState<string | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newStore, setNewStore] = useState({
+    name: "", chain_name: "", address: "", city: "", region: "", zip_code: "", country: "United States",
+  });
+  const [creatingNew, setCreatingNew] = useState(false);
+
+  const loadStores = async () => {
+    const { data: s } = await supabase.from("specialty_stores")
+      .select("id, name, chain_name, city, region")
+      .eq("active", true).order("name").limit(500);
+    setStores((s ?? []) as Store[]);
+    return (s ?? []) as Store[];
+  };
 
   useEffect(() => {
     if (!open || !batchId) return;
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const [{ data: b }, { data: s }] = await Promise.all([
+      setAutoCreatedId(null);
+      setShowCreateForm(false);
+      const [{ data: b }, s] = await Promise.all([
         supabase.from("flyer_extraction_batches")
           .select("id, store_id, extracted_items_count, extracted_store_hint, store_match_candidates, store_match_confidence, extracted_valid_from, extracted_valid_until")
           .eq("id", batchId).maybeSingle(),
-        supabase.from("specialty_stores")
-          .select("id, name, chain_name, city, region")
-          .eq("active", true).order("name").limit(500),
+        loadStores(),
       ]);
       if (cancelled) return;
       const batchRow = (b as Batch | null) ?? null;
       setBatch(batchRow);
-      setStores((s ?? []) as Store[]);
       // Pre-fill store: explicit store_id if AI was high-confidence, else top candidate, else nothing
-      const preStore = batchRow?.store_id
+      let preStore = batchRow?.store_id
         ?? batchRow?.store_match_candidates?.[0]?.id
         ?? "";
+
+      // Auto-create from hint when no match was found but AI extracted enough info
+      const h = batchRow?.extracted_store_hint;
+      const noMatch = !preStore && (!batchRow?.store_match_candidates?.length);
+      const enoughDetail = h && (h.name || h.chain_name) && (h.address || h.city);
+      if (noMatch && enoughDetail) {
+        setAutoCreating(true);
+        const created = await createStoreFromHint(h);
+        if (!cancelled && created) {
+          preStore = created.id;
+          setAutoCreatedId(created.id);
+          await loadStores();
+        }
+        if (!cancelled) setAutoCreating(false);
+      }
       setStoreId(preStore);
+
+      // Pre-fill new-store form from hint for the manual fallback
+      if (h) {
+        setNewStore((prev) => ({
+          ...prev,
+          name: h.name ?? prev.name,
+          chain_name: h.chain_name ?? prev.chain_name,
+          address: h.address ?? prev.address,
+          city: h.city ?? prev.city,
+          region: h.region ?? prev.region,
+          zip_code: h.zip ?? prev.zip_code,
+        }));
+      }
+
       // Pre-fill dates: AI-extracted, else today + 7 days
       const today = new Date().toISOString().slice(0, 10);
       const week = new Date(); week.setDate(week.getDate() + 7);
@@ -80,6 +123,52 @@ export function AdminFlyerConfirmDialog({
     })();
     return () => { cancelled = true; };
   }, [batchId, open]);
+
+  const createStoreFromHint = async (h: any): Promise<{ id: string } | null> => {
+    const name = String(h?.name ?? h?.chain_name ?? "").trim();
+    if (!name) return null;
+    const { data, error } = await supabase.from("specialty_stores").insert({
+      name,
+      chain_name: h?.chain_name ?? null,
+      address: h?.address ?? null,
+      city: h?.city ?? null,
+      region: h?.region ?? null,
+      zip_code: h?.zip ?? null,
+      country: h?.country ?? "United States",
+      cuisine_specialties: [],
+      price_tier: "$$",
+      curation_source: "admin_curated",
+      active: true,
+    }).select("id").maybeSingle();
+    if (error) {
+      toast.error(`Auto-create store failed: ${error.message}`);
+      return null;
+    }
+    if (data?.id) toast.success(`Added "${name}" to stores`);
+    return data;
+  };
+
+  const submitNewStore = async () => {
+    if (!newStore.name.trim()) return toast.error("Store name required");
+    setCreatingNew(true);
+    const created = await createStoreFromHint({
+      name: newStore.name,
+      chain_name: newStore.chain_name || null,
+      address: newStore.address || null,
+      city: newStore.city || null,
+      region: newStore.region || null,
+      zip: newStore.zip_code || null,
+      country: newStore.country || null,
+    });
+    if (created?.id) {
+      await loadStores();
+      setStoreId(created.id);
+      setAutoCreatedId(created.id);
+      setShowCreateForm(false);
+    }
+    setCreatingNew(false);
+  };
+
 
   const filteredStores = useMemo(() => {
     if (!storeQuery.trim()) return stores.slice(0, 50);
