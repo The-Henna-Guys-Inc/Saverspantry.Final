@@ -297,7 +297,68 @@ const AdminDeals = () => {
           </Tabs>
         )}
 
-        <p className="text-xs text-muted-foreground">{counts.total} item{counts.total === 1 ? "" : "s"}</p>
+        <Card className="p-3 rounded-2xl">
+          <div className="flex items-center gap-2 mb-2">
+            <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs font-medium text-muted-foreground">Filters</span>
+            {filtersActive && (
+              <Button size="sm" variant="ghost" className="h-6 px-2 text-xs ml-auto" onClick={resetFilters}>Reset</Button>
+            )}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                value={itemQuery}
+                onChange={(e) => setItemQuery(e.target.value)}
+                placeholder="Search items…"
+                className="pl-7 h-9 text-sm"
+              />
+            </div>
+            <Select value={storeFilter} onValueChange={setStoreFilter}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Store" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All stores</SelectItem>
+                {distinctStores.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={cityFilter} onValueChange={setCityFilter}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="City" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All cities</SelectItem>
+                {distinctCities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={sourceFilter} onValueChange={setSourceFilter}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Source" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All sources</SelectItem>
+                <SelectItem value="admin_curated">Flyer/admin curated</SelectItem>
+                <SelectItem value="user_submitted">User submitted</SelectItem>
+                <SelectItem value="promo_email">Email ingestion</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest first</SelectItem>
+                <SelectItem value="oldest">Oldest first</SelectItem>
+                <SelectItem value="savings">Highest savings %</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
+            <Button
+              size="sm"
+              variant={newlyExtracted ? "default" : "outline"}
+              onClick={() => setNewlyExtracted(!newlyExtracted)}
+              className="rounded-full h-7 text-xs"
+            >
+              <Sparkles className="h-3 w-3 mr-1" /> Newly extracted (24h)
+            </Button>
+            <span className="text-xs text-muted-foreground ml-auto">{counts.total} item{counts.total === 1 ? "" : "s"}</span>
+          </div>
+        </Card>
 
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>
