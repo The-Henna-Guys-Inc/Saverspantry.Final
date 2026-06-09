@@ -34,8 +34,9 @@ Deno.serve(async (req) => {
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
   const admin = createClient(supaUrl, serviceKey, { auth: { persistSession: false } });
 
-  // Auth
+  // Auth: cron secret, service-role bearer (internal call from discover-flyer-sources), or admin JWT.
   const cronSecret = req.headers.get("x-cron-secret");
+  const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
   let actingUserId: string | null = null;
   if (cronSecret) {
     const { data: ok } = await admin.rpc("verify_cron_secret", { _secret: cronSecret });
@@ -43,8 +44,11 @@ Deno.serve(async (req) => {
     const { data: firstAdmin } = await admin.from("user_roles").select("user_id")
       .eq("role", "admin").limit(1).maybeSingle();
     actingUserId = firstAdmin?.user_id ?? null;
+  } else if (token === serviceKey) {
+    const { data: firstAdmin } = await admin.from("user_roles").select("user_id")
+      .eq("role", "admin").limit(1).maybeSingle();
+    actingUserId = firstAdmin?.user_id ?? null;
   } else {
-    const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
     if (!token) return json({ error: "missing auth" }, 401);
     const userClient = createClient(supaUrl, anonKey, {
       global: { headers: { Authorization: `Bearer ${token}` } },
