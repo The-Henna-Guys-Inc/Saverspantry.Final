@@ -91,10 +91,13 @@ const AdminFlyerSources = () => {
       region: editing.region || null,
       city: editing.city || null,
       flyer_url: editing.flyer_url,
+      flyer_landing_url: editing.flyer_landing_url || null,
       render_mode: editing.render_mode || "html",
       default_store_id: editing.default_store_id || null,
       active: editing.active ?? true,
       notes: editing.notes || null,
+      requires_week_select: editing.requires_week_select ?? false,
+      week_selector_css: editing.week_selector_css || null,
     };
     const res = editing.id
       ? await supabase.from("flyer_sources" as any).update(payload).eq("id", editing.id)
