@@ -201,6 +201,20 @@ const AdminDeals = () => {
     pending: deals.filter((d) => d.moderation_status === "pending_review").length,
   }), [deals]);
 
+  const distinctStores = useMemo(
+    () => Array.from(new Set(deals.map((d) => d.store_name).filter(Boolean))).sort(),
+    [deals],
+  );
+  const distinctCities = useMemo(
+    () => Array.from(new Set(deals.map((d) => d.city).filter(Boolean) as string[])).sort(),
+    [deals],
+  );
+  const filtersActive = storeFilter !== "all" || cityFilter !== "all" || sourceFilter !== "all" || itemQuery.trim() !== "" || newlyExtracted || sortBy !== "newest";
+  const resetFilters = () => {
+    setStoreFilter("all"); setCityFilter("all"); setSourceFilter("all");
+    setItemQuery(""); setNewlyExtracted(false); setSortBy("newest");
+  };
+
   if (authLoading || checking) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
