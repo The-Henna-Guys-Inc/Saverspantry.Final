@@ -232,6 +232,9 @@ const AdminDeals = () => {
           </div>
           <div className="flex items-center gap-2">
             <Button asChild variant="outline" size="sm">
+              <Link to="/admin/flyer-sources">Flyer sources</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
               <Link to="/admin/email-inbox">Email inbox</Link>
             </Button>
             <Button asChild variant="outline" size="sm">
