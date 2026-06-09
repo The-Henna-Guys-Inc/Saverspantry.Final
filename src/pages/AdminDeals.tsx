@@ -85,14 +85,17 @@ const AdminDeals = () => {
   };
 
   useEffect(() => {
-    if (!batchFilter) { setBatchInfo(null); return; }
+    if (!batchFilter) { setBatchInfo(null); setConfirmOpen(false); return; }
     (async () => {
       const { data } = await supabase
         .from("flyer_extraction_batches")
-        .select("extracted_items_count, ai_cost_usd, original_filename")
+        .select("extracted_items_count, ai_cost_usd, original_filename, extraction_status")
         .eq("id", batchFilter)
         .maybeSingle();
-      if (data) setBatchInfo(data as any);
+      if (data) {
+        setBatchInfo(data as any);
+        if ((data as any).extraction_status === "awaiting_confirmation") setConfirmOpen(true);
+      }
     })();
   }, [batchFilter]);
 
