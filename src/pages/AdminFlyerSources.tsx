@@ -257,6 +257,7 @@ const AdminFlyerSources = () => {
                       <h3 className="font-semibold truncate">{s.chain_name}</h3>
                       {!s.active && <Badge variant="outline">inactive</Badge>}
                       {s.render_mode === "firecrawl" && <Badge variant="secondary">firecrawl</Badge>}
+                      {s.requires_week_select && <Badge variant="secondary">week tabs</Badge>}
                       {s.last_status === "ok" && <Badge className="bg-primary/15 text-primary border-0">last: ok</Badge>}
                       {s.last_status && s.last_status !== "ok" && <Badge variant="destructive">last: {s.last_status}</Badge>}
                       {s.consecutive_failures > 0 && <Badge variant="destructive">{s.consecutive_failures} fails</Badge>}
@@ -265,10 +266,21 @@ const AdminFlyerSources = () => {
                       {[s.city, s.region].filter(Boolean).join(", ")}
                       {s.last_run_at && <> · last run {formatDistanceToNow(new Date(s.last_run_at), { addSuffix: true })}</>}
                     </p>
-                    <a href={s.flyer_url} target="_blank" rel="noopener noreferrer"
+                    {s.flyer_landing_url && (
+                      <a href={s.flyer_landing_url} target="_blank" rel="noopener noreferrer"
+                         className="text-xs text-muted-foreground hover:underline inline-flex items-center gap-1 mt-1 break-all">
+                        landing: {s.flyer_landing_url} <ExternalLink className="h-3 w-3 shrink-0" />
+                      </a>
+                    )}
+                    <a href={s.last_resolved_url || s.flyer_url} target="_blank" rel="noopener noreferrer"
                        className="text-xs text-primary hover:underline inline-flex items-center gap-1 mt-1 break-all">
-                      {s.flyer_url} <ExternalLink className="h-3 w-3 shrink-0" />
+                      {s.last_resolved_url ? <>resolved: {s.last_resolved_url}</> : s.flyer_url} <ExternalLink className="h-3 w-3 shrink-0" />
                     </a>
+                    {s.week_selector_css && (
+                      <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                        selector ({s.week_selector_strategy ?? "click"}): <code>{s.week_selector_css}</code>
+                      </p>
+                    )}
                     {s.last_error && <p className="text-xs text-destructive mt-1 line-clamp-2">{s.last_error}</p>}
                     {s.last_batch_id && (
                       <Link to={`/admin/deals?batch=${s.last_batch_id}`} className="text-xs text-primary hover:underline mt-1 inline-block">
@@ -281,6 +293,15 @@ const AdminFlyerSources = () => {
                       {running === s.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
                       <span className="ml-1.5">Run now</span>
                     </Button>
+                    <Button size="sm" variant="outline" onClick={() => resolveOne(s.id, false)} disabled={resolving === s.id} className="rounded-xl">
+                      {resolving === s.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Search className="h-3 w-3" />}
+                      <span className="ml-1.5">Resolve URL</span>
+                    </Button>
+                    {s.requires_week_select && (
+                      <Button size="sm" variant="ghost" onClick={() => resolveOne(s.id, true)} disabled={resolving === s.id} className="rounded-xl">
+                        <Wand2 className="h-3 w-3 mr-1.5" />Re-learn selector
+                      </Button>
+                    )}
                     <div className="flex items-center gap-1">
                       <Switch checked={s.active} onCheckedChange={() => toggleActive(s)} />
                       <Button size="icon" variant="ghost" onClick={() => { setEditing(s); setDialogOpen(true); }}><Edit className="h-3.5 w-3.5" /></Button>
