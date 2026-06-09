@@ -49,8 +49,9 @@ const AdminDeals = () => {
   const [busy, setBusy] = useState<string | null>(null);
   const [mode, setMode] = useState<QueueMode>("pending");
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
-  const [batchInfo, setBatchInfo] = useState<{ extracted_items_count: number; ai_cost_usd: number; original_filename: string } | null>(null);
+  const [batchInfo, setBatchInfo] = useState<{ extracted_items_count: number; ai_cost_usd: number; original_filename: string; extraction_status: string } | null>(null);
   const [busyAll, setBusyAll] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
