@@ -7,7 +7,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, ShieldCheck, Check, X, ExternalLink, Flag, MapPin, Sparkles } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, ShieldCheck, Check, X, ExternalLink, Flag, MapPin, Sparkles, Search, Filter } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { AdminFlyerConfirmDialog } from "@/components/AdminFlyerConfirmDialog";
@@ -53,6 +55,14 @@ const AdminDeals = () => {
   const [busyAll, setBusyAll] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  // Filters
+  const [storeFilter, setStoreFilter] = useState<string>("all");
+  const [cityFilter, setCityFilter] = useState<string>("all");
+  const [itemQuery, setItemQuery] = useState("");
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("newest");
+  const [newlyExtracted, setNewlyExtracted] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     (async () => {
@@ -65,10 +75,7 @@ const AdminDeals = () => {
 
   const load = async () => {
     setLoading(true);
-    let q = supabase.from("sale_observations")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(200);
+    let q = supabase.from("sale_observations").select("*").limit(300);
     if (batchFilter) {
       q = q.eq("extraction_batch_id", batchFilter).eq("moderation_status", "pending_review");
     } else if (mode === "pending") {
@@ -78,6 +85,21 @@ const AdminDeals = () => {
     } else {
       q = q.eq("source", "user_submitted");
     }
+    if (sourceFilter !== "all") q = q.eq("source", sourceFilter);
+    if (storeFilter !== "all") q = q.eq("store_name", storeFilter);
+    if (cityFilter !== "all") q = q.eq("city", cityFilter);
+    if (itemQuery.trim()) {
+      const like = `%${itemQuery.trim().replace(/[%_]/g, "")}%`;
+      q = q.or(`food_name.ilike.${like},title.ilike.${like}`);
+    }
+    if (newlyExtracted) {
+      const since = new Date(Date.now() - 24 * 3600_000).toISOString();
+      q = q.gte("created_at", since).not("extraction_batch_id", "is", null);
+    }
+    if (sortBy === "oldest") q = q.order("created_at", { ascending: true });
+    else if (sortBy === "savings") q = q.order("savings_pct", { ascending: false, nullsFirst: false });
+    else q = q.order("created_at", { ascending: false });
+
     const { data, error } = await q;
     if (error) toast.error(error.message);
     setDeals((data ?? []) as Deal[]);
@@ -102,7 +124,15 @@ const AdminDeals = () => {
   useEffect(() => {
     if (isAdmin) load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin, mode, batchFilter]);
+  }, [isAdmin, mode, batchFilter, storeFilter, cityFilter, sourceFilter, sortBy, newlyExtracted]);
+
+  // Debounce item search
+  useEffect(() => {
+    if (!isAdmin) return;
+    const t = setTimeout(() => load(), 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemQuery]);
 
   // Sign photo URLs for deal-submissions bucket
   useEffect(() => {
@@ -171,6 +201,20 @@ const AdminDeals = () => {
     pending: deals.filter((d) => d.moderation_status === "pending_review").length,
   }), [deals]);
 
+  const distinctStores = useMemo(
+    () => Array.from(new Set(deals.map((d) => d.store_name).filter(Boolean))).sort(),
+    [deals],
+  );
+  const distinctCities = useMemo(
+    () => Array.from(new Set(deals.map((d) => d.city).filter(Boolean) as string[])).sort(),
+    [deals],
+  );
+  const filtersActive = storeFilter !== "all" || cityFilter !== "all" || sourceFilter !== "all" || itemQuery.trim() !== "" || newlyExtracted || sortBy !== "newest";
+  const resetFilters = () => {
+    setStoreFilter("all"); setCityFilter("all"); setSourceFilter("all");
+    setItemQuery(""); setNewlyExtracted(false); setSortBy("newest");
+  };
+
   if (authLoading || checking) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
@@ -187,6 +231,9 @@ const AdminDeals = () => {
             <h1 className="text-2xl font-bold">Deal moderation</h1>
           </div>
           <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link to="/admin/flyer-sources">Flyer sources</Link>
+            </Button>
             <Button asChild variant="outline" size="sm">
               <Link to="/admin/email-inbox">Email inbox</Link>
             </Button>
@@ -253,7 +300,68 @@ const AdminDeals = () => {
           </Tabs>
         )}
 
-        <p className="text-xs text-muted-foreground">{counts.total} item{counts.total === 1 ? "" : "s"}</p>
+        <Card className="p-3 rounded-2xl">
+          <div className="flex items-center gap-2 mb-2">
+            <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs font-medium text-muted-foreground">Filters</span>
+            {filtersActive && (
+              <Button size="sm" variant="ghost" className="h-6 px-2 text-xs ml-auto" onClick={resetFilters}>Reset</Button>
+            )}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                value={itemQuery}
+                onChange={(e) => setItemQuery(e.target.value)}
+                placeholder="Search items…"
+                className="pl-7 h-9 text-sm"
+              />
+            </div>
+            <Select value={storeFilter} onValueChange={setStoreFilter}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Store" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All stores</SelectItem>
+                {distinctStores.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={cityFilter} onValueChange={setCityFilter}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="City" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All cities</SelectItem>
+                {distinctCities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={sourceFilter} onValueChange={setSourceFilter}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Source" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All sources</SelectItem>
+                <SelectItem value="admin_curated">Flyer/admin curated</SelectItem>
+                <SelectItem value="user_submitted">User submitted</SelectItem>
+                <SelectItem value="promo_email">Email ingestion</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest first</SelectItem>
+                <SelectItem value="oldest">Oldest first</SelectItem>
+                <SelectItem value="savings">Highest savings %</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
+            <Button
+              size="sm"
+              variant={newlyExtracted ? "default" : "outline"}
+              onClick={() => setNewlyExtracted(!newlyExtracted)}
+              className="rounded-full h-7 text-xs"
+            >
+              <Sparkles className="h-3 w-3 mr-1" /> Newly extracted (24h)
+            </Button>
+            <span className="text-xs text-muted-foreground ml-auto">{counts.total} item{counts.total === 1 ? "" : "s"}</span>
+          </div>
+        </Card>
 
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>

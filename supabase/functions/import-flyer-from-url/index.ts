@@ -14,6 +14,8 @@ const BodySchema = z.object({
   store_id: z.string().uuid().optional().nullable(),
   valid_from: z.string().optional().nullable(),
   valid_until: z.string().optional().nullable(),
+  // Internal: set by the cron scraper running with service-role auth.
+  internal_admin_user_id: z.string().uuid().optional().nullable(),
 });
 
 const MAX_BYTES = 20 * 1024 * 1024;
@@ -80,19 +82,29 @@ Deno.serve(async (req) => {
   const authHeader = req.headers.get("Authorization") ?? "";
   const token = authHeader.replace(/^Bearer\s+/i, "");
   if (!token) return json({ error: "missing auth" }, 401);
-  const userClient = createClient(supaUrl, anonKey, {
-    global: { headers: { Authorization: `Bearer ${token}` } },
-    auth: { persistSession: false },
-  });
-  const { data: userRes, error: userErr } = await userClient.auth.getUser();
-  if (userErr || !userRes?.user) return json({ error: "invalid auth" }, 401);
-  const admin = createClient(supaUrl, serviceKey, { auth: { persistSession: false } });
-  const { data: roleRow } = await admin.from("user_roles").select("role")
-    .eq("user_id", userRes.user.id).eq("role", "admin").maybeSingle();
-  if (!roleRow) return json({ error: "admin only" }, 403);
 
+  const admin = createClient(supaUrl, serviceKey, { auth: { persistSession: false } });
+
+  // Service-role internal call (cron scraper). Otherwise: user JWT + admin role check.
+  let actingUserId: string;
   const parsed = BodySchema.safeParse(await safeJson(req));
   if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
+
+  if (token === serviceKey && parsed.data.internal_admin_user_id) {
+    actingUserId = parsed.data.internal_admin_user_id;
+  } else {
+    const userClient = createClient(supaUrl, anonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+      auth: { persistSession: false },
+    });
+    const { data: userRes, error: userErr } = await userClient.auth.getUser();
+    if (userErr || !userRes?.user) return json({ error: "invalid auth" }, 401);
+    const { data: roleRow } = await admin.from("user_roles").select("role")
+      .eq("user_id", userRes.user.id).eq("role", "admin").maybeSingle();
+    if (!roleRow) return json({ error: "admin only" }, 403);
+    actingUserId = userRes.user.id;
+  }
+
   const { url, store_id, valid_from, valid_until } = parsed.data;
 
   let res: Response;
@@ -127,7 +139,7 @@ Deno.serve(async (req) => {
       .from("flyer_extraction_batches")
       .insert({
         store_id: store_id ?? null,
-        admin_user_id: userRes.user.id,
+        admin_user_id: actingUserId,
         original_filename: url.split("/").pop()?.slice(0, 200) || "url-import",
         stored_file_url: "pending",
         file_type: contentType,
@@ -196,7 +208,7 @@ Deno.serve(async (req) => {
     .from("flyer_extraction_batches")
     .insert({
       store_id: store_id ?? null,
-      admin_user_id: userRes.user.id,
+      admin_user_id: actingUserId,
       original_filename: url.slice(0, 200),
       stored_file_url: "url-html",
       file_type: "text/html",
@@ -238,7 +250,7 @@ Deno.serve(async (req) => {
   const latency = Date.now() - t0;
   if (!aiResp.ok) {
     const t = await aiResp.text();
-    await logAiUsage({ userId: userRes.user.id, functionName: FN, model: MODEL, latencyMs: latency, status: "error", error: `${aiResp.status}` });
+    await logAiUsage({ userId: actingUserId, functionName: FN, model: MODEL, latencyMs: latency, status: "error", error: `${aiResp.status}` });
     await admin.from("flyer_extraction_batches").update({
       extraction_status: "failed", extraction_notes: `ai ${aiResp.status}: ${t.slice(0, 240)}`,
     }).eq("id", batch.id);
@@ -262,7 +274,7 @@ Deno.serve(async (req) => {
   } catch (e) { console.error("tool args parse failed", e); }
 
   await logAiUsage({
-    userId: userRes.user.id, functionName: FN, model: MODEL,
+    userId: actingUserId, functionName: FN, model: MODEL,
     promptTokens: usage.prompt_tokens ?? 0, completionTokens: usage.completion_tokens ?? 0, latencyMs: latency,
   });
 

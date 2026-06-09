@@ -1,120 +1,51 @@
-# Promo email → deals pipeline
+## Option B build: curated flyer sources + better moderation filters
 
-Goal: an inbox the app owns. Promo emails land there, the app pulls flyers + addresses out of them, and they show up in your existing moderation queue as `pending_review` deals tied to the right store.
+### 1. New table: `flyer_sources`
+A small admin-managed registry of chain flyer URLs to scrape on a schedule.
 
-Build it in three slices. Slice 1 is the foundation we'll wire up first; slices 2–3 layer on after you've seen it work end-to-end.
+Columns:
+- `chain_name`, `store_name` (optional, for single-store sources)
+- `region`, `city` (target launch area; matches existing `LAUNCH_CITIES`)
+- `flyer_url` (templated URL, e.g. `https://www.jewelosco.com/weeklyad/...`)
+- `render_mode` (`html` | `firecrawl` — picks fetcher in `import-flyer-from-url`)
+- `default_store_id` (optional FK to `specialty_stores` so auto-import skips the confirm dialog when the chain maps to a known store)
+- `cadence` (`weekly` for now; placeholder for daily later)
+- `active`, `last_run_at`, `last_status`, `last_error`, `consecutive_failures`
 
----
+Admin-only RLS; service_role full access for the cron function.
 
-## Slice 1 — Inbox + admin review (attachments only)
+### 2. Edge function: `discover-flyer-sources`
+- Triggered by `pg_cron` weekly (Wed 6am Central) and on-demand by admin "Run now" button.
+- Loads active sources, optionally filtered by `region` / `city` / `source_id`.
+- Hard cap per run: max 30 sources (and skips any scraped in the last 5 days) — protects Firecrawl credits.
+- For each source: invokes existing `import-flyer-from-url` (which already handles HTML + Firecrawl fallback + extraction + queueing for moderation).
+- Updates `last_run_at` / `last_status`. Three consecutive failures → auto-deactivate + write to `operational_alerts`.
 
-**Inbound provider:** Resend Inbound (cleanest fit; same vendor for sending, available as a Lovable connector). One forwarding address: `deals@<your-domain>`.
+### 3. Admin UI: `/admin/flyer-sources`
+Simple list + add/edit dialog:
+- Add chain → name, region, city, URL, render mode, optional default store
+- Toggle active, "Run now" button per row, last run timestamp + status badge
+- "Run all active" button at top
+- Seeded with: Jewel-Osco, Mariano's, Aldi, Meijer, Tony's Fresh Market, Cermak Fresh Market, Pete's Fresh Market, County Market, Schnucks, Strack & Van Til (chosen for Chicagoland / Peoria / Bloomington / Champaign coverage).
 
-**Flow**
+### 4. Moderation queue filters (`AdminDeals.tsx`)
+Add a filter bar above the deal list (works in both default and `?batch=` modes):
+- **Store** — searchable dropdown of distinct `store_name` in the current result set
+- **City** — dropdown of distinct `city`
+- **Item search** — text input over `food_name` / `title` (ILIKE)
+- **Source** — chips: All / Flyer batches / Email / User-submitted
+- **Sort** — Newest first (default) / Oldest / Highest savings %
+- **"Newly extracted" quick chip** — last 24h + `source = admin_curated` + has `extraction_batch_id`
 
-```text
-Promo email
-   │
-   ▼
-Resend Inbound webhook ──► ingest-promo-email (edge fn)
-                              │  • verify signature
-                              │  • save raw email + attachments to storage
-                              │  • parse sender, subject, body, ZIP/address
-                              │  • try to match a store
-                              │  • for each PDF/image attachment:
-                              │       create flyer_extraction_batch
-                              │       invoke extract-flyer-deals
-                              ▼
-                       promo_email_ingestions row
-                              │
-                              ▼
-                Admin "Email inbox" tab on /admin/deals
-                  - shows email + matched store
-                  - admin can re-assign store
-                  - jumps into the existing batch review screen
-```
+Filters applied server-side where cheap (source, sort, item search, store_id) and client-side for the small distinct-value dropdowns.
 
-**New schema**
+### Technical notes
+- Cron uses `supabase--insert` (not migration) since it embeds project URL + anon key.
+- `import-flyer-from-url` already populates `flyer_extraction_batches` and `extracted_store_hint`, so cron-imported flyers flow through the existing confirm dialog when no `default_store_id` is set.
+- No new AI cost beyond what flyer extraction already costs; Firecrawl only used when the chain's `render_mode = firecrawl` or HTML fetch returns <300 chars.
+- Filters are pure presentation on top of the existing `sale_observations` query — no schema changes for the moderation side.
 
-- `promo_email_ingestions`
-  - `from_address`, `from_domain`, `subject`, `received_at`
-  - `raw_storage_path` (full .eml in storage)
-  - `matched_store_id` (nullable), `match_confidence` (`high` / `low` / `unmatched`)
-  - `status`: `received` → `processed` → `failed` / `needs_assignment`
-  - `notes`, `attachment_count`
-- `flyer_extraction_batches.source_email_id` → nullable FK to the row above
-- `store_email_aliases` (admin-managed): `from_domain` or `from_address` → `chain_name` or specific `store_id`. Lets you teach the system: "anything from `weeklyad@kroger.com` is Kroger."
-
-**New storage bucket**
-
-- `promo-emails` (private). Path: `{ingestion_id}/raw.eml` + `{ingestion_id}/attachments/<n>.pdf`.
-
-**Admin UI additions** (no end-user UI yet)
-
-- New tab on `/admin/deals` → **Email inbox**
-  - Table: received_at · from · subject · matched store (badge: matched / low confidence / unmatched) · # deals extracted · status
-  - Row click → side panel:
-    - Email preview (subject, from, body excerpt, attachment list)
-    - Store picker (searchable, same component used in `AdminFlyerUpload`)
-    - "Reprocess" button (re-runs extraction with the corrected store)
-    - "Open batch" → existing `?batch=` review flow
-- New screen `/admin/email-aliases` — simple CRUD for `store_email_aliases`
-
-**Edge function: `ingest-promo-email`**
-
-- Accepts Resend's webhook payload
-- Verifies `Resend-Signature` HMAC
-- Writes raw email, then iterates attachments; only PDFs/JPEGs/PNGs/WEBPs ≤20MB
-- Store matching order:
-  1. Exact match in `store_email_aliases`
-  2. ZIP code regex in body → if alias chain set, narrow to that chain in that ZIP
-  3. Address line regex → geocode (Google Places, key already in secrets) → nearest active store within 5 mi
-  4. Otherwise mark `unmatched`, status `needs_assignment`, skip extraction
-- For each valid attachment: insert `flyer_extraction_batches` (linked to ingestion + matched store) and invoke `extract-flyer-deals`
-- Write summary back to `promo_email_ingestions`
-
----
-
-## Slice 2 — Follow "view in browser" links
-
-Most chains don't attach the flyer; they link to it. After Slice 1 is solid:
-
-- In `ingest-promo-email`, scan the HTML body for `<a>` tags whose text/href looks like a flyer (`weekly ad`, `view flyer`, `.pdf`, known viewer hosts like `flippapp.com`, `circular.com`, etc.)
-- For direct PDF/image URLs → download and feed into the same pipeline
-- For JS-heavy viewers → call the Firecrawl connector to render the page and pull the flyer asset
-- Add a "Skip" filter via the AI prompt: if a flyer page yields zero priced items, mark the batch `skipped` instead of polluting the queue
-
-## Slice 3 — User-facing forwarding + opt-in
-
-Once admin ingestion is reliable:
-
-- Surface a per-user forwarding alias (`deals+u_<userId>@…`) so a user's forwarded emails are credited to them and only their nearby stores are considered
-- Optional: opt-in toggle in Settings → "Forward your store emails to Saver's Pantry"
-- Notification when a forwarded email produces deals matching the user's watchlist (reuses `watchlist-sale-matcher`)
-
----
-
-## Honest constraints to flag
-
-- Store newsletters are tied to the subscriber's loyalty account + ZIP; we **cannot** sign one shared inbox up for every region. Realistic sources are (a) admins subscribing per-region, (b) users forwarding their own emails (Slice 3).
-- JS-only ad viewers (Flipp, etc.) need Firecrawl — that's why it's deferred to Slice 2.
-- Promotional email = noisy. We rely on the AI extractor's existing "skip non-grocery" guard plus a hard floor: if `extracted_items_count = 0`, mark the batch `skipped` so admins don't see empty noise.
-
----
-
-## Technical details (for reference)
-
-- **Provider auth:** Resend connector via `standard_connectors--connect`. Webhook URL is the deployed `ingest-promo-email` edge function. Signature verified with HMAC-SHA256 against a shared secret stored as `RESEND_WEBHOOK_SECRET`.
-- **`extract_flyer_deals` reuse:** unchanged. We just create batches with `source_email_id` set; existing review UI works as-is.
-- **RLS:** `promo_email_ingestions` and `store_email_aliases` are admin-only (same pattern as `flyer_extraction_batches`).
-- **Mobile:** admin screens only — desktop-first is fine, but the side-panel uses Sheet so it stacks on 360px.
-
----
-
-## What I need from you to start Slice 1
-
-1. **Confirm Resend** as the inbound provider (vs. Mailgun / SendGrid).
-2. **Forwarding address** — what local part? (`deals@`, `flyers@`, `inbox@`?)
-3. **Confirm scope:** Slice 1 only for now (attachments + admin inbox), no link-following or user-facing pieces yet.
-
-Once you confirm those three, I'll: connect Resend → add the schema + bucket → build the edge function → add the Email inbox tab and alias screen.
+### Out of scope (deferred)
+- Firecrawl `search` discovery (Option A) — revisit once curated sources are stable.
+- Daily cadence and per-source schedules.
+- Auto-approval of high-confidence deals.

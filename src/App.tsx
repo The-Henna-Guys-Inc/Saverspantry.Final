@@ -28,6 +28,7 @@ import AdminDeals from "./pages/AdminDeals.tsx";
 import AdminEmailInbox from "./pages/AdminEmailInbox.tsx";
 import AdminEmailAliases from "./pages/AdminEmailAliases.tsx";
 import AdminUsdaSync from "./pages/AdminUsdaSync.tsx";
+import AdminFlyerSources from "./pages/AdminFlyerSources.tsx";
 import Legal from "./pages/Legal.tsx";
 import Privacy from "./pages/Privacy.tsx";
 import Terms from "./pages/Terms.tsx";
@@ -86,6 +87,7 @@ const App = () => (
           <Route path="/admin/email-inbox" element={<AdminEmailInbox />} />
           <Route path="/admin/email-aliases" element={<AdminEmailAliases />} />
           <Route path="/admin/usda-sync" element={<AdminUsdaSync />} />
+          <Route path="/admin/flyer-sources" element={<AdminFlyerSources />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
