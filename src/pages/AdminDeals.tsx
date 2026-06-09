@@ -7,9 +7,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, ShieldCheck, Check, X, ExternalLink, Flag, MapPin } from "lucide-react";
+import { Loader2, ShieldCheck, Check, X, ExternalLink, Flag, MapPin, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { AdminFlyerConfirmDialog } from "@/components/AdminFlyerConfirmDialog";
 
 type Deal = {
   id: string;
@@ -48,8 +49,9 @@ const AdminDeals = () => {
   const [busy, setBusy] = useState<string | null>(null);
   const [mode, setMode] = useState<QueueMode>("pending");
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
-  const [batchInfo, setBatchInfo] = useState<{ extracted_items_count: number; ai_cost_usd: number; original_filename: string } | null>(null);
+  const [batchInfo, setBatchInfo] = useState<{ extracted_items_count: number; ai_cost_usd: number; original_filename: string; extraction_status: string } | null>(null);
   const [busyAll, setBusyAll] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -83,14 +85,17 @@ const AdminDeals = () => {
   };
 
   useEffect(() => {
-    if (!batchFilter) { setBatchInfo(null); return; }
+    if (!batchFilter) { setBatchInfo(null); setConfirmOpen(false); return; }
     (async () => {
       const { data } = await supabase
         .from("flyer_extraction_batches")
-        .select("extracted_items_count, ai_cost_usd, original_filename")
+        .select("extracted_items_count, ai_cost_usd, original_filename, extraction_status")
         .eq("id", batchFilter)
         .maybeSingle();
-      if (data) setBatchInfo(data as any);
+      if (data) {
+        setBatchInfo(data as any);
+        if ((data as any).extraction_status === "awaiting_confirmation") setConfirmOpen(true);
+      }
     })();
   }, [batchFilter]);
 
@@ -214,6 +219,29 @@ const AdminDeals = () => {
             </div>
           </Card>
         )}
+
+        {batchFilter && batchInfo?.extraction_status === "awaiting_confirmation" && (
+          <Card className="p-4 rounded-2xl bg-amber-500/5 border-amber-500/30">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="text-sm">
+                <span className="font-semibold text-amber-700 dark:text-amber-400">Awaiting confirmation</span>
+                <span className="text-muted-foreground ml-2">
+                  AI extracted {batchInfo.extracted_items_count} deal{batchInfo.extracted_items_count === 1 ? "" : "s"}. Confirm the store and dates to send them to moderation.
+                </span>
+              </div>
+              <Button size="sm" onClick={() => setConfirmOpen(true)} className="rounded-xl">
+                <Sparkles className="h-3 w-3 mr-1.5" /> Confirm details
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        <AdminFlyerConfirmDialog
+          batchId={batchFilter}
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          onConfirmed={() => { setConfirmOpen(false); load(); }}
+        />
 
         {!batchFilter && (
           <Tabs value={mode} onValueChange={(v) => setMode(v as QueueMode)}>

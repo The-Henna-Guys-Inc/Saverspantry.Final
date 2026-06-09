@@ -1,8 +1,8 @@
-// Admin-only: import a flyer from a URL. PDF/image links are downloaded and
-// run through the existing flyer extraction pipeline. HTML pages are fetched
-// as plain text and parsed with an LLM (no Firecrawl/JS rendering). Pages that
-// rely on JS to render their flyer (Flipp/Circular.com/etc.) will return little
-// usable text — we surface that to the admin.
+// Admin-only: import a flyer from a URL. Store + dates are optional —
+// after extraction the admin confirms them in a dialog before deals
+// hit the moderation queue. PDF/image links are handed off to the
+// existing extract-flyer-deals pipeline. HTML pages are fetched as
+// plain text and parsed with an LLM (no Firecrawl/JS rendering).
 
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -11,9 +11,9 @@ import { logAiUsage } from "../_shared/aiUsage.ts";
 
 const BodySchema = z.object({
   url: z.string().url(),
-  store_id: z.string().uuid(),
-  valid_from: z.string().min(1),
-  valid_until: z.string().min(1),
+  store_id: z.string().uuid().optional().nullable(),
+  valid_from: z.string().optional().nullable(),
+  valid_until: z.string().optional().nullable(),
 });
 
 const MAX_BYTES = 20 * 1024 * 1024;
@@ -24,10 +24,24 @@ const tool = {
   type: "function",
   function: {
     name: "record_deals",
-    description: "Record every distinct sale/deal item visible in the flyer page text.",
+    description: "Record every distinct sale item in the page text, plus the store identity and validity window if printed.",
     parameters: {
       type: "object",
       properties: {
+        store_hint: {
+          type: ["object", "null"],
+          properties: {
+            name: { type: ["string", "null"] },
+            chain_name: { type: ["string", "null"] },
+            address: { type: ["string", "null"] },
+            city: { type: ["string", "null"] },
+            region: { type: ["string", "null"] },
+            zip: { type: ["string", "null"] },
+          },
+          additionalProperties: false,
+        },
+        valid_from:  { type: ["string", "null"], description: "YYYY-MM-DD if printed." },
+        valid_until: { type: ["string", "null"], description: "YYYY-MM-DD if printed." },
         deals: {
           type: "array",
           items: {
@@ -63,7 +77,6 @@ Deno.serve(async (req) => {
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
 
-  // Auth: admin only
   const authHeader = req.headers.get("Authorization") ?? "";
   const token = authHeader.replace(/^Bearer\s+/i, "");
   if (!token) return json({ error: "missing auth" }, 401);
@@ -82,7 +95,6 @@ Deno.serve(async (req) => {
   if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
   const { url, store_id, valid_from, valid_until } = parsed.data;
 
-  // Fetch the URL
   let res: Response;
   try {
     res = await fetch(url, {
@@ -102,11 +114,10 @@ Deno.serve(async (req) => {
   const isImg = contentType.startsWith("image/");
   const isHtml = contentType.startsWith("text/html") || contentType.includes("xhtml");
 
-  const { data: store } = await admin.from("specialty_stores")
-    .select("name, chain_name, city, region").eq("id", store_id).maybeSingle();
-  if (!store) return json({ error: "Store not found" }, 404);
+  const flyerValidFrom = valid_from ? new Date(valid_from).toISOString() : null;
+  const flyerValidUntil = valid_until ? new Date(valid_until).toISOString() : null;
 
-  // ---- PDF / image: reuse the existing extraction pipeline ----
+  // ---- PDF / image: hand off to extract-flyer-deals (it does the AI vision call) ----
   if (isPdf || isImg) {
     const buf = new Uint8Array(await res.arrayBuffer());
     if (buf.byteLength > MAX_BYTES) return json({ error: "File >20MB" }, 400);
@@ -115,14 +126,16 @@ Deno.serve(async (req) => {
     const { data: batch, error: bErr } = await admin
       .from("flyer_extraction_batches")
       .insert({
-        store_id, admin_user_id: userRes.user.id,
+        store_id: store_id ?? null,
+        admin_user_id: userRes.user.id,
         original_filename: url.split("/").pop()?.slice(0, 200) || "url-import",
         stored_file_url: "pending",
         file_type: contentType,
-        flyer_valid_from: new Date(valid_from).toISOString(),
-        flyer_valid_until: new Date(valid_until).toISOString(),
+        flyer_valid_from: flyerValidFrom,
+        flyer_valid_until: flyerValidUntil,
         extraction_status: "pending",
         source_url: url,
+        requires_confirmation: true,
       } as any).select("id").single();
     if (bErr || !batch) return json({ error: bErr?.message ?? "batch insert failed" }, 500);
 
@@ -132,20 +145,16 @@ Deno.serve(async (req) => {
     if (upErr) return json({ error: `upload: ${upErr.message}` }, 500);
     await admin.from("flyer_extraction_batches").update({ stored_file_url: path }).eq("id", batch.id);
 
-    // Invoke extract-flyer-deals service-role-style
     const extractRes = await fetch(`${supaUrl}/functions/v1/extract-flyer-deals`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${serviceKey}`,
-      },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceKey}` },
       body: JSON.stringify({ batch_id: batch.id }),
     });
     const extracted = await extractRes.json().catch(() => ({}));
     return json({ ok: extractRes.ok, mode: isPdf ? "pdf" : "image", batch_id: batch.id, extracted });
   }
 
-  // ---- HTML: fetch text, ask the LLM to extract deals ----
+  // ---- HTML: fetch + LLM extract directly here ----
   if (!isHtml) return json({ error: `Unsupported content-type: ${contentType || "unknown"}` }, 400);
   if (!apiKey) return json({ error: "AI gateway not configured" }, 500);
 
@@ -158,38 +167,37 @@ Deno.serve(async (req) => {
     }, 422);
   }
 
-  // Create batch
   const { data: batch, error: bErr } = await admin
     .from("flyer_extraction_batches")
     .insert({
-      store_id, admin_user_id: userRes.user.id,
+      store_id: store_id ?? null,
+      admin_user_id: userRes.user.id,
       original_filename: url.slice(0, 200),
       stored_file_url: "url-html",
       file_type: "text/html",
-      flyer_valid_from: new Date(valid_from).toISOString(),
-      flyer_valid_until: new Date(valid_until).toISOString(),
+      flyer_valid_from: flyerValidFrom,
+      flyer_valid_until: flyerValidUntil,
       extraction_status: "processing",
       source_url: url,
+      requires_confirmation: true,
     } as any).select("id").single();
   if (bErr || !batch) return json({ error: bErr?.message ?? "batch insert failed" }, 500);
 
-  // Store the cleaned text as a record we can re-process later
   await admin.storage.from("flyer-uploads")
-    .upload(`${batch.id}/page.txt`, new TextEncoder().encode(text), {
-      contentType: "text/plain", upsert: true,
-    });
+    .upload(`${batch.id}/page.txt`, new TextEncoder().encode(text), { contentType: "text/plain", upsert: true });
   await admin.from("flyer_extraction_batches").update({ stored_file_url: `${batch.id}/page.txt` }).eq("id", batch.id);
 
   const sysPrompt = [
     "You extract sale items from a grocery store's weekly-ad page (plain text scraped from HTML).",
-    "Be exhaustive: capture every distinct sale item with a clear price.",
-    "Use the printed sale price. Only set regular_price_usd when a was/regular price is shown.",
-    "Lowercase generic food_name with no brand.",
-    "If a unit price like '$1.99/lb' is shown, set sale_price_usd=1.99 and pack_size='1 lb'.",
-    "Skip nav links, ads with no price, and non-grocery items.",
+    "Also identify which store/location this page is for and the validity window if printed.",
+    "Be exhaustive on items with a clear price. Lowercase generic food_name, no brand.",
+    "Only set regular_price_usd when a was/regular price is shown.",
+    "Skip nav links, ads with no price, non-grocery items.",
+    "For store_hint, copy name/chain/address/city/state/zip exactly as printed.",
+    "For valid_from / valid_until, parse any 'valid' / 'effective' / 'sale dates' line into ISO YYYY-MM-DD.",
   ].join(" ");
 
-  const userPrompt = `Store: ${store.name}${store.chain_name ? ` (${store.chain_name})` : ""}${store.city ? ` — ${store.city}, ${store.region ?? ""}` : ""}.\nSource URL: ${url}\n\nPage text:\n${text.slice(0, 60000)}`;
+  const userPrompt = `Source URL: ${url}\n\nPage text:\n${text.slice(0, 60000)}`;
 
   const t0 = Date.now();
   const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -203,7 +211,6 @@ Deno.serve(async (req) => {
     }),
   });
   const latency = Date.now() - t0;
-
   if (!aiResp.ok) {
     const t = await aiResp.text();
     await logAiUsage({ userId: userRes.user.id, functionName: FN, model: MODEL, latencyMs: latency, status: "error", error: `${aiResp.status}` });
@@ -218,55 +225,131 @@ Deno.serve(async (req) => {
   const aiJson = await aiResp.json();
   const usage = aiJson.usage ?? {};
   let parsedDeals: any[] = [];
+  let storeHint: any = null;
+  let aiValidFrom: string | null = null;
+  let aiValidUntil: string | null = null;
   try {
     const args = JSON.parse(aiJson.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments ?? "{}");
     parsedDeals = Array.isArray(args.deals) ? args.deals : [];
+    storeHint = args.store_hint && typeof args.store_hint === "object" ? args.store_hint : null;
+    aiValidFrom = normalizeDate(args.valid_from);
+    aiValidUntil = normalizeDate(args.valid_until);
   } catch (e) { console.error("tool args parse failed", e); }
 
   await logAiUsage({
     userId: userRes.user.id, functionName: FN, model: MODEL,
-    promptTokens: usage.prompt_tokens ?? 0, completionTokens: usage.completion_tokens ?? 0,
-    latencyMs: latency,
+    promptTokens: usage.prompt_tokens ?? 0, completionTokens: usage.completion_tokens ?? 0, latencyMs: latency,
   });
 
-  const validUntilDate = new Date(valid_until);
-  const rows = parsedDeals.slice(0, 200).map((d) => {
-    const sale = Number(d.sale_price_usd);
-    const reg = d.regular_price_usd != null ? Number(d.regular_price_usd) : null;
-    const savings = reg && reg > sale ? Math.round(((reg - sale) / reg) * 100) : null;
-    return {
-      food_name: String(d.food_name ?? "").toLowerCase().slice(0, 80),
-      title: String(d.title ?? "").slice(0, 160),
-      store_id, store_name: store.name, store_chain: store.chain_name ?? null,
-      city: store.city ?? null, region: store.region ?? null,
-      sale_price_usd: sale, regular_price_usd: reg, savings_pct: savings,
-      pack_size: d.pack_size ?? null, category: d.category ?? null,
-      starts_at: new Date(valid_from).toISOString(), ends_at: validUntilDate.toISOString(),
-      source: "admin_curated", moderation_status: "pending_review",
-      extraction_batch_id: batch.id, approved_by_admin_id: userRes.user.id,
-    };
-  }).filter((r) => r.food_name && r.title && Number.isFinite(r.sale_price_usd) && r.sale_price_usd > 0);
+  // Fuzzy-match store_hint against specialty_stores.
+  const match = await matchStoreByHint(admin, storeHint, url);
 
-  let inserted = 0;
-  if (rows.length) {
-    const { error: insErr, count } = await admin.from("sale_observations").insert(rows, { count: "exact" });
-    if (insErr) {
-      await admin.from("flyer_extraction_batches").update({
-        extraction_status: "failed", extraction_notes: `insert: ${insErr.message}`,
-      }).eq("id", batch.id);
-      return json({ error: "Could not save extracted deals" }, 500);
-    }
-    inserted = count ?? rows.length;
-  }
+  const cleanDeals = parsedDeals.map(sanitizeDeal).filter(Boolean).slice(0, 200);
 
   await admin.from("flyer_extraction_batches").update({
-    extraction_status: "completed",
-    extracted_items_count: rows.length,
-    completed_at: new Date().toISOString(),
+    extraction_status: "awaiting_confirmation",
+    extracted_items_count: cleanDeals.length,
+    pending_deals: cleanDeals,
+    extracted_store_hint: storeHint,
+    store_match_candidates: match.candidates,
+    store_match_confidence: match.confidence,
+    extracted_valid_from: aiValidFrom,
+    extracted_valid_until: aiValidUntil,
+    store_id: store_id ?? (match.confidence === "high" ? match.bestId : null),
+    completed_at: null,
   }).eq("id", batch.id);
 
-  return json({ ok: true, mode: "html", batch_id: batch.id, extracted: rows.length, inserted });
+  return json({
+    ok: true, mode: "html", batch_id: batch.id,
+    extracted: { extracted: cleanDeals.length, raw_returned: parsedDeals.length },
+    store_match_confidence: match.confidence,
+  });
 });
+
+// ---------- helpers ----------
+
+function normalizeDate(v: any): string | null {
+  if (!v || typeof v !== "string") return null;
+  const m = v.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[1]}-${m[2]}-${m[3]}` : null;
+}
+
+function sanitizeDeal(d: any) {
+  const sale = Number(d?.sale_price_usd);
+  const food = String(d?.food_name ?? "").toLowerCase().slice(0, 80).trim();
+  const title = String(d?.title ?? "").slice(0, 160).trim();
+  if (!food || !title || !Number.isFinite(sale) || sale <= 0) return null;
+  const reg = d.regular_price_usd != null ? Number(d.regular_price_usd) : null;
+  const savings = reg && reg > sale ? Math.round(((reg - sale) / reg) * 100) : null;
+  return {
+    food_name: food, title, sale_price_usd: sale,
+    regular_price_usd: Number.isFinite(reg as number) ? (reg as number) : null,
+    savings_pct: savings,
+    pack_size: d.pack_size ?? null,
+    category: d.category ?? null,
+  };
+}
+
+type StoreMatch = {
+  bestId: string | null;
+  confidence: "high" | "low" | "none";
+  candidates: Array<{ id: string; name: string; chain_name: string | null; city: string | null; region: string | null; score: number }>;
+};
+
+async function matchStoreByHint(admin: any, hint: any, url: string): Promise<StoreMatch> {
+  const name = String(hint?.name ?? "").trim();
+  const chain = String(hint?.chain_name ?? "").trim();
+  const city = String(hint?.city ?? "").trim();
+  const region = String(hint?.region ?? "").trim();
+  const zip = String(hint?.zip ?? "").trim();
+
+  // Also: try the URL domain as an extra signal.
+  let domain = "";
+  try { domain = new URL(url).hostname.replace(/^www\./, "").toLowerCase(); } catch {}
+
+  if (!name && !chain && !zip && !domain) return { bestId: null, confidence: "none", candidates: [] };
+
+  const filters: string[] = [];
+  if (chain) filters.push(`chain_name.ilike.%${chain}%`);
+  if (name)  filters.push(`name.ilike.%${name}%`);
+  if (zip)   filters.push(`zip_code.eq.${zip}`);
+
+  let q = admin.from("specialty_stores")
+    .select("id, name, chain_name, city, region, zip_code")
+    .eq("active", true).limit(20);
+  if (filters.length) q = q.or(filters.join(","));
+  const { data: pool } = await q;
+  let rows = (pool ?? []) as any[];
+
+  // Add alias match for the URL domain
+  if (domain) {
+    const { data: aliased } = await admin.from("store_email_aliases")
+      .select("store_id").eq("match_type", "from_domain").eq("match_value", domain).maybeSingle();
+    if (aliased?.store_id && !rows.some((r) => r.id === aliased.store_id)) {
+      const { data: aliasStore } = await admin.from("specialty_stores")
+        .select("id, name, chain_name, city, region, zip_code").eq("id", aliased.store_id).maybeSingle();
+      if (aliasStore) rows = [aliasStore, ...rows];
+    }
+  }
+  if (!rows.length) return { bestId: null, confidence: "none", candidates: [] };
+
+  const scored = rows.map((s) => {
+    let score = 0;
+    if (name && s.name?.toLowerCase().includes(name.toLowerCase())) score += 3;
+    if (chain && s.chain_name?.toLowerCase() === chain.toLowerCase()) score += 3;
+    else if (chain && s.chain_name?.toLowerCase().includes(chain.toLowerCase())) score += 2;
+    if (city && s.city?.toLowerCase() === city.toLowerCase()) score += 2;
+    if (region && s.region?.toLowerCase() === region.toLowerCase()) score += 1;
+    if (zip && s.zip_code === zip) score += 4;
+    return { id: s.id, name: s.name, chain_name: s.chain_name, city: s.city, region: s.region, score };
+  }).filter((s) => s.score > 0).sort((a, b) => b.score - a.score);
+
+  if (!scored.length) return { bestId: null, confidence: "none", candidates: [] };
+  const top = scored[0];
+  const second = scored[1]?.score ?? 0;
+  const confidence: "high" | "low" = (top.score >= 5 && top.score - second >= 2) ? "high" : "low";
+  return { bestId: top.id, confidence, candidates: scored.slice(0, 5) };
+}
 
 function stripHtml(s: string): string {
   return s
