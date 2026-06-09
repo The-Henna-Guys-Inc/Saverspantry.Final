@@ -75,10 +75,7 @@ const AdminDeals = () => {
 
   const load = async () => {
     setLoading(true);
-    let q = supabase.from("sale_observations")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(200);
+    let q = supabase.from("sale_observations").select("*").limit(300);
     if (batchFilter) {
       q = q.eq("extraction_batch_id", batchFilter).eq("moderation_status", "pending_review");
     } else if (mode === "pending") {
@@ -88,6 +85,21 @@ const AdminDeals = () => {
     } else {
       q = q.eq("source", "user_submitted");
     }
+    if (sourceFilter !== "all") q = q.eq("source", sourceFilter);
+    if (storeFilter !== "all") q = q.eq("store_name", storeFilter);
+    if (cityFilter !== "all") q = q.eq("city", cityFilter);
+    if (itemQuery.trim()) {
+      const like = `%${itemQuery.trim().replace(/[%_]/g, "")}%`;
+      q = q.or(`food_name.ilike.${like},title.ilike.${like}`);
+    }
+    if (newlyExtracted) {
+      const since = new Date(Date.now() - 24 * 3600_000).toISOString();
+      q = q.gte("created_at", since).not("extraction_batch_id", "is", null);
+    }
+    if (sortBy === "oldest") q = q.order("created_at", { ascending: true });
+    else if (sortBy === "savings") q = q.order("savings_pct", { ascending: false, nullsFirst: false });
+    else q = q.order("created_at", { ascending: false });
+
     const { data, error } = await q;
     if (error) toast.error(error.message);
     setDeals((data ?? []) as Deal[]);
