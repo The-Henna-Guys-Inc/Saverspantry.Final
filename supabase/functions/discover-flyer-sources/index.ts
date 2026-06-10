@@ -77,11 +77,11 @@ Deno.serve(async (req) => {
     return new Date(s.last_run_at).getTime() < cutoff;
   }).slice(0, cap);
 
-  const results: any[] = [];
-  for (const src of candidates) {
+  // Process each candidate; runs in the background so the HTTP response
+  // returns immediately and we don't hit the 150s edge idle timeout.
+  const processOne = async (src: any) => {
     const startedAt = new Date().toISOString();
     try {
-      // Resolve current week's URL + selector actions (cached when fresh).
       let resolvedUrl = src.flyer_url;
       let actions: any[] | null = null;
       let forceFc = src.render_mode === "firecrawl" || !!src.requires_week_select;
@@ -130,27 +130,47 @@ Deno.serve(async (req) => {
           _metadata: { source_id: src.id, url: src.flyer_url },
         });
       }
-
-      results.push({ id: src.id, chain: src.chain_name, ok, batch_id: data?.batch_id, error: data?.error });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       await admin.from("flyer_sources").update({
         last_run_at: startedAt, last_status: "exception", last_error: msg.slice(0, 500),
         consecutive_failures: (src.consecutive_failures ?? 0) + 1,
       }).eq("id", src.id);
-      results.push({ id: src.id, chain: src.chain_name, ok: false, error: msg });
     }
+  };
+
+  // Run with limited concurrency so we don't blast Firecrawl all at once.
+  const CONCURRENCY = 3;
+  const runAll = async () => {
+    let idx = 0;
+    const workers = Array.from({ length: Math.min(CONCURRENCY, candidates.length) }, async () => {
+      while (idx < candidates.length) {
+        const mine = candidates[idx++];
+        await processOne(mine);
+      }
+    });
+    await Promise.all(workers);
+  };
+
+  // Fire-and-forget on the edge runtime; response returns immediately.
+  // @ts-ignore - EdgeRuntime is provided by Supabase functions runtime.
+  if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
+    // @ts-ignore
+    EdgeRuntime.waitUntil(runAll());
+  } else {
+    runAll().catch((e) => console.error("runAll failed:", e));
   }
 
   return json({
     ok: true,
     triggered_by: opts.triggered_by ?? (isCron ? "cron" : "admin"),
     scanned: sources?.length ?? 0,
-    ran: results.length,
-    skipped: (sources?.length ?? 0) - results.length,
-    results,
+    queued: candidates.length,
+    skipped: (sources?.length ?? 0) - candidates.length,
+    note: "Processing in background. Watch flyer_sources.last_run_at / last_status for results.",
   });
 });
+
 
 async function safeJson(req: Request) { try { return await req.json(); } catch { return {}; } }
 function json(b: unknown, s = 200) {
