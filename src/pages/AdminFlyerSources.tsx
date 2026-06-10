@@ -29,6 +29,11 @@ type Source = {
   week_selector_css: string | null;
   week_selector_strategy: string | null;
   selector_learned_at: string | null;
+  store_zip: string | null;
+  store_picker_strategy: "zip" | "storeid" | "none" | null;
+  store_picker_input_css: string | null;
+  store_picker_submit_css: string | null;
+  store_picker_learned_at: string | null;
   render_mode: "html" | "firecrawl";
   default_store_id: string | null;
   cadence: string;
@@ -46,6 +51,8 @@ const EMPTY: Partial<Source> = {
   flyer_url: "", flyer_landing_url: "", render_mode: "html",
   default_store_id: null, active: true, notes: "",
   requires_week_select: false, week_selector_css: "",
+  store_zip: "", store_picker_strategy: "none",
+  store_picker_input_css: "", store_picker_submit_css: "",
 };
 
 const AdminFlyerSources = () => {
@@ -98,6 +105,10 @@ const AdminFlyerSources = () => {
       notes: editing.notes || null,
       requires_week_select: editing.requires_week_select ?? false,
       week_selector_css: editing.week_selector_css || null,
+      store_zip: editing.store_zip || null,
+      store_picker_strategy: editing.store_picker_strategy || "none",
+      store_picker_input_css: editing.store_picker_input_css || null,
+      store_picker_submit_css: editing.store_picker_submit_css || null,
     };
     const res = editing.id
       ? await supabase.from("flyer_sources" as any).update(payload).eq("id", editing.id)
