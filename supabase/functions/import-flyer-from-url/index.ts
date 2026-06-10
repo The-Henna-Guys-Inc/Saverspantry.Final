@@ -111,31 +111,43 @@ Deno.serve(async (req) => {
 
   const { url, store_id, valid_from, valid_until, force_firecrawl, firecrawl_actions } = parsed.data;
 
-  let res: Response;
-  try {
-    res = await fetch(url, {
-      redirect: "follow",
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; SaversPantryBot/1.0; +https://saverspantry.com)",
-        "Accept": "application/pdf,image/*,text/html;q=0.9,*/*;q=0.8",
-      },
-    });
-  } catch (e) {
-    return json({ error: `Could not fetch URL: ${e instanceof Error ? e.message : String(e)}` }, 400);
-  }
-  if (!res.ok) return json({ error: `URL returned ${res.status}` }, 400);
-
-  const contentType = (res.headers.get("content-type") ?? "").toLowerCase().split(";")[0].trim();
-  const isPdf = contentType === "application/pdf";
-  const isImg = contentType.startsWith("image/");
-  const isHtml = contentType.startsWith("text/html") || contentType.includes("xhtml");
-
   const flyerValidFrom = valid_from ? new Date(valid_from).toISOString() : null;
   const flyerValidUntil = valid_until ? new Date(valid_until).toISOString() : null;
 
-  // ---- PDF / image: hand off to extract-flyer-deals (it does the AI vision call) ----
+  let contentType = "";
+  let isPdf = false, isImg = false, isHtml = false;
+  let directBuf: Uint8Array | null = null;
+  let directHtml = "";
+
+  // ---- C: Skip direct fetch when force_firecrawl is set (bot-blocked sites / SPA picker) ----
+  if (!force_firecrawl) {
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        redirect: "follow",
+        headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; SaversPantryBot/1.0; +https://saverspantry.com)",
+          "Accept": "application/pdf,image/*,text/html;q=0.9,*/*;q=0.8",
+        },
+      });
+    } catch (e) {
+      return json({ error: `Could not fetch URL: ${e instanceof Error ? e.message : String(e)}` }, 400);
+    }
+    if (!res.ok) return json({ error: `URL returned ${res.status}` }, 400);
+    contentType = (res.headers.get("content-type") ?? "").toLowerCase().split(";")[0].trim();
+    isPdf = contentType === "application/pdf";
+    isImg = contentType.startsWith("image/");
+    isHtml = contentType.startsWith("text/html") || contentType.includes("xhtml");
+    if (isPdf || isImg) directBuf = new Uint8Array(await res.arrayBuffer());
+    else if (isHtml) directHtml = await res.text();
+  } else {
+    contentType = "text/html";
+    isHtml = true;
+  }
+
+  // ---- PDF / image: hand off to extract-flyer-deals ----
   if (isPdf || isImg) {
-    const buf = new Uint8Array(await res.arrayBuffer());
+    const buf = directBuf!;
     if (buf.byteLength > MAX_BYTES) return json({ error: "File >20MB" }, 400);
     const ext = isPdf ? "pdf" : (contentType.split("/")[1] || "bin");
 
@@ -170,27 +182,24 @@ Deno.serve(async (req) => {
     return json({ ok: extractRes.ok, mode: isPdf ? "pdf" : "image", batch_id: batch.id, extracted });
   }
 
-  // ---- HTML: fetch + LLM extract directly here ----
+  // ---- HTML: scrape + LLM extract ----
   if (!isHtml) return json({ error: `Unsupported content-type: ${contentType || "unknown"}` }, 400);
   if (!apiKey) return json({ error: "AI gateway not configured" }, 500);
 
-  const html = await res.text();
-  let text = stripHtml(html);
+  let text = directHtml ? stripHtml(directHtml) : "";
   let usedFirecrawl = false;
 
-  // Use Firecrawl when: HTML stripped text is too small, or caller forces it
-  // (JS-rendered sites, multi-week tabs requiring click actions).
   const needsFirecrawl = force_firecrawl || text.length < 300;
   if (needsFirecrawl) {
     const fcKey = Deno.env.get("FIRECRAWL_API_KEY");
     if (!fcKey) {
       return json({
-        error: "Page returned almost no text and Firecrawl is not configured. Try the direct PDF/image link if the site offers one.",
+        error: "Page returned almost no text and Firecrawl is not configured.",
         text_length: text.length,
       }, 422);
     }
     try {
-      const fcBody: any = { url, formats: ["markdown"], onlyMainContent: true, waitFor: 2500 };
+      const fcBody: any = { url, formats: ["markdown", "links"], onlyMainContent: false, waitFor: 2500 };
       if (firecrawl_actions && firecrawl_actions.length) fcBody.actions = firecrawl_actions;
       const fcResp = await fetch("https://api.firecrawl.dev/v2/scrape", {
         method: "POST",
@@ -203,7 +212,29 @@ Deno.serve(async (req) => {
         return json({ error: `Firecrawl failed (${fcResp.status})`, detail: String(fcJson?.error ?? "").slice(0, 240) }, 422);
       }
       const md = fcJson?.data?.markdown ?? fcJson?.markdown ?? "";
+      const fcLinks: string[] = fcJson?.data?.links ?? fcJson?.links ?? [];
       if (md && md.length > text.length) { text = md; usedFirecrawl = true; }
+
+      // ---- E: scraped page often points to the real PDF / image flyer — recurse ----
+      const assetLink = pickFlyerAssetLink(md, fcLinks, url);
+      if (assetLink && assetLink !== url) {
+        const recRes = await fetch(`${supaUrl}/functions/v1/import-flyer-from-url`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceKey}` },
+          body: JSON.stringify({
+            url: assetLink, store_id: store_id ?? null,
+            valid_from, valid_until,
+            internal_admin_user_id: actingUserId,
+          }),
+        });
+        const recJson = await recRes.json().catch(() => ({}));
+        if (recRes.ok && recJson?.batch_id) {
+          return json({
+            ok: true, mode: `recursed-to-${recJson.mode ?? "asset"}`,
+            asset_url: assetLink, batch_id: recJson.batch_id, extracted: recJson.extracted,
+          });
+        }
+      }
     } catch (e) {
       return json({ error: `Firecrawl request failed: ${e instanceof Error ? e.message : String(e)}` }, 502);
     }
