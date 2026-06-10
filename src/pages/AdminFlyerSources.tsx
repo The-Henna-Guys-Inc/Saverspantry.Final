@@ -160,15 +160,15 @@ const AdminFlyerSources = () => {
   };
 
   const [resolving, setResolving] = useState<string | null>(null);
-  const resolveOne = async (id: string, relearn = false) => {
+  const resolveOne = async (id: string, opts: { relearn?: boolean; relearnPicker?: boolean } = {}) => {
     setResolving(id);
     const { data, error } = await supabase.functions.invoke("resolve-flyer-url", {
-      body: { source_id: id, force: true, relearn_selector: relearn },
+      body: { source_id: id, force: true, relearn_selector: opts.relearn, relearn_picker: opts.relearnPicker },
     });
     setResolving(null);
     if (error) return toast.error(error.message);
     const r = data as any;
-    if (r?.resolved_url) toast.success(`Resolved via ${r.resolved_via}${r.selector ? " · selector learned" : ""}`);
+    if (r?.resolved_url) toast.success(`Resolved via ${r.resolved_via}${r.selector ? " · week selector" : ""}${r.picker ? " · picker" : ""}`);
     else toast.error(r?.error ?? "Resolve failed");
     load();
   };
@@ -235,6 +235,41 @@ const AdminFlyerSources = () => {
                       <Input value={editing.week_selector_css ?? ""} onChange={(e) => setEditing({ ...editing, week_selector_css: e.target.value })} placeholder='[data-week="current"]' />
                     </div>
                   )}
+                  <div className="border-t pt-3 space-y-2">
+                    <Label className="text-xs uppercase text-muted-foreground">Store / ZIP picker</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">Strategy</Label>
+                        <Select
+                          value={editing.store_picker_strategy ?? "none"}
+                          onValueChange={(v) => setEditing({ ...editing, store_picker_strategy: v as any })}
+                        >
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            <SelectItem value="zip">Enter ZIP</SelectItem>
+                            <SelectItem value="storeid">Enter store ID</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-xs">ZIP / store ID</Label>
+                        <Input value={editing.store_zip ?? ""} onChange={(e) => setEditing({ ...editing, store_zip: e.target.value })} placeholder="60601" />
+                      </div>
+                    </div>
+                    {editing.store_picker_strategy && editing.store_picker_strategy !== "none" && (
+                      <>
+                        <div>
+                          <Label className="text-xs">Input CSS (auto-learned if empty)</Label>
+                          <Input value={editing.store_picker_input_css ?? ""} onChange={(e) => setEditing({ ...editing, store_picker_input_css: e.target.value })} placeholder='input[name="zip"]' />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Submit button CSS (optional, falls back to Enter)</Label>
+                          <Input value={editing.store_picker_submit_css ?? ""} onChange={(e) => setEditing({ ...editing, store_picker_submit_css: e.target.value })} placeholder='button[type="submit"]' />
+                        </div>
+                      </>
+                    )}
+                  </div>
                   <div className="flex items-center justify-between">
                     <Label>Active</Label>
                     <Switch checked={editing.active ?? true} onCheckedChange={(v) => setEditing({ ...editing, active: v })} />
