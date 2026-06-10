@@ -301,7 +301,12 @@ async function learnWeekSelector(
   try {
     const args = JSON.parse(aiJson.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments ?? "{}");
     if (args.strategy === "none" || !args.selector) return { selector: null, strategy: null };
-    return { selector: String(args.selector).slice(0, 240), strategy: args.strategy === "select" ? "select" : "click" };
+    const sel = String(args.selector).slice(0, 240);
+    if (!isStableSelector(sel)) {
+      console.warn("learnWeekSelector: rejected hashed selector", sel);
+      return { selector: null, strategy: null };
+    }
+    return { selector: sel, strategy: args.strategy === "select" ? "select" : "click" };
   } catch { return { selector: null, strategy: null }; }
 }
 
