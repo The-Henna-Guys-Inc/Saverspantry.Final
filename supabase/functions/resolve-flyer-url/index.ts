@@ -374,10 +374,17 @@ async function learnStorePicker(
   try {
     const args = JSON.parse(aiJson.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments ?? "{}");
     if (!args.input_selector) return { input: null, submit: null };
-    return {
-      input: String(args.input_selector).slice(0, 240),
-      submit: args.submit_selector ? String(args.submit_selector).slice(0, 240) : null,
-    };
+    const input = String(args.input_selector).slice(0, 240);
+    if (!isStableSelector(input)) {
+      console.warn("learnStorePicker: rejected hashed input selector", input);
+      return { input: null, submit: null };
+    }
+    let submit: string | null = args.submit_selector ? String(args.submit_selector).slice(0, 240) : null;
+    if (submit && !isStableSelector(submit)) {
+      console.warn("learnStorePicker: rejected hashed submit selector, falling back to Enter", submit);
+      submit = null;
+    }
+    return { input, submit };
   } catch { return { input: null, submit: null }; }
 }
 
