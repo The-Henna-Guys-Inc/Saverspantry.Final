@@ -339,13 +339,18 @@ const AdminFlyerSources = () => {
                       {running === s.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
                       <span className="ml-1.5">Run now</span>
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => resolveOne(s.id, false)} disabled={resolving === s.id} className="rounded-xl">
+                    <Button size="sm" variant="outline" onClick={() => resolveOne(s.id)} disabled={resolving === s.id} className="rounded-xl">
                       {resolving === s.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Search className="h-3 w-3" />}
                       <span className="ml-1.5">Resolve URL</span>
                     </Button>
                     {s.requires_week_select && (
-                      <Button size="sm" variant="ghost" onClick={() => resolveOne(s.id, true)} disabled={resolving === s.id} className="rounded-xl">
-                        <Wand2 className="h-3 w-3 mr-1.5" />Re-learn selector
+                      <Button size="sm" variant="ghost" onClick={() => resolveOne(s.id, { relearn: true })} disabled={resolving === s.id} className="rounded-xl">
+                        <Wand2 className="h-3 w-3 mr-1.5" />Re-learn week
+                      </Button>
+                    )}
+                    {s.store_picker_strategy && s.store_picker_strategy !== "none" && (
+                      <Button size="sm" variant="ghost" onClick={() => resolveOne(s.id, { relearnPicker: true })} disabled={resolving === s.id} className="rounded-xl">
+                        <Wand2 className="h-3 w-3 mr-1.5" />Re-learn picker
                       </Button>
                     )}
                     <div className="flex items-center gap-1">
