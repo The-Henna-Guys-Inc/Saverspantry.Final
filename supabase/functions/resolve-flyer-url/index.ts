@@ -377,6 +377,32 @@ async function learnStorePicker(
 }
 
 async function safeJson(req: Request) { try { return await req.json(); } catch { return {}; } }
+
+// ---------- B: stability filter for learned selectors ----------
+// Reject CSS-in-JS hashed class names like ".e-12otqdk", ".css-1a2b3c", ".jsx-1234567890",
+// ".sc-abc123", ".MuiButton-root-12345". They change on every build/render.
+function isStableSelector(sel: string | null | undefined): boolean {
+  if (!sel || typeof sel !== "string") return false;
+  const s = sel.trim();
+  if (!s) return false;
+  // Strong stable anchors → accept immediately
+  if (/(?:^|[\s>+~])(?:#[\w-]+|\[(?:id|name|data-[\w-]+|aria-[\w-]+|placeholder|type|role)[~|^$*]?=)/i.test(s)) return true;
+  if (/\b(?:input|button|form|select|textarea)\b/i.test(s) && /\[/.test(s)) return true;
+  // Otherwise look at class tokens
+  const classes = s.match(/\.[A-Za-z_][\w-]*/g) ?? [];
+  if (!classes.length) {
+    // Bare tag selector (e.g., "input[type=text]") — acceptable if it has attribute
+    return /\[/.test(s);
+  }
+  const hashy = (c: string) =>
+    /^\.css-[\w-]{4,}$/.test(c) ||
+    /^\.sc-[\w-]{4,}$/.test(c) ||
+    /^\.jsx-\d{4,}$/.test(c) ||
+    /^\.[a-z]{1,3}-?[a-z0-9]{6,}$/i.test(c) && /\d/.test(c) || // .e12otqdk, .a1b2c3d4
+    /^\.[A-Za-z]+-[a-z0-9]{6,}$/i.test(c) && /\d/.test(c);    // .MuiButton-root12345 style hashes
+  const stableCount = classes.filter((c) => !hashy(c)).length;
+  return stableCount > 0;
+}
 function json(b: unknown, s = 200) {
   return new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
