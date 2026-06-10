@@ -9,8 +9,6 @@ import Sales from "./Sales";
 import Watchlist from "./Watchlist";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { DEALS_LAUNCHED } from "@/lib/featureFlags";
-import { DealsComingSoon } from "@/components/DealsComingSoon";
 
 const Deals = () => {
   const { user, loading } = useAuth();
@@ -35,38 +33,32 @@ const Deals = () => {
 
   const triggerClass = "w-full min-w-0 rounded-xl gap-1 sm:gap-2 px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold border border-border bg-card text-foreground/70 shadow-soft hover:bg-secondary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary data-[state=active]:shadow-glow transition-smooth";
 
-  const gated = !DEALS_LAUNCHED && !isAdmin;
-
   return (
     <main className="min-h-screen bg-background">
       <Header />
       <div className="container max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-        {gated ? (
-          <DealsComingSoon />
-        ) : (
-          <Tabs value={tab} onValueChange={(v) => setParams({ tab: v })} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-transparent p-0 mb-2 gap-1.5 sm:gap-2 h-auto">
-              <TabsTrigger value="sales" className={triggerClass}>
-                <Tag className="h-4 w-4" />Deals
-              </TabsTrigger>
-              <TabsTrigger value="stores" className={triggerClass}>
-                <StoreIcon className="h-4 w-4" />Stores
-              </TabsTrigger>
-              <TabsTrigger value="watchlist" className={triggerClass}>
-                <BellRing className="h-4 w-4" />Watchlist
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="sales" className="mt-6">
-              <Sales embedded />
-            </TabsContent>
-            <TabsContent value="stores" className="mt-6">
-              <Stores embedded />
-            </TabsContent>
-            <TabsContent value="watchlist" className="mt-6">
-              <Watchlist embedded />
-            </TabsContent>
-          </Tabs>
-        )}
+        <Tabs value={tab} onValueChange={(v) => setParams({ tab: v })} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-transparent p-0 mb-2 gap-1.5 sm:gap-2 h-auto">
+            <TabsTrigger value="sales" className={triggerClass}>
+              <Tag className="h-4 w-4" />Deals
+            </TabsTrigger>
+            <TabsTrigger value="stores" className={triggerClass}>
+              <StoreIcon className="h-4 w-4" />Stores
+            </TabsTrigger>
+            <TabsTrigger value="watchlist" className={triggerClass}>
+              <BellRing className="h-4 w-4" />Watchlist
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="sales" className="mt-6">
+            <Sales embedded />
+          </TabsContent>
+          <TabsContent value="stores" className="mt-6">
+            <Stores embedded />
+          </TabsContent>
+          <TabsContent value="watchlist" className="mt-6">
+            <Watchlist embedded />
+          </TabsContent>
+        </Tabs>
       </div>
     </main>
   );

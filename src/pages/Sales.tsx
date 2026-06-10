@@ -19,7 +19,7 @@ import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
 import { detectItemCuisines } from "@/lib/cuisineHints";
 import { PagerBar } from "@/components/PagerBar";
 import { LocationHeader } from "@/components/LocationHeader";
-import { LaunchAreaCard } from "@/components/LaunchAreaCard";
+
 import { UserSubmitDealDialog } from "@/components/UserSubmitDealDialog";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { distanceMiles, formatDistance } from "@/lib/distance";
@@ -246,7 +246,7 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
 
         <LocationHeader />
 
-        <LaunchAreaCard matchedCity={matchedCity} zipCode={zipCode} />
+        
 
         <CuisineFilterBar
           cuisines={cuisines}
