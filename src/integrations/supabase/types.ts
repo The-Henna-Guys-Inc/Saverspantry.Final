@@ -506,6 +506,11 @@ export type Database = {
           requires_week_select: boolean
           selector_learned_at: string | null
           store_name: string | null
+          store_picker_input_css: string | null
+          store_picker_learned_at: string | null
+          store_picker_strategy: string | null
+          store_picker_submit_css: string | null
+          store_zip: string | null
           updated_at: string
           week_selector_css: string | null
           week_selector_strategy: string | null
@@ -533,6 +538,11 @@ export type Database = {
           requires_week_select?: boolean
           selector_learned_at?: string | null
           store_name?: string | null
+          store_picker_input_css?: string | null
+          store_picker_learned_at?: string | null
+          store_picker_strategy?: string | null
+          store_picker_submit_css?: string | null
+          store_zip?: string | null
           updated_at?: string
           week_selector_css?: string | null
           week_selector_strategy?: string | null
@@ -560,6 +570,11 @@ export type Database = {
           requires_week_select?: boolean
           selector_learned_at?: string | null
           store_name?: string | null
+          store_picker_input_css?: string | null
+          store_picker_learned_at?: string | null
+          store_picker_strategy?: string | null
+          store_picker_submit_css?: string | null
+          store_zip?: string | null
           updated_at?: string
           week_selector_css?: string | null
           week_selector_strategy?: string | null
