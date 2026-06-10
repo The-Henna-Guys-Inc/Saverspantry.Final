@@ -155,8 +155,8 @@ const AdminFlyerSources = () => {
     setRunAll(false);
     if (error) return toast.error(error.message);
     const r = data as any;
-    toast.success(`Ran ${r?.ran ?? 0} of ${r?.scanned ?? 0} sources`);
-    load();
+    toast.success(`Queued ${r?.queued ?? 0} of ${r?.scanned ?? 0} sources — processing in background`);
+    setTimeout(load, 4000);
   };
 
   const [resolving, setResolving] = useState<string | null>(null);
