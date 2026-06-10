@@ -443,6 +443,40 @@ function stripHtml(s: string): string {
     .trim();
 }
 
+// ---- E helper: from scraped markdown + links, pick the most flyer-like PDF / image URL ----
+function pickFlyerAssetLink(md: string, links: string[], pageUrl: string): string | null {
+  const collected = new Set<string>();
+  for (const l of links ?? []) if (typeof l === "string") collected.add(l);
+  if (md) {
+    const re = /https?:\/\/[^\s)"'<>]+/gi;
+    const m = md.match(re);
+    if (m) for (const u of m) collected.add(u);
+  }
+  let base: URL | null = null;
+  try { base = new URL(pageUrl); } catch {}
+  const KEYWORDS = ["weekly", "circular", "flyer", "ad", "savings", "specials"];
+  const scored: Array<{ u: string; score: number }> = [];
+  for (const raw of collected) {
+    let u = raw.replace(/[.,;)]+$/, "");
+    let parsed: URL;
+    try { parsed = new URL(u); } catch { continue; }
+    if (base && parsed.hostname !== base.hostname && !parsed.hostname.endsWith("." + base.hostname.replace(/^www\./, ""))) {
+      // allow cdn subdomains; skip totally unrelated third-party links
+      if (!/cdn|images|assets|flipp|wishabi|storage|s3|cloudfront|akamai/i.test(parsed.hostname)) continue;
+    }
+    const low = u.toLowerCase();
+    let score = 0;
+    if (/\.pdf(\?|$)/.test(low)) score += 10;
+    if (/\.(jpe?g|png|webp)(\?|$)/.test(low)) score += 6;
+    for (const k of KEYWORDS) if (low.includes(k)) score += 2;
+    if (low.includes("logo") || low.includes("icon") || low.includes("favicon") || low.includes("sprite")) score -= 8;
+    if (low.includes("placeholder")) score -= 4;
+    if (score > 0) scored.push({ u, score });
+  }
+  scored.sort((a, b) => b.score - a.score);
+  return scored[0]?.score >= 6 ? scored[0].u : null;
+}
+
 async function safeJson(req: Request): Promise<any> { try { return await req.json(); } catch { return {}; } }
 function json(b: unknown, s = 200) {
   return new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
