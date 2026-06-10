@@ -304,6 +304,9 @@ const AdminFlyerSources = () => {
                       {!s.active && <Badge variant="outline">inactive</Badge>}
                       {s.render_mode === "firecrawl" && <Badge variant="secondary">firecrawl</Badge>}
                       {s.requires_week_select && <Badge variant="secondary">week tabs</Badge>}
+                      {s.store_picker_strategy && s.store_picker_strategy !== "none" && (
+                        <Badge variant="secondary">picker: {s.store_picker_strategy}{s.store_zip ? ` ${s.store_zip}` : ""}</Badge>
+                      )}
                       {s.last_status === "ok" && <Badge className="bg-primary/15 text-primary border-0">last: ok</Badge>}
                       {s.last_status && s.last_status !== "ok" && <Badge variant="destructive">last: {s.last_status}</Badge>}
                       {s.consecutive_failures > 0 && <Badge variant="destructive">{s.consecutive_failures} fails</Badge>}
