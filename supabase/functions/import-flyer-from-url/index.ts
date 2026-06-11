@@ -123,14 +123,14 @@ Deno.serve(async (req) => {
   if (!force_firecrawl) {
     let res: Response;
     try {
-      res = await fetch(url, {
+      res = await politeFetch(url, {
         redirect: "follow",
-        headers: {
-          "User-Agent": "Mozilla/5.0 (compatible; SaversPantryBot/1.0; +https://saverspantry.com)",
-          "Accept": "application/pdf,image/*,text/html;q=0.9,*/*;q=0.8",
-        },
+        headers: { "Accept": "application/pdf,image/*,text/html;q=0.9,*/*;q=0.8" },
       });
     } catch (e) {
+      if (e instanceof RobotsDisallowedError) {
+        return json({ error: "Blocked by robots.txt; configure a different flyer URL or upload the file manually." }, 403);
+      }
       return json({ error: `Could not fetch URL: ${e instanceof Error ? e.message : String(e)}` }, 400);
     }
     if (!res.ok) return json({ error: `URL returned ${res.status}` }, 400);
