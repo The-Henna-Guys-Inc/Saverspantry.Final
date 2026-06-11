@@ -265,7 +265,12 @@ Deno.serve(async (req) => {
     const data = await resp.json();
     const args = data?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
     if (!args) return new Response(JSON.stringify({ error: "Could not extract a recipe from this page." }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    return new Response(JSON.stringify({ ...JSON.parse(args), source: "ai", source_url: url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // C-2: strip verbatim steps before returning.
+    const aiRecipe = JSON.parse(args);
+    const aiStepsCount = Array.isArray(aiRecipe.steps) ? aiRecipe.steps.length : 0;
+    aiRecipe.steps = [];
+    return new Response(JSON.stringify({ ...aiRecipe, steps_count: aiStepsCount, source: "ai", source_url: url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
   } catch (e) {
     console.error("recipe-import-url error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
