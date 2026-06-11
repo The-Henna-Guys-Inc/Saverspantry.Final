@@ -38,10 +38,9 @@ function candidateUrls(date: Date): string[] {
   ];
 }
 
-// Honest, identifiable bot UA. USDA FNS publishes these PDFs for public use;
-// we identify ourselves so they can contact us if needed.
+// Honest, identifiable bot UA + robots.txt compliance + crawl-delay handled
+// centrally by politeFetch. USDA FNS publishes these PDFs for public use.
 const UA_HEADERS = {
-  'User-Agent': 'SaversPantryBot/1.0 (+https://saverspantry.com/bot)',
   'Accept': 'application/pdf,application/octet-stream,*/*;q=0.8',
   'Accept-Language': 'en-US,en;q=0.9',
 };
