@@ -8,6 +8,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { logAiUsage } from "../_shared/aiUsage.ts";
+import { politeFetch, RobotsDisallowedError } from "../_shared/politeFetch.ts";
 
 const BodySchema = z.object({
   url: z.string().url(),
