@@ -1,12 +1,11 @@
 // Resolve the "real" current-week flyer URL for a flyer_source, and produce
-// the Firecrawl `actions` needed to (a) get past the store/ZIP picker and
-// (b) click the current-week tab when the source uses week-selector tabs.
+// the Firecrawl `actions` needed to click the current-week tab when the
+// source uses week-selector tabs.
 //
 // Layer A — URL resolution: Firecrawl `map` with a search hint, then
 // `search` as a fallback. Cached for RESOLVE_TTL_DAYS.
-// Layer B — Store/ZIP picker (NEW): if the source has a `store_zip` (or
-// store ID) and `store_picker_strategy` != 'none', learn the input + submit
-// CSS selectors once via Gemini and emit type/click/wait actions.
+// Layer B — Store/ZIP picker: REMOVED. We no longer programmatically fill
+// store/ZIP pickers — that pattern reads as circumventing access controls.
 // Layer C — Week-selector tabs: learn the tab selector via Gemini and emit
 // click/select + wait actions.
 //
@@ -21,6 +20,7 @@ const BodySchema = z.object({
   source_id: z.string().uuid(),
   force: z.boolean().optional(),
   relearn_selector: z.boolean().optional(),
+  // Accepted for backward-compat with admin UI; ignored.
   relearn_picker: z.boolean().optional(),
 });
 
@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
 
   const parsed = BodySchema.safeParse(await safeJson(req));
   if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
-  const { source_id, force, relearn_selector, relearn_picker } = parsed.data;
+  const { source_id, force, relearn_selector } = parsed.data;
 
   const { data: src, error: sErr } = await admin.from("flyer_sources")
     .select("*").eq("id", source_id).maybeSingle();
