@@ -93,8 +93,10 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
   };
 
   useEffect(() => {
+    if (authLoading) return;
     if (user) load();
-  }, [user, isFiltering, cuisines.join(",")]);
+    else setLoading(false);
+  }, [user, authLoading, isFiltering, cuisines.join(",")]);
 
   const addToWatchlist = async (r: Rec) => {
     if (!user) return;
