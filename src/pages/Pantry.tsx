@@ -90,6 +90,9 @@ const Pantry = () => {
   });
   const [wizardSubmitting, setWizardSubmitting] = useState(false);
   const [search, setSearch] = useState("");
+  const [editing, setEditing] = useState<PantryItem | null>(null);
+  const [editForm, setEditForm] = useState({ item: "", category: "pantry", unit: "unit", location: "pantry", expires_on: "" });
+  const [editSaving, setEditSaving] = useState(false);
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
   useEffect(() => { setPage(1); }, [search, isFiltering]);
