@@ -899,6 +899,65 @@ const Pantry = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit item</DialogTitle>
+            <DialogDescription>Update the name, category, unit, location, or expiry.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="edit-name" className="text-xs">Name</Label>
+              <Input id="edit-name" value={editForm.item} onChange={(e) => setEditForm((f) => ({ ...f, item: e.target.value }))} className="rounded-xl mt-1" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Category</Label>
+                <Select value={editForm.category} onValueChange={(v) => setEditForm((f) => ({ ...f, category: v }))}>
+                  <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((c) => (
+                      <SelectItem key={c} value={c}>{CATEGORY_EMOJI[c]} {c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Unit</Label>
+                <Select value={editForm.unit} onValueChange={(v) => setEditForm((f) => ({ ...f, unit: v }))}>
+                  <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {UNITS.map((u) => (<SelectItem key={u} value={u}>{u}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Storage location</Label>
+              <Select value={editForm.location} onValueChange={(v) => setEditForm((f) => ({ ...f, location: v }))}>
+                <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {allLocations.map((l) => (
+                    <SelectItem key={l} value={l}>{LOCATION_EMOJI[l] ?? "📍"} {l}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="edit-exp" className="text-xs">Expires on</Label>
+              <Input id="edit-exp" type="date" value={editForm.expires_on} onChange={(e) => setEditForm((f) => ({ ...f, expires_on: e.target.value }))} className="rounded-xl mt-1" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(null)} className="rounded-xl">Cancel</Button>
+            <Button onClick={saveEdit} disabled={editSaving} className="rounded-xl">
+              {editSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 };
