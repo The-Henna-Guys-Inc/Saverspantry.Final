@@ -51,8 +51,6 @@ const EMPTY: Partial<Source> = {
   flyer_url: "", flyer_landing_url: "", render_mode: "html",
   default_store_id: null, active: true, notes: "",
   requires_week_select: false, week_selector_css: "",
-  store_zip: "", store_picker_strategy: "none",
-  store_picker_input_css: "", store_picker_submit_css: "",
 };
 
 const AdminFlyerSources = () => {
@@ -105,10 +103,11 @@ const AdminFlyerSources = () => {
       notes: editing.notes || null,
       requires_week_select: editing.requires_week_select ?? false,
       week_selector_css: editing.week_selector_css || null,
-      store_zip: editing.store_zip || null,
-      store_picker_strategy: editing.store_picker_strategy || "none",
-      store_picker_input_css: editing.store_picker_input_css || null,
-      store_picker_submit_css: editing.store_picker_submit_css || null,
+      // Picker fields no longer set from UI (automation removed).
+      store_zip: null,
+      store_picker_strategy: "none",
+      store_picker_input_css: null,
+      store_picker_submit_css: null,
     };
     const res = editing.id
       ? await supabase.from("flyer_sources" as any).update(payload).eq("id", editing.id)
@@ -160,15 +159,15 @@ const AdminFlyerSources = () => {
   };
 
   const [resolving, setResolving] = useState<string | null>(null);
-  const resolveOne = async (id: string, opts: { relearn?: boolean; relearnPicker?: boolean } = {}) => {
+  const resolveOne = async (id: string, opts: { relearn?: boolean } = {}) => {
     setResolving(id);
     const { data, error } = await supabase.functions.invoke("resolve-flyer-url", {
-      body: { source_id: id, force: true, relearn_selector: opts.relearn, relearn_picker: opts.relearnPicker },
+      body: { source_id: id, force: true, relearn_selector: opts.relearn },
     });
     setResolving(null);
     if (error) return toast.error(error.message);
     const r = data as any;
-    if (r?.resolved_url) toast.success(`Resolved via ${r.resolved_via}${r.selector ? " · week selector" : ""}${r.picker ? " · picker" : ""}`);
+    if (r?.resolved_url) toast.success(`Resolved via ${r.resolved_via}${r.selector ? " · week selector" : ""}`);
     else toast.error(r?.error ?? "Resolve failed");
     load();
   };
@@ -235,40 +234,11 @@ const AdminFlyerSources = () => {
                       <Input value={editing.week_selector_css ?? ""} onChange={(e) => setEditing({ ...editing, week_selector_css: e.target.value })} placeholder='[data-week="current"]' />
                     </div>
                   )}
-                  <div className="border-t pt-3 space-y-2">
-                    <Label className="text-xs uppercase text-muted-foreground">Store / ZIP picker</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <Label className="text-xs">Strategy</Label>
-                        <Select
-                          value={editing.store_picker_strategy ?? "none"}
-                          onValueChange={(v) => setEditing({ ...editing, store_picker_strategy: v as any })}
-                        >
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">None</SelectItem>
-                            <SelectItem value="zip">Enter ZIP</SelectItem>
-                            <SelectItem value="storeid">Enter store ID</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label className="text-xs">ZIP / store ID</Label>
-                        <Input value={editing.store_zip ?? ""} onChange={(e) => setEditing({ ...editing, store_zip: e.target.value })} placeholder="60601" />
-                      </div>
-                    </div>
-                    {editing.store_picker_strategy && editing.store_picker_strategy !== "none" && (
-                      <>
-                        <div>
-                          <Label className="text-xs">Input CSS (auto-learned if empty)</Label>
-                          <Input value={editing.store_picker_input_css ?? ""} onChange={(e) => setEditing({ ...editing, store_picker_input_css: e.target.value })} placeholder='input[name="zip"]' />
-                        </div>
-                        <div>
-                          <Label className="text-xs">Submit button CSS (optional, falls back to Enter)</Label>
-                          <Input value={editing.store_picker_submit_css ?? ""} onChange={(e) => setEditing({ ...editing, store_picker_submit_css: e.target.value })} placeholder='button[type="submit"]' />
-                        </div>
-                      </>
-                    )}
+                  <div className="border-t pt-3">
+                    <p className="text-[11px] text-muted-foreground">
+                      Store/ZIP picker automation removed. For chains that gate flyers behind a
+                      store picker, paste the post-selection URL directly into <strong>Flyer URL</strong>.
+                    </p>
                   </div>
                   <div className="flex items-center justify-between">
                     <Label>Active</Label>
@@ -304,9 +274,6 @@ const AdminFlyerSources = () => {
                       {!s.active && <Badge variant="outline">inactive</Badge>}
                       {s.render_mode === "firecrawl" && <Badge variant="secondary">firecrawl</Badge>}
                       {s.requires_week_select && <Badge variant="secondary">week tabs</Badge>}
-                      {s.store_picker_strategy && s.store_picker_strategy !== "none" && (
-                        <Badge variant="secondary">picker: {s.store_picker_strategy}{s.store_zip ? ` ${s.store_zip}` : ""}</Badge>
-                      )}
                       {s.last_status === "ok" && <Badge className="bg-primary/15 text-primary border-0">last: ok</Badge>}
                       {s.last_status && s.last_status !== "ok" && <Badge variant="destructive">last: {s.last_status}</Badge>}
                       {s.consecutive_failures > 0 && <Badge variant="destructive">{s.consecutive_failures} fails</Badge>}
@@ -349,11 +316,6 @@ const AdminFlyerSources = () => {
                     {s.requires_week_select && (
                       <Button size="sm" variant="ghost" onClick={() => resolveOne(s.id, { relearn: true })} disabled={resolving === s.id} className="rounded-xl">
                         <Wand2 className="h-3 w-3 mr-1.5" />Re-learn week
-                      </Button>
-                    )}
-                    {s.store_picker_strategy && s.store_picker_strategy !== "none" && (
-                      <Button size="sm" variant="ghost" onClick={() => resolveOne(s.id, { relearnPicker: true })} disabled={resolving === s.id} className="rounded-xl">
-                        <Wand2 className="h-3 w-3 mr-1.5" />Re-learn picker
                       </Button>
                     )}
                     <div className="flex items-center gap-1">

@@ -1,12 +1,11 @@
 // Resolve the "real" current-week flyer URL for a flyer_source, and produce
-// the Firecrawl `actions` needed to (a) get past the store/ZIP picker and
-// (b) click the current-week tab when the source uses week-selector tabs.
+// the Firecrawl `actions` needed to click the current-week tab when the
+// source uses week-selector tabs.
 //
 // Layer A — URL resolution: Firecrawl `map` with a search hint, then
 // `search` as a fallback. Cached for RESOLVE_TTL_DAYS.
-// Layer B — Store/ZIP picker (NEW): if the source has a `store_zip` (or
-// store ID) and `store_picker_strategy` != 'none', learn the input + submit
-// CSS selectors once via Gemini and emit type/click/wait actions.
+// Layer B — Store/ZIP picker: REMOVED. We no longer programmatically fill
+// store/ZIP pickers — that pattern reads as circumventing access controls.
 // Layer C — Week-selector tabs: learn the tab selector via Gemini and emit
 // click/select + wait actions.
 //
@@ -21,6 +20,7 @@ const BodySchema = z.object({
   source_id: z.string().uuid(),
   force: z.boolean().optional(),
   relearn_selector: z.boolean().optional(),
+  // Accepted for backward-compat with admin UI; ignored.
   relearn_picker: z.boolean().optional(),
 });
 
@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
 
   const parsed = BodySchema.safeParse(await safeJson(req));
   if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
-  const { source_id, force, relearn_selector, relearn_picker } = parsed.data;
+  const { source_id, force, relearn_selector } = parsed.data;
 
   const { data: src, error: sErr } = await admin.from("flyer_sources")
     .select("*").eq("id", source_id).maybeSingle();
@@ -107,35 +107,15 @@ Deno.serve(async (req) => {
   }
 
   const actions: any[] = [];
-  const pickerStrategy: string = src.store_picker_strategy ?? "none";
-  const wantsPicker = pickerStrategy !== "none" && !!src.store_zip;
-  let pickerInput = src.store_picker_input_css ?? null;
-  let pickerSubmit = src.store_picker_submit_css ?? null;
-  let force_firecrawl = src.render_mode === "firecrawl" || !!src.requires_week_select || wantsPicker;
+  let force_firecrawl = src.render_mode === "firecrawl" || !!src.requires_week_select;
 
-  // ---- Layer B: store/ZIP picker ----
-  if (wantsPicker) {
-    if ((!pickerInput || relearn_picker) && fcKey && apiKey) {
-      const learned = await learnStorePicker(fcKey, apiKey, resolvedUrl || landing, pickerStrategy, actingUserId);
-      if (learned.input) {
-        pickerInput = learned.input;
-        pickerSubmit = learned.submit;
-        await admin.from("flyer_sources").update({
-          store_picker_input_css: learned.input,
-          store_picker_submit_css: learned.submit,
-          store_picker_learned_at: new Date().toISOString(),
-        }).eq("id", src.id);
-      }
-    }
-    if (pickerInput) {
-      actions.push({ type: "wait", milliseconds: 1500 });
-      actions.push({ type: "write", selector: pickerInput, text: String(src.store_zip) });
-      actions.push({ type: "wait", milliseconds: 800 });
-      if (pickerSubmit) actions.push({ type: "click", selector: pickerSubmit });
-      else actions.push({ type: "press", key: "Enter" });
-      actions.push({ type: "wait", milliseconds: 3000 });
-    }
-  }
+  // ---- Layer B: store/ZIP picker (REMOVED) ----
+  // Programmatically filling a retailer's ZIP picker / store-locator to bypass
+  // a gated weekly-ad page reads as circumventing access controls under Google
+  // Play's Deceptive Behavior policy and retailer ToS. We no longer emit those
+  // actions. If a flyer requires a store selection, configure `flyer_url` to a
+  // pre-selected store URL or provide `default_store_id`, both of which the
+  // retailer exposes publicly.
 
   // ---- Layer C: week-selector tabs ----
   let learnedSelector: string | null = src.week_selector_css ?? null;
@@ -169,7 +149,7 @@ Deno.serve(async (req) => {
     force_firecrawl,
     actions: actions.length ? actions : null,
     selector: learnedSelector,
-    picker: pickerInput ? { input: pickerInput, submit: pickerSubmit, strategy: pickerStrategy } : null,
+    picker: null,
   });
 });
 
@@ -310,83 +290,7 @@ async function learnWeekSelector(
   } catch { return { selector: null, strategy: null }; }
 }
 
-// ---------- Selector learning: store/ZIP picker ----------
-
-async function learnStorePicker(
-  fcKey: string, apiKey: string, url: string, strategy: string, userId: string | null,
-): Promise<{ input: string | null; submit: string | null }> {
-  const html = await scrapeHtml(fcKey, url);
-  if (!html) return { input: null, submit: null };
-  const trimmed = trimHtml(html);
-
-  const tool = {
-    type: "function",
-    function: {
-      name: "report_picker",
-      description: "Return CSS selectors for a grocery store's ZIP / store-locator picker.",
-      parameters: {
-        type: "object",
-        properties: {
-          input_selector:  { type: ["string", "null"], description: "CSS selector for the ZIP/store input field" },
-          submit_selector: { type: ["string", "null"], description: "CSS selector for the submit/search/find-store button (null if Enter works)" },
-          reason:          { type: ["string", "null"] },
-        },
-        required: ["input_selector"],
-        additionalProperties: false,
-      },
-    },
-  };
-
-  const t0 = Date.now();
-  let aiResp: Response;
-  try {
-    aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: "system", content:
-            "You read raw HTML of a grocery store's weekly-ad page that gates content behind a store/ZIP picker. " +
-            `The user wants to enter a ${strategy === "storeid" ? "store ID" : "ZIP code"}. ` +
-            "Find the input field where the value goes, and the submit/search/'find store'/'set my store' button. " +
-            "Prefer stable selectors: id, name, data-* attributes, aria-label. Avoid generated class hashes. " +
-            "If no picker is visible, return input_selector=null."
-          },
-          { role: "user", content: `URL: ${url}\n\nHTML:\n${trimmed}` },
-        ],
-        tools: [tool],
-        tool_choice: { type: "function", function: { name: "report_picker" } },
-      }),
-    });
-  } catch { return { input: null, submit: null }; }
-  const latency = Date.now() - t0;
-
-  if (!aiResp.ok) {
-    if (userId) await logAiUsage({ userId, functionName: FN, model: MODEL, latencyMs: latency, status: "error", error: `${aiResp.status}` });
-    return { input: null, submit: null };
-  }
-  const aiJson = await aiResp.json();
-  if (userId) {
-    const u = aiJson.usage ?? {};
-    await logAiUsage({ userId, functionName: FN, model: MODEL, latencyMs: latency, promptTokens: u.prompt_tokens ?? 0, completionTokens: u.completion_tokens ?? 0 });
-  }
-  try {
-    const args = JSON.parse(aiJson.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments ?? "{}");
-    if (!args.input_selector) return { input: null, submit: null };
-    const input = String(args.input_selector).slice(0, 240);
-    if (!isStableSelector(input)) {
-      console.warn("learnStorePicker: rejected hashed input selector", input);
-      return { input: null, submit: null };
-    }
-    let submit: string | null = args.submit_selector ? String(args.submit_selector).slice(0, 240) : null;
-    if (submit && !isStableSelector(submit)) {
-      console.warn("learnStorePicker: rejected hashed submit selector, falling back to Enter", submit);
-      submit = null;
-    }
-    return { input, submit };
-  } catch { return { input: null, submit: null }; }
-}
+// Store/ZIP picker selector learning removed — see Layer B comment above.
 
 async function safeJson(req: Request) { try { return await req.json(); } catch { return {}; } }
 
