@@ -107,35 +107,15 @@ Deno.serve(async (req) => {
   }
 
   const actions: any[] = [];
-  const pickerStrategy: string = src.store_picker_strategy ?? "none";
-  const wantsPicker = pickerStrategy !== "none" && !!src.store_zip;
-  let pickerInput = src.store_picker_input_css ?? null;
-  let pickerSubmit = src.store_picker_submit_css ?? null;
-  let force_firecrawl = src.render_mode === "firecrawl" || !!src.requires_week_select || wantsPicker;
+  let force_firecrawl = src.render_mode === "firecrawl" || !!src.requires_week_select;
 
-  // ---- Layer B: store/ZIP picker ----
-  if (wantsPicker) {
-    if ((!pickerInput || relearn_picker) && fcKey && apiKey) {
-      const learned = await learnStorePicker(fcKey, apiKey, resolvedUrl || landing, pickerStrategy, actingUserId);
-      if (learned.input) {
-        pickerInput = learned.input;
-        pickerSubmit = learned.submit;
-        await admin.from("flyer_sources").update({
-          store_picker_input_css: learned.input,
-          store_picker_submit_css: learned.submit,
-          store_picker_learned_at: new Date().toISOString(),
-        }).eq("id", src.id);
-      }
-    }
-    if (pickerInput) {
-      actions.push({ type: "wait", milliseconds: 1500 });
-      actions.push({ type: "write", selector: pickerInput, text: String(src.store_zip) });
-      actions.push({ type: "wait", milliseconds: 800 });
-      if (pickerSubmit) actions.push({ type: "click", selector: pickerSubmit });
-      else actions.push({ type: "press", key: "Enter" });
-      actions.push({ type: "wait", milliseconds: 3000 });
-    }
-  }
+  // ---- Layer B: store/ZIP picker (REMOVED) ----
+  // Programmatically filling a retailer's ZIP picker / store-locator to bypass
+  // a gated weekly-ad page reads as circumventing access controls under Google
+  // Play's Deceptive Behavior policy and retailer ToS. We no longer emit those
+  // actions. If a flyer requires a store selection, configure `flyer_url` to a
+  // pre-selected store URL or provide `default_store_id`, both of which the
+  // retailer exposes publicly.
 
   // ---- Layer C: week-selector tabs ----
   let learnedSelector: string | null = src.week_selector_css ?? null;
@@ -169,7 +149,7 @@ Deno.serve(async (req) => {
     force_firecrawl,
     actions: actions.length ? actions : null,
     selector: learnedSelector,
-    picker: pickerInput ? { input: pickerInput, submit: pickerSubmit, strategy: pickerStrategy } : null,
+    picker: null,
   });
 });
 
