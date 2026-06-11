@@ -113,7 +113,13 @@ Deno.serve(async (req) => {
 
     const { data: { user } } = await userClient.auth.getUser();
     if (!user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({
+        recommendations: [],
+        total_monthly_savings_usd: 0,
+        cuisine_preferences: [],
+        filter_applied: false,
+        pricing_adjustment: null,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const body = await req.json().catch(() => ({}));
