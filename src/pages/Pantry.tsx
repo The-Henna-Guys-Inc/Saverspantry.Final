@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash2, Refrigerator, Minus, AlertTriangle, X, ScanLine, CalendarDays, Package, Search } from "lucide-react";
+import { Loader2, Plus, Trash2, Refrigerator, Minus, AlertTriangle, X, ScanLine, CalendarDays, Package, Search, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -90,6 +90,9 @@ const Pantry = () => {
   });
   const [wizardSubmitting, setWizardSubmitting] = useState(false);
   const [search, setSearch] = useState("");
+  const [editing, setEditing] = useState<PantryItem | null>(null);
+  const [editForm, setEditForm] = useState({ item: "", category: "pantry", unit: "unit", location: "pantry", expires_on: "" });
+  const [editSaving, setEditSaving] = useState(false);
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
   useEffect(() => { setPage(1); }, [search, isFiltering]);
@@ -312,6 +315,37 @@ const Pantry = () => {
     if (error) { setItems(prev); toast.error(error.message); return; }
     if (n < it.quantity) await logConsumption(it, it.quantity - n);
     checkLowStock(it, n);
+  };
+
+  const openEdit = (it: PantryItem) => {
+    setEditing(it);
+    setEditForm({
+      item: it.item,
+      category: it.category ?? "pantry",
+      unit: it.unit ?? "unit",
+      location: it.location ?? "pantry",
+      expires_on: it.expires_on ?? "",
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    const name = editForm.item.trim();
+    if (!name) return toast.error("Name is required");
+    setEditSaving(true);
+    const patch = {
+      item: name,
+      category: editForm.category,
+      unit: editForm.unit,
+      location: editForm.location,
+      expires_on: editForm.expires_on || null,
+    };
+    const { error } = await supabase.from("pantry_items").update(patch).eq("id", editing.id);
+    setEditSaving(false);
+    if (error) return toast.error(error.message);
+    setItems((p) => p.map((x) => (x.id === editing.id ? { ...x, ...patch } : x)));
+    setEditing(null);
+    toast.success("Item updated");
   };
 
   const setItemThreshold = async (it: PantryItem, val: string) => {
@@ -751,6 +785,9 @@ const Pantry = () => {
                               ))}
                             </div>
                           </div>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg shrink-0" onClick={() => openEdit(it)} title="Edit">
+                            <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                          </Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg shrink-0 -mr-1" onClick={() => remove(it.id)} title="Remove">
                             <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
                           </Button>
@@ -862,6 +899,65 @@ const Pantry = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit item</DialogTitle>
+            <DialogDescription>Update the name, category, unit, location, or expiry.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="edit-name" className="text-xs">Name</Label>
+              <Input id="edit-name" value={editForm.item} onChange={(e) => setEditForm((f) => ({ ...f, item: e.target.value }))} className="rounded-xl mt-1" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Category</Label>
+                <Select value={editForm.category} onValueChange={(v) => setEditForm((f) => ({ ...f, category: v }))}>
+                  <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((c) => (
+                      <SelectItem key={c} value={c}>{CATEGORY_EMOJI[c]} {c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Unit</Label>
+                <Select value={editForm.unit} onValueChange={(v) => setEditForm((f) => ({ ...f, unit: v }))}>
+                  <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {UNITS.map((u) => (<SelectItem key={u} value={u}>{u}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Storage location</Label>
+              <Select value={editForm.location} onValueChange={(v) => setEditForm((f) => ({ ...f, location: v }))}>
+                <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {allLocations.map((l) => (
+                    <SelectItem key={l} value={l}>{LOCATION_EMOJI[l] ?? "📍"} {l}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="edit-exp" className="text-xs">Expires on</Label>
+              <Input id="edit-exp" type="date" value={editForm.expires_on} onChange={(e) => setEditForm((f) => ({ ...f, expires_on: e.target.value }))} className="rounded-xl mt-1" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(null)} className="rounded-xl">Cancel</Button>
+            <Button onClick={saveEdit} disabled={editSaving} className="rounded-xl">
+              {editSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 };
