@@ -66,16 +66,16 @@ Deno.serve(async (req) => {
   const ingestionId = row.id as string;
 
   try {
-    // Save raw email body for audit
-    await admin.storage
-      .from("promo-emails")
-      .upload(`${ingestionId}/raw.json`, new Blob([rawBody], { type: "application/json" }), { upsert: true });
+    // ToS/copyright hygiene (M-3): do NOT persist the raw email body. We keep
+    // a short text excerpt on the row for debugging and discard everything else.
+    // Attachments are still written to flyer-uploads so extract-flyer-deals can
+    // read them; that file is purged once extraction completes.
 
     // --- Match a store ---
     const match = await matchStore(admin, { fromAddress, fromDomain, text, html, subject });
 
     await admin.from("promo_email_ingestions").update({
-      raw_storage_path: `${ingestionId}/raw.json`,
+      raw_storage_path: null,
       matched_store_id: match.storeId,
       match_confidence: match.confidence,
       match_method: match.method,
@@ -83,6 +83,7 @@ Deno.serve(async (req) => {
       detected_address: match.address,
       notes: match.notes,
     }).eq("id", ingestionId);
+
 
     if (!match.storeId) {
       await admin.from("promo_email_ingestions").update({
@@ -102,14 +103,15 @@ Deno.serve(async (req) => {
       const bytes = decodeAttachmentContent(a);
       if (!bytes || bytes.byteLength === 0 || bytes.byteLength > MAX_ATTACHMENT_BYTES) continue;
 
-      // Upload attachment to promo-emails (audit) and to flyer-uploads (where extract-flyer-deals reads from)
+      // Upload only to flyer-uploads (where extract-flyer-deals reads from).
+      // The extract function purges this file on success — we don't keep an
+      // audit copy in promo-emails anymore (M-3 / C-1).
       const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 80);
-      const promoPath = `${ingestionId}/attachments/${i}-${safeName}`;
       const flyerPath = `email/${ingestionId}/${i}-${safeName}`;
 
-      await admin.storage.from("promo-emails").upload(promoPath, new Blob([bytes], { type: contentType }), { upsert: true });
       const { error: upErr } = await admin.storage.from("flyer-uploads").upload(flyerPath, new Blob([bytes], { type: contentType }), { upsert: true });
       if (upErr) { console.error("flyer upload failed", upErr); continue; }
+
 
       const { data: batch, error: bErr } = await admin.from("flyer_extraction_batches").insert({
         store_id: match.storeId,

@@ -71,7 +71,7 @@ export const RecipeUrlImport = ({ onImported }: { onImported?: () => void }) => 
               <div className="text-xs uppercase tracking-wider text-accent">{recipe.cuisine}</div>
               <h3 className="font-semibold text-primary">{recipe.title}</h3>
               <div className="text-xs text-muted-foreground mt-1">
-                {recipe.time_minutes}m · {recipe.servings} servings · {recipe.ingredients?.length ?? 0} ingredients · {recipe.steps?.length ?? 0} steps
+                {recipe.time_minutes}m · {recipe.servings} servings · {recipe.ingredients?.length ?? 0} ingredients · {recipe.steps_count ?? 0} steps
               </div>
             </div>
             <Button size="sm" variant="outline" onClick={save} className="rounded-xl shrink-0">
@@ -88,8 +88,17 @@ export const RecipeUrlImport = ({ onImported }: { onImported?: () => void }) => 
               </ul>
             </details>
           )}
+          {recipe.source_url && (
+            <p className="text-xs text-muted-foreground mt-3">
+              Cooking instructions stay at the source —{" "}
+              <a href={recipe.source_url} target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">
+                view full recipe
+              </a>.
+            </p>
+          )}
         </div>
       )}
+
     </Card>
   );
 };

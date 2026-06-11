@@ -229,7 +229,10 @@ Deno.serve(async (req) => {
     const ld = tryJsonLd(html);
     if (ld) {
       const recipe = normalizeRecipe(ld);
-      return new Response(JSON.stringify({ ...recipe, source: "json-ld", source_url: url }), {
+      const stepsCount = recipe.steps?.length ?? 0;
+      // C-2: do NOT return verbatim instructions — they're copyrightable.
+      // We keep ingredients (factual list) and link back to the source for steps.
+      return new Response(JSON.stringify({ ...recipe, steps: [], steps_count: stepsCount, source: "json-ld", source_url: url }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -253,6 +256,7 @@ Deno.serve(async (req) => {
         tool_choice: { type: "function", function: { name: "return_recipe" } },
       }),
     });
+
     if (!resp.ok) {
       if (resp.status === 429) return new Response(JSON.stringify({ error: "Rate limit hit — try again shortly." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       if (resp.status === 402) return new Response(JSON.stringify({ error: "AI credits exhausted." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -261,7 +265,12 @@ Deno.serve(async (req) => {
     const data = await resp.json();
     const args = data?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
     if (!args) return new Response(JSON.stringify({ error: "Could not extract a recipe from this page." }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    return new Response(JSON.stringify({ ...JSON.parse(args), source: "ai", source_url: url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // C-2: strip verbatim steps before returning.
+    const aiRecipe = JSON.parse(args);
+    const aiStepsCount = Array.isArray(aiRecipe.steps) ? aiRecipe.steps.length : 0;
+    aiRecipe.steps = [];
+    return new Response(JSON.stringify({ ...aiRecipe, steps_count: aiStepsCount, source: "ai", source_url: url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
   } catch (e) {
     console.error("recipe-import-url error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
