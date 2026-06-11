@@ -218,12 +218,21 @@ Deno.serve(async (req) => {
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10_000);
-    const html = await fetch(parsed.toString(), {
-      headers: { "User-Agent": "Mozilla/5.0 SaversPantryBot/1.0" },
-      redirect: "error",
-      signal: controller.signal,
-    }).then((r) => r.ok ? r.text() : Promise.reject(new Error(`Fetch ${r.status}`)))
-      .finally(() => clearTimeout(timeout));
+    let html: string;
+    try {
+      html = await politeFetch(parsed.toString(), {
+        redirect: "error",
+        signal: controller.signal,
+      }).then((r) => r.ok ? r.text() : Promise.reject(new Error(`Fetch ${r.status}`)))
+        .finally(() => clearTimeout(timeout));
+    } catch (e) {
+      if (e instanceof RobotsDisallowedError) {
+        return new Response(JSON.stringify({ error: "This site's robots.txt disallows automated fetching. Please copy the recipe manually." }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      throw e;
+    }
 
     // 1) JSON-LD path
     const ld = tryJsonLd(html);
