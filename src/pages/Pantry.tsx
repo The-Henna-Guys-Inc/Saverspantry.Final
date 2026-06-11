@@ -383,8 +383,14 @@ const Pantry = () => {
     if (tags.length === 0) return true; // generic staples always shown
     return tags.some((t) => prefCuisines.includes(t));
   };
-  const matchingItems = items.filter(itemMatchesPrefs);
-  const otherItems = isFiltering ? items.filter((i) => !itemMatchesPrefs(i)) : [];
+  const sortByLocThenName = (a: PantryItem, b: PantryItem) => {
+    const la = (a.location || "other").toLowerCase();
+    const lb = (b.location || "other").toLowerCase();
+    if (la !== lb) return la.localeCompare(lb);
+    return a.item.toLowerCase().localeCompare(b.item.toLowerCase());
+  };
+  const matchingItems = items.filter(itemMatchesPrefs).slice().sort(sortByLocThenName);
+  const otherItems = isFiltering ? items.filter((i) => !itemMatchesPrefs(i)).slice().sort(sortByLocThenName) : [];
 
   const q = search.trim().toLowerCase();
   const searchedItems = !q
