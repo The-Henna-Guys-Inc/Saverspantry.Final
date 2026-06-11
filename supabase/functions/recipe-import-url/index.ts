@@ -3,6 +3,7 @@
 //           2) fall back to AI extraction from cleaned HTML body text.
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { requireUserId, unauthorized } from "../_shared/userAuth.ts";
+import { politeFetch, RobotsDisallowedError } from "../_shared/politeFetch.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
