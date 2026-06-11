@@ -317,6 +317,37 @@ const Pantry = () => {
     checkLowStock(it, n);
   };
 
+  const openEdit = (it: PantryItem) => {
+    setEditing(it);
+    setEditForm({
+      item: it.item,
+      category: it.category ?? "pantry",
+      unit: it.unit ?? "unit",
+      location: it.location ?? "pantry",
+      expires_on: it.expires_on ?? "",
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    const name = editForm.item.trim();
+    if (!name) return toast.error("Name is required");
+    setEditSaving(true);
+    const patch = {
+      item: name,
+      category: editForm.category,
+      unit: editForm.unit,
+      location: editForm.location,
+      expires_on: editForm.expires_on || null,
+    };
+    const { error } = await supabase.from("pantry_items").update(patch).eq("id", editing.id);
+    setEditSaving(false);
+    if (error) return toast.error(error.message);
+    setItems((p) => p.map((x) => (x.id === editing.id ? { ...x, ...patch } : x)));
+    setEditing(null);
+    toast.success("Item updated");
+  };
+
   const setItemThreshold = async (it: PantryItem, val: string) => {
     const n = val === "" ? null : Math.max(0, Number(val) || 0);
     const prev = items;
