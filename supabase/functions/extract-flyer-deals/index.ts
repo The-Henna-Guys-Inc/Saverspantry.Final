@@ -233,6 +233,7 @@ Deno.serve(async (req) => {
       });
     }
 
+
     // ---- Email path: insert immediately, allow AI store override ----
     let effectiveStoreId = batch.store_id;
     let overrideNote: string | null = null;
@@ -301,6 +302,30 @@ Deno.serve(async (req) => {
       inserted = count ?? rows.length;
     }
 
+    // ToS/copyright hygiene: purge source flyer file after successful auto-insert.
+    // We've extracted facts (prices, item names) — keeping the original creative
+    // work (layout, photos) is unnecessary exposure. See plan: C-1.
+    let purgedPath: string | null = null;
+    try {
+      await admin.storage.from("flyer-uploads").remove([batch.stored_file_url]);
+      purgedPath = batch.stored_file_url;
+    } catch (e) {
+      console.warn("flyer purge failed (non-fatal):", e);
+    }
+    // Also clean the audit copy in promo-emails for email-ingest batches.
+    if (batch.source_email_id) {
+      try {
+        const { data: atts } = await admin.storage
+          .from("promo-emails")
+          .list(`${batch.source_email_id}/attachments`, { limit: 50 });
+        if (atts?.length) {
+          await admin.storage.from("promo-emails").remove(
+            atts.map((a) => `${batch.source_email_id}/attachments/${a.name}`),
+          );
+        }
+      } catch (e) { console.warn("promo-emails purge failed (non-fatal):", e); }
+    }
+
     await admin.from("flyer_extraction_batches").update({
       extraction_status: "completed",
       extracted_items_count: rows.length,
@@ -314,8 +339,10 @@ Deno.serve(async (req) => {
       extracted_valid_until: aiValidUntil,
       flyer_valid_from: effFrom,
       flyer_valid_until: effUntil,
-      extraction_notes: overrideNote,
+      extraction_notes: [overrideNote, purgedPath ? "source purged" : null].filter(Boolean).join(" · ") || null,
+      stored_file_url: purgedPath ? "purged" : batch.stored_file_url,
     }).eq("id", batch_id);
+
 
     return json({ ok: true, batch_id, mode: "inserted", extracted: rows.length, inserted, raw_returned: parsedDeals.length, store_override: !!overrideNote });
   } catch (e) {

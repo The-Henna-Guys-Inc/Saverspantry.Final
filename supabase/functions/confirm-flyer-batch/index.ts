@@ -85,6 +85,19 @@ Deno.serve(async (req) => {
     inserted = count ?? rows.length;
   }
 
+  // ToS/copyright hygiene: purge source flyer file once admin has reviewed the
+  // extracted facts. We keep only the structured deal rows, not the original
+  // copyrighted creative work. See plan: C-1.
+  let purgedPath: string | null = null;
+  if (batch.stored_file_url && batch.stored_file_url !== "purged") {
+    try {
+      await admin.storage.from("flyer-uploads").remove([batch.stored_file_url]);
+      purgedPath = batch.stored_file_url;
+    } catch (e) {
+      console.warn("flyer purge failed (non-fatal):", e);
+    }
+  }
+
   await admin.from("flyer_extraction_batches").update({
     extraction_status: "completed",
     store_id,
@@ -94,10 +107,12 @@ Deno.serve(async (req) => {
     pending_deals: null,
     confirmed_at: new Date().toISOString(),
     completed_at: new Date().toISOString(),
+    stored_file_url: purgedPath ? "purged" : batch.stored_file_url,
   }).eq("id", batch_id);
 
   return json({ ok: true, batch_id, inserted });
 });
+
 
 async function safeJson(req: Request): Promise<any> { try { return await req.json(); } catch { return {}; } }
 function json(b: unknown, s = 200) {
