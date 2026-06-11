@@ -9,6 +9,7 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { Resend } from 'npm:resend@4.0.1';
 import { checkCronAuth } from '../_shared/cronAuth.ts';
+import { politeFetch } from '../_shared/politeFetch.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -37,10 +38,9 @@ function candidateUrls(date: Date): string[] {
   ];
 }
 
-// Honest, identifiable bot UA. USDA FNS publishes these PDFs for public use;
-// we identify ourselves so they can contact us if needed.
+// Honest, identifiable bot UA + robots.txt compliance + crawl-delay handled
+// centrally by politeFetch. USDA FNS publishes these PDFs for public use.
 const UA_HEADERS = {
-  'User-Agent': 'SaversPantryBot/1.0 (+https://saverspantry.com/bot)',
   'Accept': 'application/pdf,application/octet-stream,*/*;q=0.8',
   'Accept-Language': 'en-US,en;q=0.9',
 };
@@ -66,7 +66,7 @@ function inferMonthFromUrl(url: string): Date {
 
 async function findLatestPdf(override?: string): Promise<{ url: string; bytes: Uint8Array; reportMonth: Date } | null> {
   if (override) {
-    const r = await fetch(override, { headers: UA_HEADERS });
+    const r = await politeFetch(override, { headers: UA_HEADERS });
     console.log(`[usda-sync] override fetch ${override} -> ${r.status} ${r.headers.get('content-type')}`);
     if (!r.ok) return null;
     return { url: override, bytes: new Uint8Array(await r.arrayBuffer()), reportMonth: inferMonthFromUrl(override) };
@@ -77,7 +77,7 @@ async function findLatestPdf(override?: string): Promise<{ url: string; bytes: U
     const d = new Date(now.getFullYear(), now.getMonth() - back, 1);
     for (const url of candidateUrls(d)) {
       try {
-        const r = await fetch(url, { headers: UA_HEADERS });
+        const r = await politeFetch(url, { headers: UA_HEADERS });
         if (r.ok && r.headers.get('content-type')?.includes('pdf')) {
           return { url, bytes: new Uint8Array(await r.arrayBuffer()), reportMonth: d };
         }

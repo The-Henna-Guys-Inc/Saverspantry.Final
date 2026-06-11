@@ -8,6 +8,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { logAiUsage } from "../_shared/aiUsage.ts";
+import { politeFetch, RobotsDisallowedError } from "../_shared/politeFetch.ts";
 
 const BodySchema = z.object({
   url: z.string().url(),
@@ -123,14 +124,14 @@ Deno.serve(async (req) => {
   if (!force_firecrawl) {
     let res: Response;
     try {
-      res = await fetch(url, {
+      res = await politeFetch(url, {
         redirect: "follow",
-        headers: {
-          "User-Agent": "Mozilla/5.0 (compatible; SaversPantryBot/1.0; +https://saverspantry.com)",
-          "Accept": "application/pdf,image/*,text/html;q=0.9,*/*;q=0.8",
-        },
+        headers: { "Accept": "application/pdf,image/*,text/html;q=0.9,*/*;q=0.8" },
       });
     } catch (e) {
+      if (e instanceof RobotsDisallowedError) {
+        return json({ error: "Blocked by robots.txt; configure a different flyer URL or upload the file manually." }, 403);
+      }
       return json({ error: `Could not fetch URL: ${e instanceof Error ? e.message : String(e)}` }, 400);
     }
     if (!res.ok) return json({ error: `URL returned ${res.status}` }, 400);
