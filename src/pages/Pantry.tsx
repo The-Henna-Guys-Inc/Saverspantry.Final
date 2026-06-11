@@ -785,6 +785,9 @@ const Pantry = () => {
                               ))}
                             </div>
                           </div>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg shrink-0" onClick={() => openEdit(it)} title="Edit">
+                            <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                          </Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg shrink-0 -mr-1" onClick={() => remove(it.id)} title="Remove">
                             <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
                           </Button>
