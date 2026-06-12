@@ -476,7 +476,7 @@ const Pantry = () => {
 
         {/* Manage locations */}
         <Card className="p-5 rounded-2xl border-border-strong mb-6">
-          <div className="text-xs uppercase tracking-wider text-accent mb-3">Your locations</div>
+          <h2 className="text-xs uppercase tracking-wider text-accent mb-3">Your locations</h2>
           <div className="flex flex-wrap gap-2 mb-3">
             {DEFAULT_LOCATIONS.map((l) => (
               <span key={l} className="px-2.5 py-1 rounded-full bg-muted text-xs text-muted-foreground">{l}</span>
