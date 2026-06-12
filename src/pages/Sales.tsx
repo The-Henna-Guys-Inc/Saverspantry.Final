@@ -224,8 +224,9 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
             </div>
             <h1 className="text-3xl font-bold text-primary">Deals near you</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Hand-curated weekly from {displayCity ? displayCity.name : "Illinois"} specialty grocers. Some verified by stores, some by the community — we never rank by paid placement.
+              Hand-curated weekly from {displayCity ? `${displayCity.name} specialty grocers` : "specialty grocers near you"}. Some verified by stores, some by the community — we never rank by paid placement.
             </p>
+
           </div>
           <div className="flex items-center gap-1.5 flex-wrap">
             {isAdmin && (
