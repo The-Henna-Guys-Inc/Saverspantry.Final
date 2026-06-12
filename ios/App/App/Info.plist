@@ -58,5 +58,11 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Saver's Pantry uses your camera to scan barcodes, expiry dates, and receipts so you can add items to your pantry quickly.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Saver's Pantry uses your location to find nearby grocery stores and show local deals.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Saver's Pantry lets you attach photos of receipts or pantry items for your records.</string>
 </dict>
 </plist>
