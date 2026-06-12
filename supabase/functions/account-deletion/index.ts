@@ -24,7 +24,6 @@ Deno.serve(async (req) => {
     const action = body.action as string; // "request" | "cancel"
     const reason = (body.reason ?? null) as string | null;
 
-    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     if (action === "request") {
       const { data: existing } = await admin.from("account_deletion_requests")
