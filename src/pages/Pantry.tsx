@@ -731,6 +731,7 @@ const Pantry = () => {
           onComplete={handleWizardComplete}
         />
 
+        <h2 className="text-xl font-semibold text-primary mb-3">Pantry items</h2>
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : items.length === 0 ? (
