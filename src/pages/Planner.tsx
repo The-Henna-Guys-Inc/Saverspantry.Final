@@ -274,7 +274,7 @@ const Planner = () => {
           <TabsContent value="library" className="mt-0">
             <Card className="p-6 rounded-3xl border-border-strong text-center">
               <BookmarkCheck className="h-8 w-8 text-primary mx-auto mb-3" />
-              <h3 className="text-xl font-semibold text-primary mb-1">Your saved recipes & swaps</h3>
+              <h2 className="text-xl font-semibold text-primary mb-1">Your saved recipes & swaps</h2>
               <p className="text-sm text-muted-foreground mb-4">Open the full library to browse, search and re-use everything you've saved.</p>
               <Button asChild variant="hero" className="rounded-xl">
                 <Link to="/library">Open library <ArrowRight className="h-4 w-4 ml-1.5" /></Link>
@@ -283,6 +283,7 @@ const Planner = () => {
           </TabsContent>
 
           <TabsContent value="planner" className="mt-0">
+        <h2 className="text-xl font-semibold text-primary mb-3">Meal planner</h2>
         <div className="text-xs uppercase tracking-wider text-accent mb-2">Week of {weekStart}</div>
 
         <Card className="p-6 rounded-3xl border-border-strong shadow-soft mb-8">

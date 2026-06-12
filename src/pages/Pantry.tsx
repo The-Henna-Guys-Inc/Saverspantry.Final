@@ -476,7 +476,7 @@ const Pantry = () => {
 
         {/* Manage locations */}
         <Card className="p-5 rounded-2xl border-border-strong mb-6">
-          <div className="text-xs uppercase tracking-wider text-accent mb-3">Your locations</div>
+          <h2 className="text-xs uppercase tracking-wider text-accent mb-3">Your locations</h2>
           <div className="flex flex-wrap gap-2 mb-3">
             {DEFAULT_LOCATIONS.map((l) => (
               <span key={l} className="px-2.5 py-1 rounded-full bg-muted text-xs text-muted-foreground">{l}</span>
@@ -484,7 +484,7 @@ const Pantry = () => {
             {locations.map((l) => (
               <span key={l.id} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-xs text-primary">
                 {l.name}
-                <button onClick={() => removeLocation(l.id, l.name)} className="hover:text-destructive" title="Remove">
+                <button onClick={() => removeLocation(l.id, l.name)} className="hover:text-destructive" aria-label="Remove location">
                   <X className="h-3 w-3" />
                 </button>
               </span>
@@ -731,6 +731,7 @@ const Pantry = () => {
           onComplete={handleWizardComplete}
         />
 
+        <h2 className="text-xl font-semibold text-primary mb-3">Pantry items</h2>
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : items.length === 0 ? (
