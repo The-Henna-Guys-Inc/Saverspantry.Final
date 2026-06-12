@@ -484,7 +484,7 @@ const Pantry = () => {
             {locations.map((l) => (
               <span key={l.id} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-xs text-primary">
                 {l.name}
-                <button onClick={() => removeLocation(l.id, l.name)} className="hover:text-destructive" title="Remove">
+                <button onClick={() => removeLocation(l.id, l.name)} className="hover:text-destructive" aria-label="Remove location">
                   <X className="h-3 w-3" />
                 </button>
               </span>
