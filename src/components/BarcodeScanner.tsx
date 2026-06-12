@@ -131,10 +131,22 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
     if (isNative) {
       (async () => {
         try {
-          const { camera } = await MLKitScanner.requestPermissions();
-          if (camera !== "granted" && camera !== "limited") {
+          // Check existing permission first — only prompt if we've never asked.
+          // Calling requestPermissions() on every open can re-surface the system sheet
+          // on some iOS versions, which feels broken to users.
+          let { camera } = await MLKitScanner.checkPermissions();
+          if (camera === "prompt" || camera === "prompt-with-rationale") {
+            ({ camera } = await MLKitScanner.requestPermissions());
+          }
+          if (camera === "denied") {
             setPermanentlyDenied(true);
             setErrorMsg("Camera permission denied. Enable it in Settings → Saver's Pantry → Camera.");
+            setStatus("error");
+            return;
+          }
+          if (camera !== "granted" && camera !== "limited") {
+            setPermanentlyDenied(true);
+            setErrorMsg("Camera permission unavailable. Enable it in Settings → Saver's Pantry → Camera.");
             setStatus("error");
             return;
           }
