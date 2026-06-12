@@ -283,6 +283,7 @@ const Planner = () => {
           </TabsContent>
 
           <TabsContent value="planner" className="mt-0">
+        <h2 className="text-xl font-semibold text-primary mb-3">Meal planner</h2>
         <div className="text-xs uppercase tracking-wider text-accent mb-2">Week of {weekStart}</div>
 
         <Card className="p-6 rounded-3xl border-border-strong shadow-soft mb-8">
