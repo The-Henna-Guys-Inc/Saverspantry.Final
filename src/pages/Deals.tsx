@@ -37,6 +37,7 @@ const Deals = () => {
     <main className="min-h-screen bg-background">
       <Header />
       <div className="container max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-4">Deals</h1>
         <Tabs value={tab} onValueChange={(v) => setParams({ tab: v })} className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-transparent p-0 mb-2 gap-1.5 sm:gap-2 h-auto">
             <TabsTrigger value="sales" className={triggerClass}>
@@ -50,12 +51,15 @@ const Deals = () => {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="sales" className="mt-6">
+            <h2 className="sr-only">Current deals</h2>
             <Sales embedded />
           </TabsContent>
           <TabsContent value="stores" className="mt-6">
+            <h2 className="sr-only">Stores</h2>
             <Stores embedded />
           </TabsContent>
           <TabsContent value="watchlist" className="mt-6">
+            <h2 className="sr-only">Watchlist</h2>
             <Watchlist embedded />
           </TabsContent>
         </Tabs>
