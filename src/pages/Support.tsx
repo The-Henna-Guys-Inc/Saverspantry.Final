@@ -35,7 +35,7 @@ const SECTIONS: { title: string; items: QA[] }[] = [
       },
       {
         q: "Why don't I see deals in my area?",
-        a: "We're currently launching in Chicagoland and Peoria, IL. If you're outside our launch area, you'll see a waitlist option on the Deals page. Add your ZIP code so we can let you know when we expand to your area. We're prioritizing expansion based on waitlist demand.",
+        a: "Saver's Pantry is rolling out across the U.S., but our deals are community-sourced and curated by our small team, so coverage in some areas is still thin. If you don't see many deals near you yet, it just means we're still building up local sources. We're working hard behind the scenes, and deals should start showing up in your area soon. You can help by submitting deals you spot locally or by adding your ZIP to the waitlist on the Deals page so we know where to prioritize next.",
       },
       {
         q: "How do you decide which stores to feature?",
