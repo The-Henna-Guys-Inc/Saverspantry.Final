@@ -70,6 +70,8 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
   const [matchedPage, setMatchedPage] = useState(1);
   const [allPage, setAllPage] = useState(1);
   const [sortMode, setSortMode] = useState<SortMode>("distance");
+  const [favoriteStoreIds, setFavoriteStoreIds] = useState<string[]>([]);
+  const [favoritesFilterOn, setFavoritesFilterOn] = useState(true);
   const { cuisines, isFiltering, setEnabled } = useCuisinePrefs();
   const { location, zipCode, radiusMiles } = useUserLocation();
   const matchedCity = findLaunchCity(location);
@@ -95,7 +97,7 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
     if (!user) return;
     (async () => {
       setLoading(true);
-      const [{ data: salesData }, { data: wl }, { data: confirms }, { data: roles }] = await Promise.all([
+      const [{ data: salesData }, { data: wl }, { data: confirms }, { data: roles }, { data: profile }] = await Promise.all([
         supabase
           .from("sale_observations")
           .select("*, specialty_stores(latitude, longitude)")
@@ -106,11 +108,14 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
         supabase.from("watchlist_items").select("food_name").eq("user_id", user.id),
         supabase.from("sale_confirmations").select("sale_observation_id").eq("user_id", user.id),
         supabase.from("user_roles").select("role").eq("user_id", user.id),
+        supabase.from("profiles").select("favorite_store_ids, favorites_filter_enabled").eq("user_id", user.id).maybeSingle(),
       ]);
       setSales((salesData ?? []) as Sale[]);
       setWatchedFoods((wl ?? []).map((w: any) => w.food_name.toLowerCase()));
       setConfirmedIds(new Set((confirms ?? []).map((c: any) => c.sale_observation_id)));
       setIsAdmin((roles ?? []).some((r: any) => r.role === "admin"));
+      setFavoriteStoreIds(((profile as any)?.favorite_store_ids ?? []) as string[]);
+      setFavoritesFilterOn((profile as any)?.favorites_filter_enabled ?? true);
       setLoading(false);
     })();
   }, [user]);
@@ -133,13 +138,20 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
     return withDistance.filter((s) => s._distance == null || s._distance <= radiusMiles);
   }, [withDistance, location, radiusMiles]);
 
+  const favoritesActive = favoritesFilterOn && favoriteStoreIds.length > 0;
+  const favoritesFiltered = useMemo(() => {
+    if (!favoritesActive) return radiusFiltered;
+    const favSet = new Set(favoriteStoreIds);
+    return radiusFiltered.filter((s) => s.store_id && favSet.has(s.store_id));
+  }, [radiusFiltered, favoritesActive, favoriteStoreIds]);
+
   const cuisineFiltered = useMemo(() => {
     const base = isFiltering
-      ? radiusFiltered.filter((s) => {
+      ? favoritesFiltered.filter((s) => {
           const tags = detectItemCuisines(s.food_name);
           return tags.length === 0 || tags.some((t) => cuisines.includes(t));
         })
-      : radiusFiltered;
+      : favoritesFiltered;
     const sorted = [...base];
     if (sortMode === "distance") {
       sorted.sort((a, b) => {
@@ -153,7 +165,7 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
       sorted.sort((a, b) => new Date(a.ends_at).getTime() - new Date(b.ends_at).getTime());
     }
     return sorted;
-  }, [radiusFiltered, cuisines, isFiltering, sortMode]);
+  }, [favoritesFiltered, cuisines, isFiltering, sortMode]);
 
   const matched = useMemo(() => {
     if (!watchedFoods.length) return [];
@@ -247,7 +259,46 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
 
         <LocationHeader />
 
-        
+
+        {favoritesActive && (
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-2.5 flex-wrap">
+            <p className="text-xs text-foreground">
+              Showing deals from your <span className="font-semibold text-primary">{favoriteStoreIds.length} favorite store{favoriteStoreIds.length === 1 ? "" : "s"}</span> only.
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button" variant="ghost" size="sm" className="rounded-full h-7 px-3 text-xs"
+                onClick={async () => {
+                  if (!user) return;
+                  setFavoritesFilterOn(false);
+                  await supabase.from("profiles").update({ favorites_filter_enabled: false } as any).eq("user_id", user.id);
+                }}
+              >
+                Show all deals
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="rounded-full h-7 px-3 text-xs">
+                <Link to="/settings">Edit favorites</Link>
+              </Button>
+            </div>
+          </div>
+        )}
+        {!favoritesActive && favoriteStoreIds.length > 0 && (
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-secondary/30 px-4 py-2.5 flex-wrap">
+            <p className="text-xs text-muted-foreground">
+              Showing deals from all nearby stores.
+            </p>
+            <Button
+              type="button" variant="ghost" size="sm" className="rounded-full h-7 px-3 text-xs"
+              onClick={async () => {
+                if (!user) return;
+                setFavoritesFilterOn(true);
+                await supabase.from("profiles").update({ favorites_filter_enabled: true } as any).eq("user_id", user.id);
+              }}
+            >
+              Only my favorites
+            </Button>
+          </div>
+        )}
 
         <CuisineFilterBar
           cuisines={cuisines}
