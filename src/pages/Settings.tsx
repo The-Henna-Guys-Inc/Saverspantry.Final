@@ -16,6 +16,7 @@ import { HouseholdManager } from "@/components/HouseholdManager";
 import { MyContributions } from "@/components/MyContributions";
 import { CUISINE_LABEL, mapLegacyCuisines, type CuisineTag } from "@/lib/cuisineHints";
 import { Switch } from "@/components/ui/switch";
+import { FavoriteStoresManager } from "@/components/FavoriteStoresManager";
 
 const DISCOVERY_CUISINES: CuisineTag[] = [
   "american", "italian", "french", "mediterranean", "eastern_european",
@@ -337,6 +338,7 @@ const Settings = () => {
           </Card>
         )}
 
+        <FavoriteStoresManager />
         <HouseholdManager />
         <MyContributions />
         <SupportTickets />
