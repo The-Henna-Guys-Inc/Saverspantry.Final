@@ -70,6 +70,8 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
   const [matchedPage, setMatchedPage] = useState(1);
   const [allPage, setAllPage] = useState(1);
   const [sortMode, setSortMode] = useState<SortMode>("distance");
+  const [favoriteStoreIds, setFavoriteStoreIds] = useState<string[]>([]);
+  const [favoritesFilterOn, setFavoritesFilterOn] = useState(true);
   const { cuisines, isFiltering, setEnabled } = useCuisinePrefs();
   const { location, zipCode, radiusMiles } = useUserLocation();
   const matchedCity = findLaunchCity(location);
