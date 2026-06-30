@@ -138,6 +138,13 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
     return withDistance.filter((s) => s._distance == null || s._distance <= radiusMiles);
   }, [withDistance, location, radiusMiles]);
 
+  const favoritesActive = favoritesFilterOn && favoriteStoreIds.length > 0;
+  const favoritesFiltered = useMemo(() => {
+    if (!favoritesActive) return radiusFiltered;
+    const favSet = new Set(favoriteStoreIds);
+    return radiusFiltered.filter((s) => s.store_id && favSet.has(s.store_id));
+  }, [radiusFiltered, favoritesActive, favoriteStoreIds]);
+
   const cuisineFiltered = useMemo(() => {
     const base = isFiltering
       ? radiusFiltered.filter((s) => {
