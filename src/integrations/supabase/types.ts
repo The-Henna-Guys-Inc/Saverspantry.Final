@@ -1028,6 +1028,8 @@ export type Database = {
           deletion_pending_at: string | null
           dietary_prefs: Json
           display_name: string | null
+          favorite_store_ids: string[]
+          favorites_filter_enabled: boolean
           household_size: number
           id: string
           search_radius_miles: number
@@ -1046,6 +1048,8 @@ export type Database = {
           deletion_pending_at?: string | null
           dietary_prefs?: Json
           display_name?: string | null
+          favorite_store_ids?: string[]
+          favorites_filter_enabled?: boolean
           household_size?: number
           id?: string
           search_radius_miles?: number
@@ -1064,6 +1068,8 @@ export type Database = {
           deletion_pending_at?: string | null
           dietary_prefs?: Json
           display_name?: string | null
+          favorite_store_ids?: string[]
+          favorites_filter_enabled?: boolean
           household_size?: number
           id?: string
           search_radius_miles?: number
