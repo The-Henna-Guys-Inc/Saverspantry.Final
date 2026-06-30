@@ -147,11 +147,11 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
 
   const cuisineFiltered = useMemo(() => {
     const base = isFiltering
-      ? radiusFiltered.filter((s) => {
+      ? favoritesFiltered.filter((s) => {
           const tags = detectItemCuisines(s.food_name);
           return tags.length === 0 || tags.some((t) => cuisines.includes(t));
         })
-      : radiusFiltered;
+      : favoritesFiltered;
     const sorted = [...base];
     if (sortMode === "distance") {
       sorted.sort((a, b) => {
