@@ -165,7 +165,7 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
       sorted.sort((a, b) => new Date(a.ends_at).getTime() - new Date(b.ends_at).getTime());
     }
     return sorted;
-  }, [radiusFiltered, cuisines, isFiltering, sortMode]);
+  }, [favoritesFiltered, cuisines, isFiltering, sortMode]);
 
   const matched = useMemo(() => {
     if (!watchedFoods.length) return [];
