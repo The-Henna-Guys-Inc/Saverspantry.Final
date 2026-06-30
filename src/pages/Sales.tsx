@@ -259,7 +259,46 @@ export default function Sales({ embedded = false }: { embedded?: boolean } = {})
 
         <LocationHeader />
 
-        
+
+        {favoritesActive && (
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-2.5 flex-wrap">
+            <p className="text-xs text-foreground">
+              Showing deals from your <span className="font-semibold text-primary">{favoriteStoreIds.length} favorite store{favoriteStoreIds.length === 1 ? "" : "s"}</span> only.
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button" variant="ghost" size="sm" className="rounded-full h-7 px-3 text-xs"
+                onClick={async () => {
+                  if (!user) return;
+                  setFavoritesFilterOn(false);
+                  await supabase.from("profiles").update({ favorites_filter_enabled: false } as any).eq("user_id", user.id);
+                }}
+              >
+                Show all deals
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="rounded-full h-7 px-3 text-xs">
+                <Link to="/settings">Edit favorites</Link>
+              </Button>
+            </div>
+          </div>
+        )}
+        {!favoritesActive && favoriteStoreIds.length > 0 && (
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-secondary/30 px-4 py-2.5 flex-wrap">
+            <p className="text-xs text-muted-foreground">
+              Showing deals from all nearby stores.
+            </p>
+            <Button
+              type="button" variant="ghost" size="sm" className="rounded-full h-7 px-3 text-xs"
+              onClick={async () => {
+                if (!user) return;
+                setFavoritesFilterOn(true);
+                await supabase.from("profiles").update({ favorites_filter_enabled: true } as any).eq("user_id", user.id);
+              }}
+            >
+              Only my favorites
+            </Button>
+          </div>
+        )}
 
         <CuisineFilterBar
           cuisines={cuisines}
