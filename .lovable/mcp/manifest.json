@@ -1,0 +1,165 @@
+{
+  "version": 1,
+  "sdk_version": "0.22.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://paajifqvwmoqttefxykw.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "saverspantry-mcp",
+      "version": "0.1.0",
+      "title": "Saver's Pantry"
+    },
+    "tools": [
+      {
+        "name": "list_pantry_items",
+        "title": "List pantry items",
+        "description": "List the signed-in user's pantry items. Optionally filter by storage location (pantry, fridge, freezer, counter) or a search string on the item name.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "location": {
+              "description": "Filter by storage location, e.g. 'pantry', 'fridge', 'freezer', 'counter'.",
+              "type": "string"
+            },
+            "search": {
+              "description": "Case-insensitive substring match on the item name.",
+              "type": "string"
+            },
+            "limit": {
+              "description": "Max rows to return (default 100).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "add_pantry_item",
+        "title": "Add pantry item",
+        "description": "Add a new item to the signed-in user's pantry. Use location values like 'pantry', 'fridge', 'freezer', or 'counter'.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "item": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Item name, e.g. 'olive oil'."
+            },
+            "quantity": {
+              "description": "Quantity (default 1).",
+              "type": "number",
+              "minimum": 0
+            },
+            "unit": {
+              "description": "Unit, e.g. 'ea', 'oz', 'lb', 'g' (default 'ea').",
+              "type": "string"
+            },
+            "location": {
+              "description": "Storage location (default 'pantry').",
+              "type": "string"
+            },
+            "category": {
+              "description": "Optional category, e.g. 'produce', 'dairy'.",
+              "type": "string"
+            },
+            "expires_on": {
+              "description": "ISO date (YYYY-MM-DD) for expiration.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "item"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_favorite_stores",
+        "title": "List favorite stores",
+        "description": "Return the signed-in user's favorite grocery stores (up to 3) with name, chain, and city.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "search_deals",
+        "title": "Search current deals",
+        "description": "Search currently active, approved grocery deals. Filter by food name, city, or store name. Returns items on sale right now with price and store info.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "food": {
+              "description": "Substring match on the food/item name.",
+              "type": "string"
+            },
+            "city": {
+              "description": "Filter by city name.",
+              "type": "string"
+            },
+            "store": {
+              "description": "Substring match on the store name or chain.",
+              "type": "string"
+            },
+            "limit": {
+              "description": "Max rows (default 25).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_watchlist",
+        "title": "List watchlist",
+        "description": "Return the foods the signed-in user is watching for deals, with their minimum-savings thresholds.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

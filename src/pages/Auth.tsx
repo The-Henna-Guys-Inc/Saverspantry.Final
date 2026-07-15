@@ -21,6 +21,18 @@ const SIGNUP_BENEFITS = [
   { icon: Smartphone, text: "Access everything across phone and web" },
 ];
 
+const safeNext = (raw: string | null): string => {
+  if (!raw) return "/";
+  try {
+    const decoded = decodeURIComponent(raw);
+    // Only allow same-origin relative paths (must start with a single "/")
+    if (!decoded.startsWith("/") || decoded.startsWith("//")) return "/";
+    return decoded;
+  } catch {
+    return "/";
+  }
+};
+
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -29,6 +41,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const nextPath = safeNext(searchParams.get("next"));
 
   const handleSignup = async () => {
     const parsed = schema.safeParse({ email, password });
@@ -38,7 +51,7 @@ const Auth = () => {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: `${window.location.origin}${nextPath}`,
         data: { display_name: name || email.split("@")[0] },
       },
     });
@@ -55,7 +68,7 @@ const Auth = () => {
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success("Welcome back!");
-    navigate("/");
+    navigate(nextPath);
   };
 
   useEffect(() => {
@@ -80,12 +93,12 @@ const Auth = () => {
       if (isNativeAuthAvailable()) {
         console.log(TAG, "using native sign-in", { provider });
         await nativeSignIn(provider);
-        navigate("/");
+        navigate(nextPath);
         return;
       }
 
       const result = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}${nextPath}`,
       });
       console.log(TAG, "lovable.signInWithOAuth result", {
         redirected: result.redirected,
@@ -97,7 +110,7 @@ const Auth = () => {
         return;
       }
       if (result.redirected) return;
-      navigate("/");
+      navigate(nextPath);
     } catch (e: any) {
       console.error(TAG, "handleOAuth threw", e);
       toast.error(e?.message || "Sign-in failed");

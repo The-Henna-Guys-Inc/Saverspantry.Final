@@ -34,6 +34,7 @@ import Privacy from "./pages/Privacy.tsx";
 import Terms from "./pages/Terms.tsx";
 import Support from "./pages/Support.tsx";
 import JoinHousehold from "./pages/JoinHousehold.tsx";
+import OAuthConsent from "./pages/OAuthConsent.tsx";
 import { InstallPrompt } from "./components/InstallPrompt";
 import { MobileTabBar } from "./components/MobileTabBar";
 import { LegalAcceptanceGate } from "./components/LegalAcceptanceGate";
@@ -61,6 +62,7 @@ const App = () => (
           <Route path="/support" element={<Support />} />
           <Route path="/join/:code" element={<JoinHousehold />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
           <Route path="/library" element={<Library />} />
           <Route path="/planner" element={<Planner />} />
           <Route path="/pantry" element={<Pantry />} />
