@@ -93,12 +93,12 @@ const Auth = () => {
       if (isNativeAuthAvailable()) {
         console.log(TAG, "using native sign-in", { provider });
         await nativeSignIn(provider);
-        navigate("/");
+        navigate(nextPath);
         return;
       }
 
       const result = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}${nextPath}`,
       });
       console.log(TAG, "lovable.signInWithOAuth result", {
         redirected: result.redirected,
@@ -110,7 +110,7 @@ const Auth = () => {
         return;
       }
       if (result.redirected) return;
-      navigate("/");
+      navigate(nextPath);
     } catch (e: any) {
       console.error(TAG, "handleOAuth threw", e);
       toast.error(e?.message || "Sign-in failed");
