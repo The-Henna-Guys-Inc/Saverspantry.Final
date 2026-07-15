@@ -23,7 +23,6 @@ export default defineTool({
     expires_on: z.string().optional().describe("ISO date (YYYY-MM-DD) for expiration."),
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
-  needsApproval: true,
   handler: async (input, ctx) => {
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
