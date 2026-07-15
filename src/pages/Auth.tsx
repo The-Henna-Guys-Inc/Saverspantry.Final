@@ -21,6 +21,18 @@ const SIGNUP_BENEFITS = [
   { icon: Smartphone, text: "Access everything across phone and web" },
 ];
 
+const safeNext = (raw: string | null): string => {
+  if (!raw) return "/";
+  try {
+    const decoded = decodeURIComponent(raw);
+    // Only allow same-origin relative paths (must start with a single "/")
+    if (!decoded.startsWith("/") || decoded.startsWith("//")) return "/";
+    return decoded;
+  } catch {
+    return "/";
+  }
+};
+
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -29,6 +41,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const nextPath = safeNext(searchParams.get("next"));
 
   const handleSignup = async () => {
     const parsed = schema.safeParse({ email, password });
