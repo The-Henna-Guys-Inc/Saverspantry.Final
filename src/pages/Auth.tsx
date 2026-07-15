@@ -51,7 +51,7 @@ const Auth = () => {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: `${window.location.origin}${nextPath}`,
         data: { display_name: name || email.split("@")[0] },
       },
     });
@@ -68,7 +68,7 @@ const Auth = () => {
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success("Welcome back!");
-    navigate("/");
+    navigate(nextPath);
   };
 
   useEffect(() => {
