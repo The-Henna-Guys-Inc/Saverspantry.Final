@@ -343,7 +343,7 @@ const Settings = () => {
 
         {DEALS_FEATURE_ENABLED && <FavoriteStoresManager />}
         <HouseholdManager />
-        <MyContributions />
+        {DEALS_FEATURE_ENABLED && <MyContributions />}
         <SupportTickets />
         <AccountManagement />
 

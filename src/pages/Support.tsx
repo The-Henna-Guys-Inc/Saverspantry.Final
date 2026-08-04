@@ -4,7 +4,7 @@ import { HelpCircle, Mail, MessageSquare, Bug, Sparkles } from "lucide-react";
 
 type QA = { q: string; a: React.ReactNode };
 
-const SECTIONS: { title: string; items: QA[] }[] = [
+const ALL_SECTIONS: { title: string; items: QA[] }[] = [
   {
     title: "Getting Started",
     items: [
