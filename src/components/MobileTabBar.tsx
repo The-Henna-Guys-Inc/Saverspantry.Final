@@ -21,6 +21,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/NotificationBell";
 import { BrandMark } from "@/components/BrandMark";
+import { DEALS_FEATURE_ENABLED } from "@/lib/featureFlags";
 
 import { toast } from "sonner";
 
@@ -29,8 +30,8 @@ const tabs = [
   { to: "/planner", label: "Plan", Icon: CalendarDays },
   { to: "/swap", label: "Swap", Icon: Repeat },
   { to: "/pantry", label: "Pantry", Icon: Refrigerator },
-  { to: "/deals", label: "Deals", Icon: Tag },
-];
+  { to: "/deals", label: "Deals", Icon: Tag, dealsOnly: true },
+].filter((t) => !("dealsOnly" in t) || DEALS_FEATURE_ENABLED);
 
 export const MobileTabBar = () => {
   const { user, loading } = useAuth();
@@ -67,7 +68,7 @@ export const MobileTabBar = () => {
       aria-label="Primary"
       className="fixed bottom-0 inset-x-0 z-40 bg-background/90 backdrop-blur-md border-t border-border/60 safe-bottom"
     >
-      <ul className="grid grid-cols-6 max-w-2xl mx-auto pb-3">
+      <ul className={cn("grid max-w-2xl mx-auto pb-3", DEALS_FEATURE_ENABLED ? "grid-cols-6" : "grid-cols-5")}>
         {tabs.map(({ to, label, Icon, end }) => (
           <li key={to}>
             <NavLink

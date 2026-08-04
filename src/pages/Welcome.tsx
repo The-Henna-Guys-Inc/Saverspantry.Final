@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { BrandMark } from "@/components/BrandMark";
+import { DEALS_FEATURE_ENABLED } from "@/lib/featureFlags";
 
 
 const CREAM = "#FAF5EC";
@@ -19,12 +20,36 @@ const cardStyle: React.CSSProperties = {
   boxShadow: "0 4px 20px -8px rgba(31,81,50,0.18)",
 };
 
-const PERKS = [
+// v1.1: restore when DEALS_FEATURE_ENABLED is true.
+const PERKS_WITH_DEALS = [
   { icon: "🍳", text: "Recipes for your cuisine" },
   { icon: "📋", text: "Meal plans & grocery lists" },
   { icon: "🏪", text: "Deals at nearby grocers" },
   { icon: "📦", text: "Pantry & bulk-buy savings" },
 ];
+
+const PERKS_NO_DEALS = [
+  { icon: "🔁", text: "Cuisine-aware ingredient swaps" },
+  { icon: "🍳", text: "AI-generated recipes for 8+ cuisines" },
+  { icon: "📋", text: "Weekly meal planning + grocery lists" },
+  { icon: "📦", text: "Pantry tracker" },
+  { icon: "🥗", text: "Nutrition lookup" },
+];
+
+const PERKS = DEALS_FEATURE_ENABLED ? PERKS_WITH_DEALS : PERKS_NO_DEALS;
+
+// v1.1: restore the deals-forward hero copy below.
+const HERO_WITH_DEALS = {
+  headline: <>Save $100+ a month<br />on groceries</>,
+  sub: "Swap ingredients to save money — same nutrition, your cuisine, no guesswork.",
+};
+
+const HERO_NO_DEALS = {
+  headline: <>Cook the food you love,<br />for less</>,
+  sub: "Smart ingredient swaps and AI recipes for your cuisine.",
+};
+
+const HERO = DEALS_FEATURE_ENABLED ? HERO_WITH_DEALS : HERO_NO_DEALS;
 
 const Welcome = () => {
   const navigate = useNavigate();
@@ -43,10 +68,10 @@ const Welcome = () => {
 
         <div style={cardStyle} className="text-center">
           <h1 style={{ color: GREEN, fontWeight: 700, fontSize: 24, lineHeight: 1.2 }}>
-            Save $100+ a month<br />on groceries
+            {HERO.headline}
           </h1>
           <p className="mt-3" style={{ color: MUTED, fontSize: 15, lineHeight: 1.5 }}>
-            Swap ingredients to save money — same nutrition, your cuisine, no guesswork.
+            {HERO.sub}
           </p>
         </div>
 

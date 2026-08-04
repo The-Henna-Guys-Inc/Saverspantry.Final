@@ -39,6 +39,7 @@ import { InstallPrompt } from "./components/InstallPrompt";
 import { MobileTabBar } from "./components/MobileTabBar";
 import { LegalAcceptanceGate } from "./components/LegalAcceptanceGate";
 import { SessionEnforcer } from "./components/SessionEnforcer";
+import { DEALS_FEATURE_ENABLED } from "./lib/featureFlags";
 
 const queryClient = new QueryClient();
 
@@ -68,10 +69,22 @@ const App = () => (
           <Route path="/pantry" element={<Pantry />} />
           <Route path="/pantry/calendar" element={<Navigate to="/pantry?tab=expiry" replace />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/deals" element={<Deals />} />
-          <Route path="/stores" element={<Navigate to="/deals?tab=stores" replace />} />
-          <Route path="/sales" element={<Navigate to="/deals?tab=sales" replace />} />
-          <Route path="/watchlist" element={<Watchlist />} />
+          {/* Deals routes — gated by DEALS_FEATURE_ENABLED (see docs/DEALS_FEATURE_FLAG.md) */}
+          {DEALS_FEATURE_ENABLED ? (
+            <>
+              <Route path="/deals" element={<Deals />} />
+              <Route path="/stores" element={<Navigate to="/deals?tab=stores" replace />} />
+              <Route path="/sales" element={<Navigate to="/deals?tab=sales" replace />} />
+              <Route path="/watchlist" element={<Watchlist />} />
+            </>
+          ) : (
+            <>
+              <Route path="/deals" element={<Navigate to="/" replace />} />
+              <Route path="/stores" element={<Navigate to="/" replace />} />
+              <Route path="/sales" element={<Navigate to="/" replace />} />
+              <Route path="/watchlist" element={<Navigate to="/" replace />} />
+            </>
+          )}
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/bulk-buy" element={<Navigate to="/pantry?tab=bulk-buy" replace />} />
           <Route path="/swap" element={<Swap />} />
