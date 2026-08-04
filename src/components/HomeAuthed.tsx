@@ -78,7 +78,9 @@ export const HomeAuthed = ({ user }: Props) => {
             .from("pantry_items")
             .select("item, expires_on, quantity, low_stock_threshold")
             .eq("user_id", user.id),
-          supabase.from("watchlist_items").select("id").eq("user_id", user.id),
+          DEALS_FEATURE_ENABLED
+            ? supabase.from("watchlist_items").select("id").eq("user_id", user.id)
+            : Promise.resolve({ data: [] as { id: string }[] }),
         ]);
 
       if (cancelled) return;

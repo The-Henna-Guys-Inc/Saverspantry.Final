@@ -1,10 +1,11 @@
 import { Header } from "@/components/Header";
 import { Card } from "@/components/ui/card";
 import { HelpCircle, Mail, MessageSquare, Bug, Sparkles } from "lucide-react";
+import { DEALS_FEATURE_ENABLED } from "@/lib/featureFlags";
 
 type QA = { q: string; a: React.ReactNode };
 
-const SECTIONS: { title: string; items: QA[] }[] = [
+const ALL_SECTIONS: { title: string; items: QA[] }[] = [
   {
     title: "Getting Started",
     items: [
@@ -130,6 +131,11 @@ const SECTIONS: { title: string; items: QA[] }[] = [
     ],
   },
 ];
+
+// v1.1: the "Deals & Stores" FAQ section returns when DEALS_FEATURE_ENABLED is true.
+const SECTIONS = ALL_SECTIONS.filter(
+  (s) => DEALS_FEATURE_ENABLED || s.title !== "Deals & Stores",
+);
 
 const Support = () => {
   return (
