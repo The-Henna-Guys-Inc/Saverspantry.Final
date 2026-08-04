@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Store, MapPin, X, Heart } from "lucide-react";
 import { CUISINE_LABEL, CuisineTag } from "@/lib/cuisineHints";
+import { DEALS_FEATURE_ENABLED } from "@/lib/featureFlags";
 
 type StoreRow = {
   id: string;
@@ -108,11 +109,13 @@ export const SpecialtyStoreBanner = ({ topCuisines, matchCount }: Props) => {
             </div>
           )}
 
-          <div className="mt-3">
-            <Button asChild variant="ghost" size="sm" className="h-7 px-2 text-xs">
-              <Link to="/stores">Browse all specialty stores →</Link>
-            </Button>
-          </div>
+          {DEALS_FEATURE_ENABLED && (
+            <div className="mt-3">
+              <Button asChild variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                <Link to="/stores">Browse all specialty stores →</Link>
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </Card>
