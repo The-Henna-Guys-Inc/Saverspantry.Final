@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { mapLegacyCuisines, type CuisineTag } from "@/lib/cuisineHints";
 import { syncWatchlistStaples } from "@/lib/watchlistSeeder";
+import { DEALS_FEATURE_ENABLED } from "@/lib/featureFlags";
 
 export function useCuisinePrefs() {
   const { user } = useAuth();
@@ -36,7 +37,7 @@ export function useCuisinePrefs() {
     setCuisines(next);
     await supabase.from("profiles").update({ cuisine_preferences: next }).eq("user_id", user.id);
     // Auto-seed top-5 staples for any newly selected cuisines.
-    syncWatchlistStaples(user.id, next).catch(() => {});
+    if (DEALS_FEATURE_ENABLED) syncWatchlistStaples(user.id, next).catch(() => {});
   };
 
   const setEnabled = async (on: boolean) => {

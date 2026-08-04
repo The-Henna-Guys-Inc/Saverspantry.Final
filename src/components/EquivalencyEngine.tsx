@@ -13,6 +13,7 @@ import { COST_SWAPS, CALORIE_SWAPS } from "@/lib/popularSwaps";
 import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
 import { buildCuisineOptions, pickDefaultCuisineOption } from "@/lib/cuisineHints";
 import { CuisinePrefHint } from "./CuisinePrefHint";
+import { DEALS_FEATURE_ENABLED } from "@/lib/featureFlags";
 
 type Swap = {
   title: string;
@@ -218,7 +219,7 @@ export const EquivalencyEngine = () => {
               <div className="flex items-start justify-between gap-2">
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Original</div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <WatchlistButton foodName={result.original.name} />
+                  {DEALS_FEATURE_ENABLED && <WatchlistButton foodName={result.original.name} />}
                   <SaveButton table="saved_swaps" payload={{ food: result.original.name, result }} />
                 </div>
               </div>

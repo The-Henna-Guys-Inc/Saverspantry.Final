@@ -11,6 +11,7 @@ import { useCuisinePrefs } from "@/hooks/useCuisinePrefs";
 import { CUISINE_LABEL, type CuisineTag } from "@/lib/cuisineHints";
 import { toast } from "sonner";
 import { AiFeedback } from "@/components/AiFeedback";
+import { DEALS_FEATURE_ENABLED } from "@/lib/featureFlags";
 
 // Infer unit + pack quantity from a free-form pack-size label like
 // "10 lb bag", "5 kg sack", "32 fl oz bottle", "24 ct case".
@@ -273,10 +274,13 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
                     <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
                       <MapPin className="h-3 w-3" />
                       <span>Best at: {r.best_store_type.replace(/_/g, " ")}</span>
-                      <Link to="/stores" className="text-primary hover:underline ml-auto">Find stores →</Link>
+                      {DEALS_FEATURE_ENABLED && (
+                        <Link to="/stores" className="text-primary hover:underline ml-auto">Find stores →</Link>
+                      )}
                     </div>
                   )}
 
+                  {DEALS_FEATURE_ENABLED && (
                   <div className="mt-4 pt-3 border-t border-border/40 flex items-center gap-2 flex-wrap">
                     <Button
                       size="sm"
@@ -294,6 +298,7 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
                       </Button>
                     )}
                   </div>
+                  )}
                 </Card>
               );
             })}
