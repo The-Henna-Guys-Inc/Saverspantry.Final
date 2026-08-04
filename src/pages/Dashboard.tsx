@@ -13,6 +13,7 @@ import {
 import { PantryInsights } from "@/components/dashboard/PantryInsights";
 import { SpendReport } from "@/components/dashboard/SpendReport";
 import { WatchlistActivity } from "@/components/dashboard/WatchlistActivity";
+import { DEALS_FEATURE_ENABLED } from "@/lib/featureFlags";
 import { ExportButtons } from "@/components/dashboard/ExportButtons";
 
 type Event = {
@@ -143,7 +144,7 @@ const Dashboard = () => {
             <TabsTrigger value="savings" className="rounded-xl">Savings</TabsTrigger>
             <TabsTrigger value="pantry" className="rounded-xl">Pantry</TabsTrigger>
             <TabsTrigger value="spend" className="rounded-xl">Spend</TabsTrigger>
-            <TabsTrigger value="watchlist" className="rounded-xl">Watchlist</TabsTrigger>
+            {DEALS_FEATURE_ENABLED && <TabsTrigger value="watchlist" className="rounded-xl">Watchlist</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="savings">
@@ -154,7 +155,9 @@ const Dashboard = () => {
             <div className="text-5xl mb-3">🌱</div>
             <h2 className="text-xl font-semibold text-primary mb-2">No savings yet</h2>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              Save a swap from the Equivalency Engine, capture a deal, or generate a meal plan — your savings will start showing up here.
+              {DEALS_FEATURE_ENABLED
+                ? "Save a swap from the Equivalency Engine, capture a deal, or generate a meal plan — your savings will start showing up here."
+                : "Save a swap from the Equivalency Engine or generate a meal plan — your savings will start showing up here."}
             </p>
           </Card>
         ) : (
@@ -281,9 +284,11 @@ const Dashboard = () => {
             <SpendReport userId={user.id} />
           </TabsContent>
 
-          <TabsContent value="watchlist">
-            <WatchlistActivity userId={user.id} />
-          </TabsContent>
+          {DEALS_FEATURE_ENABLED && (
+            <TabsContent value="watchlist">
+              <WatchlistActivity userId={user.id} />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </main>

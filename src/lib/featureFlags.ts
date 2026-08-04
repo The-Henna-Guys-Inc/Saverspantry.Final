@@ -1,11 +1,18 @@
 // Feature flags. Flip these to roll a feature out to all users.
+
+// DEALS_FEATURE_ENABLED — master kill-switch for the entire Deals feature
+// (Deals tab, /deals + /sales routes, deal copy, waitlist, watchlist deal
+// surfacing). Set to `false` for the v1.0 App Store launch.
 //
-// DEALS_LAUNCHED — set to `true` once the deals data is loaded and we're
-// ready to expose the Deals tabs to everyone. While `false`, regular users
-// see a "Launching soon" gate; admins always see the real page so they can
-// keep loading data behind the scenes.
+// To re-enable in v1.1: set this to `true`, rebuild, resubmit.
+// See docs/DEALS_FEATURE_FLAG.md for details.
+//
+// NOTE: admin pages (/admin/deals, /admin/flyer-sources) are intentionally
+// NOT gated by this flag so we can keep curating deals internally.
+export const DEALS_FEATURE_ENABLED = false;
+
+// DEALS_LAUNCHED — legacy soft-launch gate, kept for compatibility.
 export const DEALS_LAUNCHED = false;
 
 // Target launch date used by the countdown on the gate. Adjust as needed.
-// Defaults to 4 weeks from when this flag was last set.
 export const DEALS_LAUNCH_DATE = new Date("2026-06-12T12:00:00-05:00");

@@ -17,6 +17,7 @@ import { MyContributions } from "@/components/MyContributions";
 import { CUISINE_LABEL, mapLegacyCuisines, type CuisineTag } from "@/lib/cuisineHints";
 import { Switch } from "@/components/ui/switch";
 import { FavoriteStoresManager } from "@/components/FavoriteStoresManager";
+import { DEALS_FEATURE_ENABLED } from "@/lib/featureFlags";
 
 const DISCOVERY_CUISINES: CuisineTag[] = [
   "american", "italian", "french", "mediterranean", "eastern_european",
@@ -234,7 +235,9 @@ const Settings = () => {
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mb-3">
-                  Used everywhere — Swaps, Recipes, Deals, Stores, Pantry, and Bulk-Buy will prioritize these.
+                  {DEALS_FEATURE_ENABLED
+                    ? "Used everywhere — Swaps, Recipes, Deals, Stores, Pantry, and Bulk-Buy will prioritize these."
+                    : "Used everywhere — Swaps, Recipes, Pantry, and Bulk-Buy will prioritize these."}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {DISCOVERY_CUISINES.map((c) => {
@@ -338,7 +341,7 @@ const Settings = () => {
           </Card>
         )}
 
-        <FavoriteStoresManager />
+        {DEALS_FEATURE_ENABLED && <FavoriteStoresManager />}
         <HouseholdManager />
         <MyContributions />
         <SupportTickets />

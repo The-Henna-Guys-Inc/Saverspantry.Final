@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { DEALS_FEATURE_ENABLED } from "@/lib/featureFlags";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -166,7 +167,7 @@ export const HomeAuthed = ({ user }: Props) => {
       </Link>,
     );
   }
-  if (cards.length < 2) {
+  if (DEALS_FEATURE_ENABLED && cards.length < 2) {
     cards.push(
       <Link key="watch" to={watchlistCount > 0 ? "/deals?tab=sales" : "/deals?tab=watchlist"} className="block">
         <Card className="p-5 rounded-2xl border-border/60 hover:shadow-soft transition-smooth">
