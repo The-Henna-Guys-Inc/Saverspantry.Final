@@ -29,11 +29,10 @@ const PERKS_WITH_DEALS = [
 ];
 
 const PERKS_NO_DEALS = [
-  { icon: "🔁", text: "Cuisine-aware ingredient swaps" },
-  { icon: "🍳", text: "AI-generated recipes for 8+ cuisines" },
-  { icon: "📋", text: "Weekly meal planning + grocery lists" },
-  { icon: "📦", text: "Pantry tracker" },
-  { icon: "🥗", text: "Nutrition lookup" },
+  { icon: "🍳", text: "Recipes for your cuisine" },
+  { icon: "📋", text: "Meal plans & grocery lists" },
+  { icon: "🔁", text: "Cheaper ingredient swaps" },
+  { icon: "📦", text: "Pantry & bulk-buy savings" },
 ];
 
 const PERKS = DEALS_FEATURE_ENABLED ? PERKS_WITH_DEALS : PERKS_NO_DEALS;
@@ -45,9 +44,10 @@ const HERO_WITH_DEALS = {
 };
 
 const HERO_NO_DEALS = {
-  headline: <>Cook the food you love,<br />for less</>,
-  sub: "Smart ingredient swaps and AI recipes for your cuisine.",
+  headline: <>Save $100+ a month<br />on groceries</>,
+  sub: "Swap ingredients to save money — same nutrition, your cuisine, no guesswork.",
 };
+
 
 const HERO = DEALS_FEATURE_ENABLED ? HERO_WITH_DEALS : HERO_NO_DEALS;
 
