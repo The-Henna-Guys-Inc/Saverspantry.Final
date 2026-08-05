@@ -78,7 +78,7 @@ export const HouseholdManager = () => {
         <Users className="h-3.5 w-3.5" /> Household
       </div>
       <p className="text-sm text-muted-foreground -mt-2">
-        Share your pantry, watchlist, meal plan, and savings with anyone you cook with.
+        Share your pantry, meal plan, and savings with anyone you cook with.
       </p>
 
       {households.length === 0 ? (

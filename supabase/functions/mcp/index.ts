@@ -191,17 +191,19 @@ var list_watchlist_default = defineTool5({
 });
 
 // src/lib/mcp/index.ts
+import { DEALS_FEATURE_ENABLED } from "npm:@/lib/featureFlags";
 var projectRef = "paajifqvwmoqttefxykw";
 var mcp_default = defineMcp({
   name: "saverspantry-mcp",
   title: "Saver's Pantry",
   version: "0.1.0",
-  instructions: "Tools for Saver's Pantry \u2014 read and update the signed-in user's pantry, favorite stores, watchlist, and search current grocery deals. All data is scoped to the authenticated user.",
+  instructions: DEALS_FEATURE_ENABLED ? "Tools for Saver's Pantry \u2014 read and update the signed-in user's pantry, favorite stores, watchlist, and search current grocery deals. All data is scoped to the authenticated user." : "Tools for Saver's Pantry \u2014 read and update the signed-in user's pantry. All data is scoped to the authenticated user.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
   }),
-  tools: [list_pantry_items_default, add_pantry_item_default, list_favorite_stores_default, search_deals_default, list_watchlist_default]
+  // v1.1: deals/stores tools return when DEALS_FEATURE_ENABLED is true.
+  tools: DEALS_FEATURE_ENABLED ? [list_pantry_items_default, add_pantry_item_default, list_favorite_stores_default, search_deals_default, list_watchlist_default] : [list_pantry_items_default, add_pantry_item_default]
 });
 
 // lovable-mcp-supabase-entry.ts
