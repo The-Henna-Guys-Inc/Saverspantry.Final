@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
+import { DEALS_FEATURE_ENABLED } from "@/lib/featureFlags";
 
 // Minimal typed wrapper for the beta supabase.auth.oauth namespace.
 type OAuthResult = {
