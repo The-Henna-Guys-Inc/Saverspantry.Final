@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
+import { DEALS_FEATURE_ENABLED } from "@/lib/featureFlags";
 
 // Minimal typed wrapper for the beta supabase.auth.oauth namespace.
 type OAuthResult = {
@@ -126,10 +127,16 @@ export default function OAuthConsent() {
                   This connection can:
                 </div>
                 <ul className="text-sm text-foreground space-y-1 list-disc list-inside">
-                  <li>Read your pantry items and watchlist</li>
+                  <li>Read your pantry items</li>
                   <li>Add items to your pantry (with your approval)</li>
-                  <li>Read your favorite stores</li>
-                  <li>Search current grocery deals</li>
+                  {/* v1.1: restore when DEALS_FEATURE_ENABLED is true. */}
+                  {DEALS_FEATURE_ENABLED && (
+                    <>
+                      <li>Read your favorite stores</li>
+                      <li>Read your watchlist</li>
+                      <li>Search current grocery deals</li>
+                    </>
+                  )}
                 </ul>
                 {scopes.length > 0 && (
                   <div className="pt-2 text-xs text-muted-foreground">

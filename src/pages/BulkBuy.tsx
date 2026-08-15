@@ -204,7 +204,7 @@ const BulkBuy = ({ embedded = false }: { embedded?: boolean }) => {
                         )}
                       </div>
                     </div>
-                    {r.on_sale && (
+                    {DEALS_FEATURE_ENABLED && r.on_sale && (
                       <span className="shrink-0 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent/20 text-accent inline-flex items-center gap-1">
                         <Tag className="h-3 w-3" /> On deal
                       </span>
