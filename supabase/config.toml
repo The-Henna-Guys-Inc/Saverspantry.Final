@@ -1,74 +1,53 @@
 project_id = "paajifqvwmoqttefxykw"
 
-
-[functions.nutrition-lookup]
-verify_jwt = false
-
-[functions.equivalency-swap]
-verify_jwt = false
-
-[functions.recipe-generate]
-verify_jwt = false
-
-[functions.meal-plan-generate]
-verify_jwt = false
-
-[functions.grocery-list-generate]
-verify_jwt = false
-
-[functions.export-analytics]
-verify_jwt = false
-
-[functions.monthly-recap-pdf]
-verify_jwt = false
-
-[functions.pantry-expiry-check]
-verify_jwt = false
-
-[functions.weekly-savings-rollup]
-verify_jwt = false
-
-[functions.watchlist-sale-matcher]
-verify_jwt = false
-
-[functions.kroger-prices]
-verify_jwt = false
-
-[functions.expiry-date-ocr]
-verify_jwt = false
-
-[functions.account-deletion]
-verify_jwt = false
-
-[functions.purge-deleted-accounts]
-verify_jwt = false
-
-[functions.data-export]
-verify_jwt = false
-
-[functions.ops-monitor]
-verify_jwt = false
-
-[functions.admin-users-list]
-verify_jwt = false
-
-[functions.admin-user-action]
-verify_jwt = false
-
-[functions.ingest-promo-email]
-verify_jwt = false
-
-[functions.dev-test-promo-ingest]
-verify_jwt = false
-
-[functions.admin-manual-flyer-ingest]
-verify_jwt = false
-
-[functions.admin-reprocess-flyer]
-verify_jwt = false
-
-[functions.usda-food-plans-sync]
-verify_jwt = false
-
-[functions.apple-native-auth]
-verify_jwt = false
+[functions]
+  [functions.account-deletion]
+    verify_jwt = false
+  [functions.admin-manual-flyer-ingest]
+    verify_jwt = false
+  [functions.admin-reprocess-flyer]
+    verify_jwt = false
+  [functions.admin-user-action]
+    verify_jwt = false
+  [functions.admin-users-list]
+    verify_jwt = false
+  [functions.apple-native-auth]
+    verify_jwt = false
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.data-export]
+    verify_jwt = false
+  [functions.dev-test-promo-ingest]
+    verify_jwt = false
+  [functions.equivalency-swap]
+    verify_jwt = false
+  [functions.expiry-date-ocr]
+    verify_jwt = false
+  [functions.export-analytics]
+    verify_jwt = false
+  [functions.grocery-list-generate]
+    verify_jwt = false
+  [functions.ingest-promo-email]
+    verify_jwt = false
+  [functions.kroger-prices]
+    verify_jwt = false
+  [functions.meal-plan-generate]
+    verify_jwt = false
+  [functions.monthly-recap-pdf]
+    verify_jwt = false
+  [functions.nutrition-lookup]
+    verify_jwt = false
+  [functions.ops-monitor]
+    verify_jwt = false
+  [functions.pantry-expiry-check]
+    verify_jwt = false
+  [functions.purge-deleted-accounts]
+    verify_jwt = false
+  [functions.recipe-generate]
+    verify_jwt = false
+  [functions.usda-food-plans-sync]
+    verify_jwt = false
+  [functions.watchlist-sale-matcher]
+    verify_jwt = false
+  [functions.weekly-savings-rollup]
+    verify_jwt = false
