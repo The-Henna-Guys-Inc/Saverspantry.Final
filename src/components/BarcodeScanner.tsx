@@ -11,7 +11,10 @@ import {
   BarcodeFormat as MLKitFormat,
 } from "@capacitor-mlkit/barcode-scanning";
 
-const isNative = Capacitor.isNativePlatform();
+// The ML Kit scanner is only usable when its native plugin is actually linked
+// into the app binary. If it isn't (e.g. iOS builds without the pod), fall back
+// to the in-webview camera scanner instead of showing "plugin is not implemented".
+const isNative = Capacitor.isNativePlatform() && Capacitor.isPluginAvailable("BarcodeScanner");
 
 type Props = {
   open: boolean;
