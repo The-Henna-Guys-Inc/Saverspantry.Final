@@ -4,7 +4,7 @@ import addPantryItem from "./tools/add-pantry-item";
 import listFavoriteStores from "./tools/list-favorite-stores";
 import searchDeals from "./tools/search-deals";
 import listWatchlist from "./tools/list-watchlist";
-import { DEALS_FEATURE_ENABLED } from "@/lib/featureFlags";
+import { DEALS_FEATURE_ENABLED } from "../featureFlags";
 
 // Build the OAuth issuer from the Supabase project ref. Vite inlines this env
 // var as a literal at build time, so the entry stays import-safe (no runtime
