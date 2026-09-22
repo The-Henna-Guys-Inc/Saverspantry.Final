@@ -14,7 +14,13 @@ import {
 // The ML Kit scanner is only usable when its native plugin is actually linked
 // into the app binary. If it isn't (e.g. iOS builds without the pod), fall back
 // to the in-webview camera scanner instead of showing "plugin is not implemented".
-const isNative = Capacitor.isNativePlatform() && Capacitor.isPluginAvailable("BarcodeScanner");
+const isNativeApp = Capacitor.isNativePlatform();
+const isNative = isNativeApp && Capacitor.isPluginAvailable("BarcodeScanner");
+
+// Wording differs inside the installed app vs. a web browser.
+const DENIED_MSG = isNativeApp
+  ? "Camera access is off. Enable it in Settings → Saver's Pantry → Camera."
+  : "Camera permission is blocked in your browser settings.";
 
 type Props = {
   open: boolean;
