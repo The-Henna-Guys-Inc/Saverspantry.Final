@@ -206,7 +206,7 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
         if (perm?.state === "denied") {
           setCameraPermission("denied");
           setPermanentlyDenied(true);
-          setErrorMsg("Camera permission is blocked in your browser settings.");
+          setErrorMsg(DENIED_MSG);
           setStatus("error");
           return;
         }
@@ -284,7 +284,7 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
 
     const permissionState = await readWebCameraPermission();
     if (permissionState === "denied") {
-      setErrorMsg("Camera permission is blocked in your browser settings.");
+      setErrorMsg(DENIED_MSG);
       setStatus("error");
       return;
     }
@@ -323,7 +323,7 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
           setPermanentlyDenied(latestPermission === "denied");
           setErrorMsg(
             latestPermission === "denied"
-              ? "Camera permission was blocked by the browser."
+              ? DENIED_MSG
               : "Camera access did not start. Tap Start camera and allow access if prompted."
           );
         } else if (name === "NotFoundError" || name === "OverconstrainedError") {
@@ -463,7 +463,7 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
             <Camera className="h-8 w-8 mx-auto text-accent" />
             <div className="text-sm text-foreground font-medium">Camera access needed</div>
             <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-              Tap below — your browser will ask for camera permission. We only use it while this scanner is open.
+              Tap below to turn on the camera. We only use it while this scanner is open.
             </p>
             <Button onClick={() => void requestCamera()} disabled={status === "requesting"} variant="hero" size="sm" className="rounded-xl">
               {status === "requesting" ? (
@@ -483,7 +483,9 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
             </div>
             {permanentlyDenied && (
               <div className="text-xs text-muted-foreground">
-                Your browser is blocking camera access. Tap the camera/lock icon in the address bar, set Camera to <strong>Allow</strong>, then try again.
+                {isNativeApp
+                  ? "Open Settings → Saver's Pantry and turn Camera on, then try again."
+                  : "Tap the camera/lock icon in the address bar, set Camera to Allow, then try again."}
               </div>
             )}
             <Button onClick={() => void requestCamera()} variant="hero" size="sm" className="rounded-xl">
