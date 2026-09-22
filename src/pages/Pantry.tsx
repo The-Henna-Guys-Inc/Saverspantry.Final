@@ -268,6 +268,7 @@ const Pantry = () => {
     setItems((p) => [data as PantryItem, ...p]);
     setName(""); setQty("1"); setExpires(""); setExpiresDays(""); setThreshold(""); setImageUrl(""); setBarcode("");
     toast.success("Added to pantry");
+    setShowManual(false);
   };
 
   const checkLowStock = (it: PantryItem, next: number) => {
@@ -518,7 +519,8 @@ const Pantry = () => {
             onClick={() => setShowManual((v) => !v)}
             className="rounded-xl mt-2 w-full"
           >
-            <Plus className="h-4 w-4 mr-2" /> {showManual ? "Hide manual entry" : "Add manually"}
+            {showManual ? <Minus className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+            {showManual ? "Hide manual entry" : "Add manually"}
           </Button>
           <p className="text-xs text-muted-foreground mt-3">
             After a successful scan, you'll choose whether to add it to your pantry or remove one.
@@ -547,8 +549,15 @@ const Pantry = () => {
         </Card>
 
 
-        {showManual && (
-          <Card className="p-5 sm:p-6 rounded-3xl border-border-strong shadow-soft mb-8 space-y-5">
+        <Dialog open={showManual} onOpenChange={setShowManual}>
+          <DialogContent className="max-w-md w-[96vw] max-h-[85vh] overflow-y-auto rounded-3xl">
+            <DialogHeader>
+              <DialogTitle>Add item manually</DialogTitle>
+              <DialogDescription className="sr-only">
+                Enter the details to add this item to your pantry
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-5">
             {/* Name */}
             <div>
               <Label htmlFor="n" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name</Label>
@@ -666,8 +675,9 @@ const Pantry = () => {
               {adding ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Plus className="h-5 w-5 mr-2" />}
               Save to Pantry
             </Button>
-          </Card>
-        )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <BarcodeScanner open={scannerOpen} onOpenChange={setScannerOpen} onDetected={handleScanned} />
 
