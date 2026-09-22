@@ -190,8 +190,10 @@ var list_watchlist_default = defineTool5({
   }
 });
 
+// src/lib/featureFlags.ts
+var DEALS_FEATURE_ENABLED = false;
+
 // src/lib/mcp/index.ts
-import { DEALS_FEATURE_ENABLED } from "npm:@/lib/featureFlags";
 var projectRef = "paajifqvwmoqttefxykw";
 var mcp_default = defineMcp({
   name: "saverspantry-mcp",
