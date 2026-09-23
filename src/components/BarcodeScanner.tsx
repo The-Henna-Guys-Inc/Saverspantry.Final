@@ -10,12 +10,17 @@ import {
   BarcodeScanner as MLKitScanner,
   BarcodeFormat as MLKitFormat,
 } from "@capacitor-mlkit/barcode-scanning";
+import {
+  CapacitorBarcodeScanner,
+  CapacitorBarcodeScannerTypeHint,
+  CapacitorBarcodeScannerCameraDirection,
+} from "@capacitor/barcode-scanner";
 
-// The ML Kit scanner is only usable when its native plugin is actually linked
-// into the app binary. If it isn't (e.g. iOS builds without the pod), fall back
-// to the in-webview camera scanner instead of showing "plugin is not implemented".
 const isNativeApp = Capacitor.isNativePlatform();
-const isNative = isNativeApp && Capacitor.isPluginAvailable("BarcodeScanner");
+// ML Kit only supports CocoaPods on iOS; this app uses Swift Package Manager.
+// Use the SPM-compatible native scanner there, and keep ML Kit on Android.
+const isIOS = Capacitor.getPlatform() === "ios";
+const isNative = isNativeApp && Capacitor.isPluginAvailable(isIOS ? "CapacitorBarcodeScanner" : "BarcodeScanner");
 
 // Wording differs inside the installed app vs. a web browser.
 const DENIED_MSG = isNativeApp
@@ -110,6 +115,64 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
     }
   };
 
+  const scanNatively = async () => {
+    setStatus("requesting");
+    setErrorMsg("");
+    try {
+      let code: string | undefined;
+      if (isIOS) {
+        // This plugin presents its own iOS camera screen and requests permission
+        // only when needed. WKWebView getUserMedia is not required.
+        const result = await CapacitorBarcodeScanner.scanBarcode({
+          hint: CapacitorBarcodeScannerTypeHint.ALL,
+          cameraDirection: CapacitorBarcodeScannerCameraDirection.BACK,
+          scanInstructions: "Hold the barcode in the frame",
+          cancelButtonAccessibilityLabel: "Close scanner",
+        });
+        code = result.ScanResult;
+      } else {
+        let { camera } = await MLKitScanner.checkPermissions();
+        if (camera === "prompt" || camera === "prompt-with-rationale") {
+          ({ camera } = await MLKitScanner.requestPermissions());
+        }
+        if (camera !== "granted" && camera !== "limited") {
+          setPermanentlyDenied(true);
+          setErrorMsg(DENIED_MSG);
+          setStatus("error");
+          return;
+        }
+        try {
+          const { available } = await MLKitScanner.isGoogleBarcodeScannerModuleAvailable();
+          if (!available) await MLKitScanner.installGoogleBarcodeScannerModule();
+        } catch { /* best-effort */ }
+        setStatus("scanning");
+        const result = await MLKitScanner.scan({
+          formats: [MLKitFormat.Ean13, MLKitFormat.Ean8, MLKitFormat.UpcA, MLKitFormat.UpcE,
+            MLKitFormat.Code128, MLKitFormat.Code39, MLKitFormat.Itf, MLKitFormat.QrCode],
+        });
+        code = result.barcodes?.[0]?.rawValue;
+      }
+      if (stoppedRef.current) return;
+      if (code) await handleDetected(code);
+      else onOpenChangeRef.current(false);
+    } catch (e: unknown) {
+      if (stoppedRef.current) return;
+      const error = e as { code?: string; message?: string };
+      console.error("[scanner] native scan failed:", error);
+      if (error.code === "OS-PLUG-BARC-0006" || /cancelled|canceled/i.test(error.message ?? "")) {
+        onOpenChangeRef.current(false);
+        return;
+      }
+      if (error.code === "OS-PLUG-BARC-0007" || /camera access (wasn.t provided|denied)/i.test(error.message ?? "")) {
+        setPermanentlyDenied(true);
+        setErrorMsg(DENIED_MSG);
+      } else {
+        setErrorMsg(error.message ?? "Could not start the scanner.");
+      }
+      setStatus("error");
+    }
+  };
+
   // Prime AudioContext on open.
   useEffect(() => {
     if (!open) return;
@@ -136,55 +199,15 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
     }
     stoppedRef.current = false;
 
-    // Native (iOS/Android via Capacitor) — use ML Kit, skip the web video element entirely.
+    // Installed apps use their native scanner, never the webview camera.
     if (isNative) {
-      (async () => {
-        try {
-          // Check existing permission first — only prompt if we've never asked.
-          // Calling requestPermissions() on every open can re-surface the system sheet
-          // on some iOS versions, which feels broken to users.
-          let { camera } = await MLKitScanner.checkPermissions();
-          if (camera === "prompt" || camera === "prompt-with-rationale") {
-            ({ camera } = await MLKitScanner.requestPermissions());
-          }
-          if (camera === "denied") {
-            setPermanentlyDenied(true);
-            setErrorMsg("Camera permission denied. Enable it in Settings → Saver's Pantry → Camera.");
-            setStatus("error");
-            return;
-          }
-          if (camera !== "granted" && camera !== "limited") {
-            setPermanentlyDenied(true);
-            setErrorMsg("Camera permission unavailable. Enable it in Settings → Saver's Pantry → Camera.");
-            setStatus("error");
-            return;
-          }
-          // Android needs the Google Barcode Scanner Module to be installed once.
-          if (Capacitor.getPlatform() === "android") {
-            try {
-              const { available } = await MLKitScanner.isGoogleBarcodeScannerModuleAvailable();
-              if (!available) await MLKitScanner.installGoogleBarcodeScannerModule();
-            } catch { /* best-effort */ }
-          }
-          setStatus("scanning");
-          const { barcodes } = await MLKitScanner.scan({
-            formats: [
-              MLKitFormat.Ean13, MLKitFormat.Ean8, MLKitFormat.UpcA, MLKitFormat.UpcE,
-              MLKitFormat.Code128, MLKitFormat.Code39, MLKitFormat.Itf, MLKitFormat.QrCode,
-            ],
-          });
-          const code = barcodes?.[0]?.rawValue;
-          if (code) {
-            await handleDetected(code);
-          } else {
-            onOpenChangeRef.current(false);
-          }
-        } catch (e: any) {
-          console.error("[scanner] native scan failed:", e);
-          setErrorMsg(e?.message ?? "Native scanner failed.");
-          setStatus("error");
-        }
-      })();
+      void scanNatively();
+      return;
+    }
+
+    if (isNativeApp) {
+      setErrorMsg("This version of the app does not include the camera scanner. Update the app to use scanning.");
+      setStatus("error");
       return;
     }
 
@@ -264,31 +287,13 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
     stoppedRef.current = false;
 
     if (isNative) {
-      try {
-        let { camera } = await MLKitScanner.checkPermissions();
-        if (camera === "prompt" || camera === "prompt-with-rationale") {
-          ({ camera } = await MLKitScanner.requestPermissions());
-        }
-        if (camera !== "granted" && camera !== "limited") {
-          setPermanentlyDenied(true);
-          setErrorMsg(DENIED_MSG);
-          setStatus("error");
-          return;
-        }
-        setStatus("scanning");
-        const { barcodes } = await MLKitScanner.scan({
-          formats: [
-            MLKitFormat.Ean13, MLKitFormat.Ean8, MLKitFormat.UpcA, MLKitFormat.UpcE,
-            MLKitFormat.Code128, MLKitFormat.Code39, MLKitFormat.Itf, MLKitFormat.QrCode,
-          ],
-        });
-        const code = barcodes?.[0]?.rawValue;
-        if (code) await handleDetected(code);
-        else onOpenChangeRef.current(false);
-      } catch (e: any) {
-        setErrorMsg(e?.message ?? "Native scanner failed.");
-        setStatus("error");
-      }
+      await scanNatively();
+      return;
+    }
+
+    if (isNativeApp) {
+      setErrorMsg("This version of the app does not include the camera scanner. Update the app to use scanning.");
+      setStatus("error");
       return;
     }
 
