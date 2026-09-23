@@ -265,6 +265,16 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
 
     if (isNative) {
       try {
+        let { camera } = await MLKitScanner.checkPermissions();
+        if (camera === "prompt" || camera === "prompt-with-rationale") {
+          ({ camera } = await MLKitScanner.requestPermissions());
+        }
+        if (camera !== "granted" && camera !== "limited") {
+          setPermanentlyDenied(true);
+          setErrorMsg(DENIED_MSG);
+          setStatus("error");
+          return;
+        }
         setStatus("scanning");
         const { barcodes } = await MLKitScanner.scan({
           formats: [
@@ -315,6 +325,12 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
       } catch (e2: any) {
         const name = e2?.name as string | undefined;
         const latestPermission = await readWebCameraPermission();
+        if (isNativeApp && (name === "NotAllowedError" || name === "SecurityError")) {
+          setPermanentlyDenied(true);
+          setErrorMsg(DENIED_MSG);
+          setStatus("error");
+          return;
+        }
         if (isAutoStart && (name === "NotAllowedError" || name === "SecurityError") && latestPermission !== "denied") {
           setStatus("needs-permission");
           return;
@@ -484,13 +500,15 @@ export const BarcodeScanner = ({ open, onOpenChange, onDetected, mode = "add" }:
             {permanentlyDenied && (
               <div className="text-xs text-muted-foreground">
                 {isNativeApp
-                  ? "Open Settings → Saver's Pantry and turn Camera on, then try again."
+                  ? "iOS won't ask again after camera access is switched off. Turn Camera on in Settings, then reopen the scanner."
                   : "Tap the camera/lock icon in the address bar, set Camera to Allow, then try again."}
               </div>
             )}
-            <Button onClick={() => void requestCamera()} variant="hero" size="sm" className="rounded-xl">
-              <Camera className="h-4 w-4" /><span className="ml-2">Try again</span>
-            </Button>
+            {!permanentlyDenied && (
+              <Button onClick={() => void requestCamera()} variant="hero" size="sm" className="rounded-xl">
+                <Camera className="h-4 w-4" /><span className="ml-2">Try again</span>
+              </Button>
+            )}
           </div>
         )}
 
