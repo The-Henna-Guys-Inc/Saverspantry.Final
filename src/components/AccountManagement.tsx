@@ -65,9 +65,13 @@ export const AccountManagement = () => {
     try {
       const res = await callFn("account-deletion", "POST", { action: "request" });
       if (!res.ok) throw new Error("Could not schedule deletion");
-      const j = await res.json();
-      setPurgeAt(j.scheduled_purge_at);
-      setPendingAt(new Date().toISOString());
+      const j = await res.json().catch(() => ({}));
+      if (j?.scheduled_purge_at) {
+        setPurgeAt(j.scheduled_purge_at);
+        setPendingAt(new Date().toISOString());
+      } else {
+        await refresh();
+      }
       toast.success("Account deletion scheduled. You have 30 days to cancel.");
     } catch (e: any) { toast.error(e.message); } finally { setBusy(null); }
   };

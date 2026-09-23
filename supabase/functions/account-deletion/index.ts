@@ -27,9 +27,9 @@ Deno.serve(async (req) => {
 
     if (action === "request") {
       const { data: existing } = await admin.from("account_deletion_requests")
-        .select("id, cancelled_at, purged_at").eq("user_id", userId).maybeSingle();
+        .select("id, cancelled_at, purged_at, scheduled_purge_at").eq("user_id", userId).maybeSingle();
       if (existing && !existing.cancelled_at && !existing.purged_at) {
-        return new Response(JSON.stringify({ ok: true, already: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ ok: true, already: true, scheduled_purge_at: existing.scheduled_purge_at }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       const purgeAt = new Date(Date.now() + 30 * 86400000).toISOString();
       if (existing) {
