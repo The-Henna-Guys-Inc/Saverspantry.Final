@@ -47,7 +47,7 @@ const Auth = () => {
     const parsed = schema.safeParse({ email, password });
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -57,6 +57,11 @@ const Auth = () => {
     });
     setLoading(false);
     if (error) return toast.error(error.message);
+    if (data.session) {
+      toast.success("Welcome to Saver's Pantry!");
+      navigate(nextPath, { replace: true });
+      return;
+    }
     toast.success("Check your email to confirm your account.");
   };
 
@@ -70,6 +75,17 @@ const Auth = () => {
     toast.success("Welcome back!");
     navigate(nextPath);
   };
+
+  // Send already-signed-in users straight into the app
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate(nextPath, { replace: true });
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) navigate(nextPath, { replace: true });
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [navigate, nextPath]);
 
   useEffect(() => {
     const requestedMode = searchParams.get("mode");
@@ -295,9 +311,6 @@ const Auth = () => {
                 >
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create account"}
                 </Button>
-                <p className="text-center" style={{ color: MUTED, fontSize: 12 }}>
-                  We'll email you a confirmation link.
-                </p>
               </div>
             </>
           )}
