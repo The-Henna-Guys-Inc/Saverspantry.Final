@@ -206,14 +206,52 @@ function getNutrient(food: any, id: number): number {
   return Number(hit.amount ?? hit.value ?? 0);
 }
 
-async function callAI(messages: any[], tool: any) {
+const FAST_MODEL = "google/gemini-2.5-flash-lite";
+
+// Queries that ask "which foods are highest in X" need the AI classifier;
+// everything else is a single-food lookup and can skip that round-trip.
+const RANKING_HINT = /\b(highest|most|best|richest|top|high in|rich in|sources? of|foods? (with|for|that))\b/i;
+
+const WEIGHT_UNITS: Record<string, number> = {
+  g: 1, gram: 1, grams: 1, kg: 1000, oz: 28.35, ounce: 28.35, ounces: 28.35, lb: 453.6, lbs: 453.6, pound: 453.6, pounds: 453.6,
+};
+
+// Common staples (incl. the app's "Popular US staples" chips) with standard USDA portion weights.
+const STAPLE_PORTIONS: Record<string, { food_name: string; serving_grams: number }> = {
+  "1 large egg": { food_name: "egg, whole, raw", serving_grams: 50 },
+  "1 egg": { food_name: "egg, whole, raw", serving_grams: 50 },
+  "1 cup whole milk": { food_name: "milk, whole", serving_grams: 244 },
+  "1 medium banana": { food_name: "banana, raw", serving_grams: 118 },
+  "1 banana": { food_name: "banana, raw", serving_grams: 118 },
+  "1 slice whole wheat bread": { food_name: "bread, whole wheat", serving_grams: 32 },
+  "1 cup cooked white rice": { food_name: "rice, white, cooked", serving_grams: 158 },
+  "1 medium apple": { food_name: "apple, raw, with skin", serving_grams: 182 },
+  "1 apple": { food_name: "apple, raw, with skin", serving_grams: 182 },
+  "1 tbsp peanut butter": { food_name: "peanut butter, smooth", serving_grams: 16 },
+  "1 cup oatmeal": { food_name: "oatmeal, cooked with water", serving_grams: 234 },
+  "1 medium baked potato": { food_name: "potato, baked, flesh and skin", serving_grams: 173 },
+  "1 cup cooked quinoa": { food_name: "quinoa, cooked", serving_grams: 185 },
+};
+
+// Parse simple queries locally (no AI): known staples, or "<number><weight unit> <food>".
+function localParse(normalized: string): { food_name: string; serving_grams: number; portion_label: string } | null {
+  const staple = STAPLE_PORTIONS[normalized];
+  if (staple) return { ...staple, portion_label: normalized };
+  const m = normalized.match(/^(\d+(?:\.\d+)?)\s*(g|grams?|kg|oz|ounces?|lbs?|pounds?)\s+(?:of\s+)?([a-z][a-z ,'-]{1,80})$/);
+  if (!m) return null;
+  const grams = Number(m[1]) * WEIGHT_UNITS[m[2]];
+  if (!grams || grams <= 0 || grams > 5000) return null;
+  return { food_name: m[3].trim(), serving_grams: Math.round(grams), portion_label: `${m[1]} ${m[2]}` };
+}
+
+async function callAI(messages: any[], tool: any, model: string = MODEL) {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
   const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: MODEL,
+      model,
       messages,
       tools: [tool],
       tool_choice: { type: "function", function: { name: tool.function.name } },
@@ -245,7 +283,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const cacheKey = await stableHash({ q: query.toLowerCase().trim(), v: "usda2" });
+    const normalizedQuery = query.toLowerCase().trim().replace(/\s+/g, " ");
+    const cacheKey = await stableHash({ q: normalizedQuery, v: "usda2" });
     const cached = await cacheGet<{ nutrition?: unknown; ranking?: unknown }>(FN, cacheKey);
     if (cached) {
       logAiUsage({ userId, functionName: FN, model: MODEL, cached: true, latencyMs: Date.now() - startedAt });
@@ -257,13 +296,14 @@ Deno.serve(async (req) => {
     // 0) Classify intent — single food lookup vs "top foods by nutrient" ranking
     let intent: "single_food" | "top_foods" = "single_food";
     let nutrientHint = "";
-    try {
+    if (RANKING_HINT.test(normalizedQuery)) try {
       const { args } = await callAI(
         [
           { role: "system", content: "Classify the user's nutrition query. 'top_foods' means they're asking which foods are highest/best/richest in a nutrient (e.g. 'foods with most omega-3', 'highest protein foods', 'best source of iron'). 'single_food' means they're asking nutrition facts for one food/portion. Always call classify_query." },
           { role: "user", content: query },
         ],
         INTENT_TOOL,
+        FAST_MODEL,
       );
       intent = args?.intent === "top_foods" ? "top_foods" : "single_food";
       nutrientHint = (args?.nutrient ?? "").toLowerCase().trim();
@@ -378,16 +418,20 @@ Deno.serve(async (req) => {
 
     // 1) Parse user's free-text query into food name + grams
     let parsed: { food_name: string; serving_grams: number; portion_label: string };
-    try {
+    const local = localParse(normalizedQuery);
+    if (local) {
+      parsed = local;
+    } else try {
       const { args, usage } = await callAI(
         [
           { role: "system", content: "You parse natural-language food queries into a clean food name and the total grams the user described. Use standard household measure conversions (e.g. 1 tbsp chia ≈ 12g, 1 cup cooked quinoa ≈ 185g, 1 medium banana ≈ 118g). Always call parse_portion." },
           { role: "user", content: query },
         ],
         PARSE_TOOL,
+        FAST_MODEL,
       );
       parsed = args;
-      logAiUsage({ userId, functionName: FN + ":parse", model: MODEL, promptTokens: usage.prompt_tokens ?? 0, completionTokens: usage.completion_tokens ?? 0, latencyMs: Date.now() - startedAt });
+      logAiUsage({ userId, functionName: FN + ":parse", model: FAST_MODEL, promptTokens: usage.prompt_tokens ?? 0, completionTokens: usage.completion_tokens ?? 0, latencyMs: Date.now() - startedAt });
     } catch (e: any) {
       console.error("parse failed", e?.message);
       parsed = { food_name: query, serving_grams: 100, portion_label: query };
@@ -395,6 +439,16 @@ Deno.serve(async (req) => {
 
     let nutrition: any = null;
     let source: "usda" | "ai" = "ai";
+
+    // Start the friendly tip right away so it runs alongside the USDA lookups.
+    const notePromise: Promise<string> = callAI(
+      [
+        { role: "system", content: "Give one short (≤20 words), friendly, money-conscious tip or swap idea about this food. Never moralize. Always call return_note." },
+        { role: "user", content: `${parsed.food_name} (${parsed.portion_label})` },
+      ],
+      NOTE_TOOL,
+      FAST_MODEL,
+    ).then(({ args }) => args?.notes ?? "", () => "");
 
     // 2) Try USDA FDC
     if (USDA_API_KEY) {
@@ -428,17 +482,7 @@ Deno.serve(async (req) => {
               const key_micros = micros.slice(0, 3).map(m => ({ ...m, dv_percent: Math.round(m.dv_percent) }));
 
               // friendly note via AI (best-effort, non-fatal)
-              let notes = "";
-              try {
-                const { args } = await callAI(
-                  [
-                    { role: "system", content: "Give one short (≤20 words), friendly, money-conscious tip or swap idea about this food. Never moralize. Always call return_note." },
-                    { role: "user", content: `${parsed.food_name} (${parsed.portion_label})` },
-                  ],
-                  NOTE_TOOL,
-                );
-                notes = args?.notes ?? "";
-              } catch { /* ignore */ }
+              const notes = await notePromise;
 
               nutrition = {
                 food: `${parsed.food_name} — ${parsed.portion_label}`,
