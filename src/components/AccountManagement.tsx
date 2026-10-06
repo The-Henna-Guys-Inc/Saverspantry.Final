@@ -145,7 +145,7 @@ export const AccountManagement = () => {
                 <AlertDialogTitle>Delete your account?</AlertDialogTitle>
                 <AlertDialogDescription>
                   Your pantry, savings history, meal plans, and all other data will be scheduled for permanent deletion in 30 days.
-                  You can cancel any time before then by signing back in.
+                  You can cancel any time before then from Settings.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

@@ -128,12 +128,10 @@ const initializeAuth = () => {
     });
 
     setAuthSession(session, false);
-
-    if (event === "SIGNED_IN" && session?.user) {
-      setTimeout(() => {
-        void cancelPendingDeletion(session.user.id);
-      }, 0);
-    }
+    // Note: pending deletions are NOT auto-cancelled here. SIGNED_IN also fires on
+    // page refresh / session restore, which silently undid deletion requests.
+    // Users cancel explicitly via the "Cancel deletion" button in Settings.
+    void cancelPendingDeletion;
   });
 
   initPromise = (async () => {
