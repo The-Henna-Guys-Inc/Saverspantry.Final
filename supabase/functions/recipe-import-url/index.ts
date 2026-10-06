@@ -223,7 +223,7 @@ Deno.serve(async (req) => {
     let directStatus = 0;
     try {
       const r = await politeFetch(parsed.toString(), {
-        redirect: "follow",
+        redirect: "error",
         signal: controller.signal,
       }).finally(() => clearTimeout(timeout));
       directStatus = r.status;
