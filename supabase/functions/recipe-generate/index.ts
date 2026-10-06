@@ -150,7 +150,7 @@ Deno.serve(async (req) => {
     const usage = data?.usage ?? {};
     logAiUsage({ userId, functionName: FN, model: usedModel, promptTokens: usage.prompt_tokens ?? 0, completionTokens: usage.completion_tokens ?? 0, latencyMs: Date.now() - startedAt });
     const recipe = JSON.parse(args);
-    cachePut(FN, cacheKey, recipe, 24 * 7);
+    cachePut(FN, cacheKey, recipe, 24);
     return new Response(JSON.stringify(recipe), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("recipe error:", e);
