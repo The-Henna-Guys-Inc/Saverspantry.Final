@@ -187,7 +187,7 @@ const Planner = () => {
       setChecked({});
       setKrogerData(null);
       toast.success("Grocery list ready");
-      setTimeout(() => scrollToGrocery(), 150);
+      pendingGroceryScroll.current = true;
     } catch (e: any) {
       toast.error(e.message ?? "Could not build list");
     } finally {
