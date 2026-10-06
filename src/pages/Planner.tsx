@@ -393,21 +393,21 @@ const Planner = () => {
               </div>
             </div>
           )}
-          <div className="mt-5 flex flex-nowrap gap-2 items-stretch">
-            <Button variant="hero" size="sm" onClick={generate} disabled={genLoading} className="rounded-xl flex-1 min-w-0 px-2 text-xs sm:text-sm whitespace-nowrap">
+          <div className="mt-5 flex flex-col sm:flex-row flex-wrap gap-2 items-stretch">
+            <Button variant="hero" size="sm" onClick={generate} disabled={genLoading} className="rounded-xl w-full sm:w-auto sm:flex-1 px-3 py-2.5 text-sm whitespace-nowrap">
               {genLoading ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin shrink-0" /> : plan ? <RefreshCw className="h-4 w-4 mr-1.5 shrink-0" /> : <Sparkles className="h-4 w-4 mr-1.5 shrink-0" />}
-              <span className="truncate">{plan ? "Regenerate" : "Generate plan"}</span>
+              <span>{plan ? "Regenerate plan" : "Generate plan"}</span>
             </Button>
             {plan && (
-              <Button variant="outline" size="sm" onClick={buildGrocery} disabled={groceryLoading} className="rounded-xl flex-1 min-w-0 px-2 text-xs sm:text-sm whitespace-nowrap">
+              <Button variant="outline" size="sm" onClick={buildGrocery} disabled={groceryLoading} className="rounded-xl w-full sm:w-auto sm:flex-1 px-3 py-2.5 text-sm whitespace-nowrap">
                 {groceryLoading ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin shrink-0" /> : <ShoppingCart className="h-4 w-4 mr-1.5 shrink-0" />}
-                <span className="truncate">{grocery ? "Rebuild list" : "Grocery list"}</span>
+                <span>{grocery ? "Rebuild grocery list" : "Grocery list"}</span>
               </Button>
             )}
             {plan && grocery && (
-              <Button variant="hero" size="sm" onClick={scrollToGrocery} className="rounded-xl flex-1 min-w-0 px-2 text-xs sm:text-sm whitespace-nowrap" aria-label="View grocery list">
+              <Button variant="hero" size="sm" onClick={scrollToGrocery} className="rounded-xl w-full sm:w-auto sm:flex-1 px-3 py-2.5 text-sm whitespace-nowrap" aria-label="View grocery list">
                 <ArrowRight className="h-4 w-4 mr-1.5 shrink-0 rotate-90" />
-                <span className="truncate">View list</span>
+                <span>View grocery list</span>
               </Button>
             )}
           </div>
