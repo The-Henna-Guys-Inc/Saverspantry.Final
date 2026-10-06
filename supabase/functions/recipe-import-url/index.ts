@@ -219,20 +219,48 @@ Deno.serve(async (req) => {
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10_000);
-    let html: string;
+    let html = "";
+    let directStatus = 0;
     try {
-      html = await politeFetch(parsed.toString(), {
-        redirect: "error",
+      const r = await politeFetch(parsed.toString(), {
+        redirect: "follow",
         signal: controller.signal,
-      }).then((r) => r.ok ? r.text() : Promise.reject(new Error(`Fetch ${r.status}`)))
-        .finally(() => clearTimeout(timeout));
+      }).finally(() => clearTimeout(timeout));
+      directStatus = r.status;
+      if (r.ok) html = await r.text();
     } catch (e) {
       if (e instanceof RobotsDisallowedError) {
         return new Response(JSON.stringify({ error: "This site's robots.txt disallows automated fetching. Please copy the recipe manually." }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      throw e;
+      console.warn("recipe-import-url direct fetch failed:", e);
+    }
+
+    // Many recipe sites block plain server requests (403/429). Fall back to Firecrawl.
+    if (!html) {
+      const fcKey = Deno.env.get("FIRECRAWL_API_KEY");
+      if (fcKey) {
+        try {
+          const fcResp = await fetch("https://api.firecrawl.dev/v2/scrape", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${fcKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ url: parsed.toString(), formats: ["rawHtml"], onlyMainContent: false }),
+          });
+          const fcJson = await fcResp.json().catch(() => ({}));
+          if (fcResp.ok) html = fcJson?.data?.rawHtml ?? fcJson?.rawHtml ?? "";
+          else console.warn("recipe-import-url firecrawl failed:", fcResp.status);
+        } catch (e) {
+          console.warn("recipe-import-url firecrawl error:", e);
+        }
+      }
+    }
+
+    if (!html) {
+      return new Response(JSON.stringify({
+        error: "This website blocked us from reading the recipe. Try a different recipe link, or add it manually.",
+        status: directStatus,
+      }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // 1) JSON-LD path
