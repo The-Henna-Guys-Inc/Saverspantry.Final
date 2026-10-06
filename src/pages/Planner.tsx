@@ -91,16 +91,19 @@ const Planner = () => {
     if (!user) return;
     (async () => {
       const [{ data: prof }, { data: existing }] = await Promise.all([
-        supabase.from("profiles").select("household_size, dietary_prefs, zip_code").eq("user_id", user.id).maybeSingle(),
+        supabase.from("profiles").select("household_size, dietary_prefs, zip_code, cuisine_preferences").eq("user_id", user.id).maybeSingle(),
         supabase.from("meal_plans").select("plan").eq("user_id", user.id).eq("week_start_date", weekStart).maybeSingle(),
       ]);
       if (prof?.household_size) setHouseholdSize(String(prof.household_size));
       if (prof?.zip_code) setZip(prof.zip_code);
-      const prefs = (prof?.dietary_prefs ?? {}) as any;
+      const rawPrefs = (prof?.dietary_prefs ?? {}) as any;
+      const colCuisines = ((prof as any)?.cuisine_preferences ?? []) as string[];
+      const cuisineList: string[] = Array.isArray(rawPrefs.cuisines) && rawPrefs.cuisines.length ? rawPrefs.cuisines : colCuisines;
+      const prefs = { ...rawPrefs, cuisines: cuisineList };
       setProfilePrefs(prefs);
       if (prefs.style) setDietStyle(prefs.style);
-      if (Array.isArray(prefs.cuisines) && prefs.cuisines.length && !cuisine) {
-        setCuisine(prefs.cuisines.slice(0, 2).join(", "));
+      if (cuisineList.length && !cuisine) {
+        setCuisine(cuisineList.slice(0, 2).map((c) => (CUISINE_LABEL as any)[c] ?? c).join(", "));
       }
       if (Array.isArray(prefs.restrictions)) {
         const fromProfile = prefs.restrictions
