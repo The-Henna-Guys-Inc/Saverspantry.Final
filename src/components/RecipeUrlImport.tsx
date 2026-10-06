@@ -20,7 +20,12 @@ export const RecipeUrlImport = ({ onImported }: { onImported?: () => void }) => 
     const { data, error } = await supabase.functions.invoke("recipe-import-url", { body: { url: url.trim() } });
     setBusy(false);
     if (error || (data as any)?.error) {
-      toast.error((data as any)?.error || error?.message || "Import failed");
+      let msg = (data as any)?.error as string | undefined;
+      const ctx = (error as any)?.context;
+      if (!msg && ctx && typeof ctx.json === "function") {
+        try { msg = (await ctx.json())?.error; } catch { /* ignore */ }
+      }
+      toast.error(msg || "Couldn't import that recipe. Try another link.");
       return;
     }
     setRecipe(data);
