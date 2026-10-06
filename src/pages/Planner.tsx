@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate, useSearchParams, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -150,9 +150,26 @@ const Planner = () => {
     }
   };
 
+  const pendingGroceryScroll = useRef(false);
+
   const scrollToGrocery = () => {
     document.getElementById("grocery-print")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  // Scroll once the grocery list is actually rendered (works on web + native)
+  useEffect(() => {
+    if (!grocery || !pendingGroceryScroll.current) return;
+    let attempts = 0;
+    const tryScroll = () => {
+      if (document.getElementById("grocery-print")) {
+        pendingGroceryScroll.current = false;
+        scrollToGrocery();
+      } else if (++attempts < 20) {
+        requestAnimationFrame(tryScroll);
+      }
+    };
+    requestAnimationFrame(tryScroll);
+  }, [grocery]);
 
   const buildGrocery = async () => {
     if (!plan) return;
@@ -170,7 +187,7 @@ const Planner = () => {
       setChecked({});
       setKrogerData(null);
       toast.success("Grocery list ready");
-      setTimeout(() => scrollToGrocery(), 150);
+      pendingGroceryScroll.current = true;
     } catch (e: any) {
       toast.error(e.message ?? "Could not build list");
     } finally {
