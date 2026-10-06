@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Sparkles, ShoppingCart, RefreshCw, Calendar, Info, Copy, Share2, Printer, Tag, MapPin, ChefHat, BookmarkCheck, ArrowRight, Apple } from "lucide-react";
 import { toast } from "sonner";
+import { Capacitor } from "@capacitor/core";
 import { SpecialtyStoreBanner } from "@/components/SpecialtyStoreBanner";
 import { AiFeedback } from "@/components/AiFeedback";
 import { detectItemCuisines, summarizeCuisines, CUISINE_LABEL } from "@/lib/cuisineHints";
@@ -149,6 +150,10 @@ const Planner = () => {
     }
   };
 
+  const scrollToGrocery = () => {
+    document.getElementById("grocery-print")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const buildGrocery = async () => {
     if (!plan) return;
     setGroceryLoading(true);
@@ -165,6 +170,7 @@ const Planner = () => {
       setChecked({});
       setKrogerData(null);
       toast.success("Grocery list ready");
+      setTimeout(() => scrollToGrocery(), 150);
     } catch (e: any) {
       toast.error(e.message ?? "Could not build list");
     } finally {
@@ -235,7 +241,17 @@ const Planner = () => {
     } else { copyList(); }
   };
 
-  const printList = () => window.print();
+  // window.print() is a no-op inside the iOS app; use the share sheet (which includes Print) there.
+  const printList = async () => {
+    if (Capacitor.isNativePlatform()) {
+      const text = listAsText();
+      if (navigator.share) {
+        try { await navigator.share({ title: "Grocery list", text }); } catch { /* cancelled */ }
+      } else { copyList(); }
+      return;
+    }
+    window.print();
+  };
 
   return (
     <main className="min-h-screen bg-background">
@@ -365,7 +381,13 @@ const Planner = () => {
             {plan && (
               <Button variant="outline" size="sm" onClick={buildGrocery} disabled={groceryLoading} className="rounded-xl flex-1 min-w-0 px-2 text-xs sm:text-sm whitespace-nowrap">
                 {groceryLoading ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin shrink-0" /> : <ShoppingCart className="h-4 w-4 mr-1.5 shrink-0" />}
-                <span className="truncate">Grocery list</span>
+                <span className="truncate">{grocery ? "Rebuild list" : "Grocery list"}</span>
+              </Button>
+            )}
+            {plan && grocery && (
+              <Button variant="hero" size="sm" onClick={scrollToGrocery} className="rounded-xl flex-1 min-w-0 px-2 text-xs sm:text-sm whitespace-nowrap" aria-label="View grocery list">
+                <ArrowRight className="h-4 w-4 mr-1.5 shrink-0 rotate-90" />
+                <span className="truncate">View list</span>
               </Button>
             )}
           </div>
@@ -414,7 +436,7 @@ const Planner = () => {
           const krogerByItem: Record<string, KrogerMatch | null> = {};
           if (krogerData) for (const p of krogerData.prices) krogerByItem[p.item.toLowerCase()] = p.match;
           return (
-          <div id="grocery-print">
+          <div id="grocery-print" className="scroll-mt-20">
             <div className="flex items-baseline justify-between mb-2 gap-3 flex-wrap">
               <h2 className="text-xl font-semibold text-primary">Grocery list</h2>
               <div className="flex items-center gap-4 flex-wrap">
