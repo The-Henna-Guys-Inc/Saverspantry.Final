@@ -1,9 +1,10 @@
 // AI Recipe generator from ingredients + cuisine
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { getUserIdFromAuth, logAiUsage } from "../_shared/aiUsage.ts";
+import { cacheGet, cachePut, getUserIdFromAuth, logAiUsage, stableHash } from "../_shared/aiUsage.ts";
 
 const FN = "recipe-generate";
-const MODEL = "google/gemini-2.5-flash";
+const MODEL = "google/gemini-2.5-flash-lite";
+const FALLBACK_MODEL = "google/gemini-2.5-flash";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -91,12 +92,26 @@ Deno.serve(async (req) => {
       constraintBlock = `\n\nNUTRITIONAL CONSTRAINTS (try to meet within ±10%):\n${constraintLines.join("\n") || "- (none)"}${notes ? `\n\nADDITIONAL NOTES FROM USER:\n${notes}` : ""}\n\nIf a constraint conflicts with the requested cuisine and ingredients (e.g. a 400-calorie biryani), generate the recipe authentically and explain the conflict in constraint_conflict. Do NOT silently violate the constraint. If all constraints are met, return constraint_conflict as an empty string.`;
     }
 
+    const cacheKey = await stableHash({
+      v: 1,
+      ingredients: String(ingredients).toLowerCase().trim().replace(/\s+/g, " "),
+      cuisine: String(cuisine).toLowerCase().trim(),
+      prefs: prefs.toLowerCase(),
+      cal: max_calories_per_serving ?? null, pro: max_protein_g ?? null, na: max_sodium_mg ?? null,
+      notes: notes.toLowerCase(),
+    });
+    const cached = await cacheGet(FN, cacheKey);
+    if (cached) {
+      logAiUsage({ userId, functionName: FN, model: MODEL, cached: true, latencyMs: Date.now() - startedAt });
+      return new Response(JSON.stringify(cached), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const callModel = (model: string) => fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: MODEL,
+        model,
         messages: [
           { role: "system", content: "You are a friendly home cook. Generate one practical recipe for the given cuisine using mostly the available ingredients (assume basic pantry: salt, pepper, oil, common spices). Realistic US grocery prices. Strictly honor any dietary restrictions: halal = no pork or alcohol and meat must be halal-sourced; kosher = no pork/shellfish and never mix meat with dairy; vegetarian = no meat or fish. Nutrition values are approximate. Always call return_recipe." },
           { role: "user", content: `Cuisine: ${cuisine}\nAvailable ingredients: ${ingredients}\nDietary restrictions: ${prefs || "none"}${constraintBlock}` },
@@ -105,21 +120,38 @@ Deno.serve(async (req) => {
         tool_choice: { type: "function", function: { name: "return_recipe" } },
       }),
     });
+    let usedModel = MODEL;
+    let resp = await callModel(MODEL);
+    if (!resp.ok && resp.status !== 429 && resp.status !== 402) {
+      usedModel = FALLBACK_MODEL;
+      resp = await callModel(FALLBACK_MODEL);
+    }
     if (!resp.ok) {
       logAiUsage({ userId, functionName: FN, model: MODEL, status: "error", error: `gateway ${resp.status}`, latencyMs: Date.now() - startedAt });
       if (resp.status === 429) return new Response(JSON.stringify({ error: "Rate limit hit — try again shortly." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       if (resp.status === 402) return new Response(JSON.stringify({ error: "AI credits exhausted." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       return new Response(JSON.stringify({ error: "AI gateway error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const data = await resp.json();
-    const args = data?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    let data = await resp.json();
+    let args = data?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    if (!args && usedModel !== FALLBACK_MODEL) {
+      // Fast model didn't return a structured recipe — retry once with the stronger model.
+      const retry = await callModel(FALLBACK_MODEL);
+      if (retry.ok) {
+        usedModel = FALLBACK_MODEL;
+        data = await retry.json();
+        args = data?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+      }
+    }
     if (!args) {
       logAiUsage({ userId, functionName: FN, model: MODEL, status: "error", error: "no tool args", latencyMs: Date.now() - startedAt });
       return new Response(JSON.stringify({ error: "No structured response" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     const usage = data?.usage ?? {};
-    logAiUsage({ userId, functionName: FN, model: MODEL, promptTokens: usage.prompt_tokens ?? 0, completionTokens: usage.completion_tokens ?? 0, latencyMs: Date.now() - startedAt });
-    return new Response(JSON.stringify(JSON.parse(args)), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    logAiUsage({ userId, functionName: FN, model: usedModel, promptTokens: usage.prompt_tokens ?? 0, completionTokens: usage.completion_tokens ?? 0, latencyMs: Date.now() - startedAt });
+    const recipe = JSON.parse(args);
+    cachePut(FN, cacheKey, recipe, 24 * 7);
+    return new Response(JSON.stringify(recipe), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("recipe error:", e);
     logAiUsage({ userId, functionName: FN, model: MODEL, status: "error", error: e instanceof Error ? e.message : "unknown", latencyMs: Date.now() - startedAt });

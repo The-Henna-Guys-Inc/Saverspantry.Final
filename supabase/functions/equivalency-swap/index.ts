@@ -3,7 +3,8 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { cacheGet, cachePut, getUserIdFromAuth, logAiUsage, stableHash } from "../_shared/aiUsage.ts";
 
 const FN = "equivalency-swap";
-const MODEL = "google/gemini-2.5-flash";
+const MODEL = "google/gemini-2.5-flash-lite";
+const FALLBACK_MODEL = "google/gemini-2.5-flash";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -205,11 +206,11 @@ Deno.serve(async (req) => {
 
     const profileBlock = (profileLines.length ? `\nUser food profile:\n${profileLines.join("\n")}` : "") + cuisineBlock + bloodSugarBlock;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const callModel = (model: string) => fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: MODEL,
+        model,
         messages: [
           { role: "system", content: [
             "You are a nutrition equivalency engine. Given a food + portion, return 3 alternative combinations that match protein and calories within ~15% but typically cost less.",
@@ -233,6 +234,8 @@ Deno.serve(async (req) => {
         tool_choice: { type: "function", function: { name: "return_swaps" } },
       }),
     });
+    let resp = await callModel(MODEL);
+    if (!resp.ok && resp.status !== 429 && resp.status !== 402) resp = await callModel(FALLBACK_MODEL);
     if (!resp.ok) {
       const status = resp.status;
       logAiUsage({ userId, functionName: FN, model: MODEL, status: "error", error: `gateway ${status}`, latencyMs: Date.now() - startedAt });
@@ -240,8 +243,18 @@ Deno.serve(async (req) => {
       if (status === 402) return new Response(JSON.stringify({ error: "AI credits exhausted." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       return new Response(JSON.stringify({ error: "AI gateway error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const data = await resp.json();
-    const args = data?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    let data = await resp.json();
+    let args = data?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    let parsedTry: any = null;
+    try { parsedTry = args ? JSON.parse(args) : null; } catch { parsedTry = null; }
+    if (!parsedTry || !Array.isArray(parsedTry.swaps) || parsedTry.swaps.length === 0) {
+      // Fast model gave an incomplete answer — retry once with the stronger model.
+      const retry = await callModel(FALLBACK_MODEL);
+      if (retry.ok) {
+        data = await retry.json();
+        args = data?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+      }
+    }
     if (!args) {
       logAiUsage({ userId, functionName: FN, model: MODEL, status: "error", error: "no tool args", latencyMs: Date.now() - startedAt });
       return new Response(JSON.stringify({ error: "No structured response" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
