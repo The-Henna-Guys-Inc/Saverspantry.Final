@@ -150,9 +150,26 @@ const Planner = () => {
     }
   };
 
+  const pendingGroceryScroll = useRef(false);
+
   const scrollToGrocery = () => {
     document.getElementById("grocery-print")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  // Scroll once the grocery list is actually rendered (works on web + native)
+  useEffect(() => {
+    if (!grocery || !pendingGroceryScroll.current) return;
+    let attempts = 0;
+    const tryScroll = () => {
+      if (document.getElementById("grocery-print")) {
+        pendingGroceryScroll.current = false;
+        scrollToGrocery();
+      } else if (++attempts < 20) {
+        requestAnimationFrame(tryScroll);
+      }
+    };
+    requestAnimationFrame(tryScroll);
+  }, [grocery]);
 
   const buildGrocery = async () => {
     if (!plan) return;
